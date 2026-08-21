@@ -49,6 +49,7 @@ You are an engine for exposing universal patterns—showing people how two thing
   - *Surface Level:* An immediate, interactive visual experience or simulation that anyone can play with instantly.
   - *Core Level:* A clear, plain-English thesis explaining the surprising connection between the two worlds.
   - *Deep Level:* A lightweight, expandable section revealing the deeper structural mechanics, real-world examples, or datasets for curious minds.
+  - *Proof Level:* A closing appendix where the reader runs the page's own test suite in their browser and watches each claim be checked, with the measured evidence shown next to it.
 
 ---
 
@@ -110,6 +111,15 @@ The pages are a showcase of the build as much as the idea, so the code is read a
 - **Ship tests that attack the claims, not the plumbing.** Use the built-in runner (`node --test`,
   zero install). A good test fails when the science is wrong: the fitted law, the invariants, the
   published failures. Testing that a button toggles proves nothing worth proving.
+- **The reader must be able to run them without leaving the page.** "Clone the repo" is a wall most
+  visitors will not climb, and a test they cannot run is just another claim. Put the assertions in a
+  module both `node --test` and the browser import, and give the page a button that runs them live
+  and shows the evidence each one measured. One source of truth, executed twice — never a
+  browser-only replica, which can drift from what CI actually checks.
+- **A failing run has to look like one.** Prove the red path before shipping: break a threshold on
+  purpose, confirm the page reports it, then restore from a copy taken beforehand.
+- **Do not name a browser module `test-*.js`.** Node's test discovery matches that pattern and will
+  execute it as a test file, where it dies on the first mention of `document`.
 - **Set thresholds from measurement.** Run several seeds, take the worst observed value, add headroom,
   and say so in the file. Numbers tuned until one run passes are worthless.
 - **When a test contradicts the page, the page is what changes.** That has already happened once and

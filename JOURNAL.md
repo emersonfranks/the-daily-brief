@@ -48,7 +48,10 @@ wall removes every one of them — 0 of 168 samples above six, against 4 of 168.
 and a test asserts the mechanism.
 
 **Stack:** hand-rolled canvas and typed arrays, no libraries. Simulation in `grain-model.js` with no
-DOM access, rendering in `renderer.js`, 14 tests in `grain-model.test.js` run by CI on every push.
+DOM access, rendering in `renderer.js`, and the claims themselves in `claims.js` — executed twice,
+by `node --test` in CI and by a button in the page's "Prove me wrong" appendix, so a reader can run
+all 14 checks in their browser without cloning anything and watch the evidence appear next to each
+one. The red path was verified by breaking a threshold on purpose before shipping.
 
 ---
 

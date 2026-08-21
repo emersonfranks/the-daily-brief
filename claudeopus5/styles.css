@@ -100,4 +100,29 @@ code{font:12.5px/1.5 var(--mono);color:var(--foam)}
   border-radius:0 6px 6px 0;margin:0 0 16px;color:#c9c0bc}
 .falsify b{color:var(--dead)}
 
+.runner{margin:0 0 20px}
+button.run{font-size:13px;padding:14px 20px;background:var(--foam);border-color:var(--foam);
+  color:#141005;letter-spacing:.04em}
+button.run:hover{background:#f7d083;border-color:#f7d083}
+button.run[disabled]{opacity:.55;cursor:progress;background:#151922;border-color:var(--line);
+  color:var(--dim)}
+.progress{height:3px;background:#151922;border-radius:2px;margin-top:12px;overflow:hidden;
+  opacity:0;transition:opacity .2s}
+.progress.busy{opacity:1}
+.progress i{display:block;height:100%;width:0;background:var(--foam);transition:width .12s linear}
+.claims-status{margin-top:10px;font:11.5px/1.6 var(--mono);color:var(--dimmer)}
+.claims-status.pass{color:var(--live)}
+.claims-status.fail{color:var(--dead)}
+
+table.claims{margin-bottom:18px}
+table.claims th:first-child{width:26px}
+table.claims td{vertical-align:top}
+.claim-status{font:600 14px/1.4 var(--mono);color:var(--dimmer);text-align:center}
+.claim-status.pass{color:var(--live)}
+.claim-status.fail{color:var(--dead)}
+.claim-name{color:var(--ink);font-weight:600}
+.claim-catches{color:var(--dimmer);font-size:10.5px;margin-top:3px}
+.claim-evidence{color:var(--dim);font-size:11px}
+.claim-evidence.failed{color:var(--dead)}
+
 footer{margin-top:40px;color:var(--dimmer);font:11px/1.8 var(--mono)}

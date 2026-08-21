@@ -234,28 +234,35 @@
   <h2>Prove me wrong</h2>
   <div class="body">
     <p>Every number on this page is an assertion about the world, and an assertion you cannot check
-    is just decoration. So the simulation ships with a test suite whose job is to <b>attack the
-    claims above</b>, not to confirm that buttons click. Node has a test runner built in, so there
-    is nothing to install:</p>
+    is just decoration. So the simulation ships with a suite whose job is to <b>attack the claims
+    above</b>, not to confirm that buttons click. You do not have to take my word for any of it, and
+    you do not have to install anything: press the button and it all runs here, in your browser,
+    right now.</p>
+
+    <div class="runner">
+      <button id="run-claims" class="run">Run all <span id="claims-count">14</span> tests, here, now</button>
+      <div id="claims-progress" class="progress"><i id="claims-progress-fill"></i></div>
+      <div id="claims-status" class="claims-status">The simulation runs from scratch and takes a
+        couple of seconds. Nothing is precomputed.</div>
+    </div>
+
+    <table class="claims">
+      <thead>
+        <tr><th></th><th>The claim</th><th>Evidence</th></tr>
+      </thead>
+      <tbody id="claims-rows">
+        <tr id="claims-fallback"><td></td><td>The test list is built by the page's JavaScript.</td>
+          <td class="claim-evidence">Read <code>claims.js</code> in the repository instead.</td></tr>
+      </tbody>
+    </table>
+
+    <p>These are not a browser-only replica. The same <code>claims.js</code> is executed by
+    <code>node --test</code> in continuous integration on every push, and nothing reaches this site
+    unless all of them pass. If you would rather watch it from a terminal:</p>
     <pre><span class="c"># nothing to install beyond Node itself</span>
 git clone https://github.com/emersonfranks/the-daily-brief
 cd the-daily-brief
 node --test</pre>
-    <p>Fourteen tests, about two seconds. They import the same <code>grain-model.js</code> that the
-    simulation above is running &mdash; not a copy, not a fixture. If the physics is wrong, these
-    go red:</p>
-    <table>
-      <tr><th>The test</th><th>What it would catch</th></tr>
-      <tr><td>never creates or destroys lattice area</td><td>bookkeeping drift in the census</td></tr>
-      <tr><td>never resurrects a dead cell</td><td>identity leaking between grains</td></tr>
-      <tr><td>pins the mean side count to six</td><td>the Euler argument being wrong</td></tr>
-      <tr><td>traces excursions above six to single-site contacts</td><td>the leak having some other cause</td></tr>
-      <tr><td>reproduces dA/dt = k(n&minus;6)</td><td>the entire thesis</td></tr>
-      <tr><td>five dies and seven grows in measured data</td><td>the headline being backwards</td></tr>
-      <tr><td>still breaks at three sides</td><td>a published failure quietly going away</td></tr>
-      <tr><td>grows mean area linearly in time</td><td>&#10216;R&#10217; &prop; &radic;t not holding</td></tr>
-      <tr><td>loses Lewis's law to a quadratic</td><td>the claim that Lewis loses</td></tr>
-    </table>
     <p>Thresholds are the worst value observed across five independent seeds, with headroom, so a
     pass means the result is reproducible rather than lucky. The fit tolerance is loose enough to
     survive the smaller lattice the tests run on and tight enough that a broken model cannot sneak
@@ -277,5 +284,6 @@ node --test</pre>
 </div>
 
 <script type="module" src="main.js"></script>
+<script type="module" src="claims-panel.js"></script>
 </body>
 </html>

@@ -43,6 +43,7 @@ const renderer = createRenderer(world, model);
 const view = { divide: 0.5, fateMode: false, tracked: -1 };
 let trackedDiedAt = -1;
 let running = true;
+let pausedForTests = false;
 let sweepsPerFrame = 2;
 /** @type {import('./grain-model.js').Fit | null} */
 let currentFit = null;
@@ -104,7 +105,7 @@ function step() {
 }
 
 function frame() {
-  if (running) step();
+  if (running && !pausedForTests) step();
   renderer.draw(view);
   updatePanel();
   updateHud();
@@ -160,6 +161,10 @@ mustGet('r-speed').addEventListener('input', (event) => {
 });
 
 window.addEventListener('resize', renderer.resize);
+
+// The in-page test runner needs the main thread; yielding it keeps the simulation from stuttering.
+document.addEventListener('brief:pause', () => { pausedForTests = true; });
+document.addEventListener('brief:resume', () => { pausedForTests = false; });
 
 mustGet('boot').remove();
 renderer.resize();
