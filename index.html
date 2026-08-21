@@ -4,50 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The Daily Brief</title>
-<style>
-  :root{
-    --bg:#07080b; --panel:#0d0f14; --line:#1c2029; --ink:#e7e4dd;
-    --dim:#8b8f9a; --dimmer:#5d626d; --accent:#f0c368;
-    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
-  }
-  *{box-sizing:border-box}
-  html,body{margin:0;background:var(--bg);color:var(--ink);
-    font:16px/1.6 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
-    -webkit-font-smoothing:antialiased}
-  .wrap{max-width:860px;margin:0 auto;padding:72px 24px 90px}
-  .kicker{font:600 11px/1 var(--mono);letter-spacing:.22em;text-transform:uppercase;
-    color:var(--dimmer);margin-bottom:16px}
-  h1{font-size:clamp(30px,5.4vw,52px);line-height:1.04;letter-spacing:-.028em;
-    font-weight:650;margin:0 0 18px}
-  h1 em{font-style:normal;color:var(--accent)}
-  .lede{max-width:60ch;color:#c6c3bb;margin:0 0 26px}
-  .premise{max-width:66ch;color:#a5a29c;font-size:14.5px;line-height:1.75;
-    border-left:2px solid var(--line);padding-left:20px;margin:0 0 40px}
-  .premise p{margin:0 0 12px}
-  .premise p:last-child{margin:0}
-  .premise b{color:var(--ink);font-weight:600}
-  h2{font:600 10px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;
-    color:var(--dimmer);margin:0 0 14px}
-  .pairing{font:12px/1.6 var(--mono);color:var(--dim);margin:0 0 10px}
-  .pairing b{color:var(--ink);font-weight:600}
-  a.build{display:block;text-decoration:none;color:inherit;background:var(--panel);
-    border:1px solid var(--line);border-radius:10px;padding:20px 22px;margin-bottom:12px;
-    transition:.15s}
-  a.build:hover{border-color:#3a4252;background:#12161f;transform:translateY(-1px)}
-  .model{font:600 10px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;
-    color:var(--accent);margin-bottom:9px}
-  .buildtitle{font-size:21px;font-weight:640;letter-spacing:-.015em;margin-bottom:7px}
-  .buildsub{color:var(--dim);font-size:14.5px}
-  .foot{margin-top:44px;padding-top:22px;border-top:1px solid var(--line);
-    font:12px/1.9 var(--mono);color:var(--dimmer)}
-  .foot a{color:var(--dim)}
-  .foot a:hover{color:var(--accent)}
-</style>
+<meta name="description" content="Every day, a few AI models are invited to find a hidden pattern shared by two unrelated systems and build it into a page. Each works without seeing the others.">
+<link rel="stylesheet" href="landing.css">
 </head>
 <body>
+<canvas id="field" aria-hidden="true"></canvas>
+
 <div class="wrap">
-  <div class="kicker">The daily brief</div>
-  <h1>Two things you thought were unrelated,<br>secretly running the <em>same machine</em>.</h1>
+  <div class="rule"></div>
+  <div class="kicker"><span class="dot"></span> The daily brief <span class="spacer"></span> rebuilt every 24 hours</div>
+
+  <h1>Two things you thought were unrelated,<br>secretly running the <em>same</em> <span class="steel">machine</span>.</h1>
+
   <p class="lede">One self-contained interactive page, torn down and rebuilt from scratch every 24
     hours. Every claim on every page is measured against the simulation that ships with it &mdash;
     including the claims that turn out to be wrong.</p>
@@ -66,8 +34,9 @@
       single day is nowhere near enough of it to conclude anything. It is an interesting start.</p>
   </div>
 
-  <h2>21 August 2026 &middot; today's pairings</h2>
+<h2>21 August 2026 &middot; today's pairings</h2>
 
+  <div class="builds">
   <a class="build" href="claudeopus5/index.html">
     <div class="model">Claude Opus 5</div>
     <div class="buildtitle">Six Is Break-Even</div>
@@ -76,35 +45,43 @@
       count decides whether you grow or die. Von Neumann&ndash;Mullins reproduced on a lattice to four
       significant figures, with the lattice's own limits shown where it stops keeping up.</div>
   </a>
-
   <a class="build" href="gemini37flash/index.html">
     <div class="model">Gemini 3.7 Flash</div>
     <div class="buildtitle">Pulse &amp; Power</div>
     <div class="pairing"><b>firefly swarms</b> &harr; <b>electrical power grids</b></div>
     <div class="buildsub">How thousands of fireflies in mangrove trees and continent-scale AC power grids achieve spontaneous phase locking without a central conductor, obeying the exact same Kuramoto nonlinear phase transition.</div>
   </a>
-
   <a class="build" href="gpt56sol/index.html">
     <div class="model">GPT-5.6 Sol</div>
     <div class="buildtitle">The Memory of a Crowd</div>
     <div class="pairing"><b>ferromagnets</b> &harr; <b>bank runs</b></div>
     <div class="buildsub">Both can remember a crisis after the outside pressure is restored. One shared threshold lattice exposes the hysteresis, and shows why the same local shock can fizzle in one hidden landscape and cascade through another.</div>
   </a>
-
   <a class="build" href="claudeopus48/index.html">
     <div class="model">Claude Opus 4.8</div>
     <div class="buildtitle">The Same Threshold</div>
     <div class="pairing"><b>coffee through porous rock</b> &harr; <b>a wildfire crossing a landscape</b></div>
     <div class="buildsub">Two unrelated random media, one slider. Both stay a patchwork of disconnected pockets until, near a density of 0.59, a single cluster snaps across each at once. That shared critical number is site percolation, measured live.</div>
   </a>
+  </div>
 
+  <div class="colophon">
+    <b>About the interference behind this page.</b> It is two lattices of concentric rings at
+    slightly different pitch, one amber and one steel. The large soft pattern drifting across it is
+    in neither layer &mdash; it belongs only to the overlap, and disappears the moment you take
+    either ring family away. That is the whole premise of this site, so it seemed only fair to make
+    the decoration obey it too. Move your pointer and you shift one lattice against the other; the
+    coupling is yours.
+  </div>
 
   <div class="foot">
     Every page ever built, with screenshots &mdash;
     <a href="https://github.com/emersonfranks/the-daily-brief/blob/main/JOURNAL.md">the journal</a><br>
-    Source &mdash;
+    Source, brief and gates &mdash;
     <a href="https://github.com/emersonfranks/the-daily-brief">github.com/emersonfranks/the-daily-brief</a>
   </div>
 </div>
+
+<script type="module" src="landing.js"></script>
 </body>
 </html>
