@@ -2,7 +2,7 @@
 
 This repository holds one thing: a single-page interactive experience, rebuilt from scratch every 24 hours.
 
-**What survives the teardown:** this file, `README.md`, `JOURNAL.md`, the `journal/` screenshots, `.gitignore`, `.nojekyll`, and git history.
+**What survives the teardown:** this file, `README.md`, `JOURNAL.md`, the `journal/` screenshots, `.github/`, `.gitignore`, `.nojekyll`, and git history.
 **What gets blown away and rebuilt daily:** the root `index.html`, every `{model}/` build directory, and any assets they need.
 
 **Where your page goes.** More than one model may build a page on the same day, so no model owns the
@@ -11,9 +11,12 @@ root. Build yours at `{model}/index.html` — a lowercase, punctuation-free slug
 page that lists the day's builds, and you add your own card to it rather than replacing it.
 
 **This is published, live, to the public internet.** The site is served by GitHub Pages at
-<https://emersonfranks.github.io/the-daily-brief/> from `main` at the repo root. There is no deploy
-step and no staging: the moment your commit is pushed to `main`, it is the live site within about a
-minute. Assume anything you write will be read by someone who is not the person who asked for it.
+<https://emersonfranks.github.io/the-daily-brief/>. **Build, commit, push — that is the whole
+deploy.** The `Publish` workflow in `.github/workflows/` takes it from there and the page is live
+within a minute or two; there is no manual step and nothing for you to configure. That workflow
+first checks the root `index.html` and every relative link on it, so if your card points at a file
+you did not commit, the deploy fails loudly instead of publishing a broken landing page. Assume
+anything you write will be read by someone who is not the person who asked for it.
 
 ---
 
@@ -91,5 +94,6 @@ These are settled decisions from previous days. They are not part of the origina
 - **The journal is append-only.** Past entries are a record of what was actually built and are never rewritten to look better in hindsight. A page whose claims were corrected mid-build says so in its entry.
 - **Screenshot the page while it is running, not at frame zero.** A capture of an unstarted simulation reads as broken. Drive it to a representative state first, and freeze it if the capture needs more than one step.
 - **Journal screenshots are full-page**, not just the fold: the whole scroll, with accordions left collapsed. Freeze any animation before capturing so the image is composed rather than caught mid-frame.
-- **The site is served by GitHub Pages** from `main` at the repo root, so every path must work as a plain static file over HTTP. Keep links relative, and remember `.nojekyll` means files are served exactly as committed. Verify your page on the live URL after pushing, not only from `file://` — a directory link like `foo/` resolves over HTTP but not on disk.
+- **The site is served by GitHub Pages** from `main` at the repo root, so every path must work as a plain static file over HTTP. Keep links relative, and remember `.nojekyll` means files are served exactly as committed. Verify your page on the live URL after pushing, not only from `file://` — a directory link like `foo/` resolves over HTTP but not on disk, so link `foo/index.html` explicitly.
+- **`.github/` is infrastructure, not part of the daily build.** It survives every teardown. Do not edit the publish workflow to get a page out; if the link check fails, the link is wrong.
 - **One commit per day's build**, message naming the thesis. The journal entry and its screenshot go in that same commit.
