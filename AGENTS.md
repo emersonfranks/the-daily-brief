@@ -75,9 +75,9 @@ You are an engine for exposing universal patterns—showing people how two thing
 ## EXECUTION REQUIREMENTS
 
 - **No build step, no server:** The page must run directly in a browser from static files — no bundler, no transpiler, no backend, no database. "Self-contained" means the deploy has no build, *not* that everything lives in one file: split the page into `index.html`, `styles.css` and ES modules, as described under *How the code is expected to look*. Because ES modules are fetched rather than inlined, test over HTTP — the live URL is the reference, and `file://` may refuse to load them.
-- **Zero Friction:** Require zero sign-ups, zero setup, and zero instructions to start exploring. The interaction should feel immediate, responsive, and inviting.
+- **Zero Friction:** Require zero sign-ups, zero setup, and zero instructions to start exploring. The interaction should feel immediate, responsive, and inviting. A reader arriving cold must be able to answer three questions without clicking anything: what am I looking at, what should I do, and what should I expect to happen.
 - **Layered Discovery:**
-  - *Surface Level:* An immediate, interactive visual experience or simulation that anyone can play with instantly.
+  - *Surface Level:* An immediate, interactive visual experience or simulation that anyone can play with instantly — with the experiment named in plain words before the first control, so it never reads as an unexplained toy.
   - *Core Level:* A clear, plain-English thesis explaining the surprising connection between the two worlds.
   - *Deep Level:* A lightweight, expandable section revealing the deeper structural mechanics, real-world examples, or datasets for curious minds.
   - *Proof Level:* A closing appendix where the reader runs the page's own test suite in their browser and watches each claim be checked, with the measured evidence shown next to it.
@@ -168,6 +168,34 @@ These are settled decisions from previous days. They are not part of the origina
 - **Commit every file your page loads.** The CI link check verifies the landing page and each build's own references, but the surest habit is to read `git status` before pushing and account for every untracked file. A page whose stylesheet or module never got committed deploys as a blank frame.
 - **Push straight to `main`.** No branches, no pull requests. One commit per day per model, containing your `{model}/` directory, your card on the root `index.html`, your `journal/` screenshot and your `JOURNAL.md` entry, with a message naming the thesis. If another model pushed while you were building and your push is rejected, `git pull --rebase` and re-apply your card and journal entry underneath theirs — never drop or reorder what they added.
 - **`.github/` is infrastructure, not part of the daily build.** It survives every teardown. Do not edit the publish workflow to get a page out; if the link check fails, the link is wrong.
+
+## Making the science legible
+
+A page can be measured, tested and entirely correct, and still fail — if a reader cannot tell what
+they are looking at, what to do with it, or where the idea came from. These came out of a build that
+measured cleanly and still left a first-time reader asking "why should I care, and for all I know
+you made this up?"
+
+- **Name the experiment before you show the controls.** Say in one line what to do and what to watch
+  for: "drag the slider down until the grid flips, then bring it back to exactly where it started —
+  it will not return." Controls that merely exist are a toy, not an interaction.
+- **Say what one unit represents, on both sides of the pairing.** If a tile, dot or cell stands for
+  something, name what it stands for in each domain. If two panels look identical, say why they are
+  identical — that is usually the entire point, and it is invisible to someone who just arrived.
+- **Every control earns a sentence.** A button labelled `TRIGGER LOCAL SHOCK` says what it does
+  mechanically and nothing about why a reader would press it, or what a meaningful result looks
+  like when they do.
+- **Name the science out loud.** State which phenomenon, model or law the page rests on and who
+  established it. However good the simulation is, a page with no named foundation reads as
+  invention.
+- **Cite where you can; never invent a citation.** Links and DOIs are welcome and are not mandatory.
+  A fabricated reference is far worse than none — if you are not certain a paper exists and says
+  what you are claiming, name the result and the researchers in prose and leave the link out.
+- **Say whether the analogy is mathematical or empirical.** "Both systems are described by the same
+  equation" and "both systems have been measured behaving the same way" are very different claims. A
+  stylised analogy is legitimate and interesting; presenting one as the other is not. If your pairing
+  is one field's model reinterpreted onto another domain, say so on the page rather than letting the
+  visual imply more than you tested.
 
 ## How the code is expected to look
 
