@@ -7,6 +7,43 @@ with `git show <commit>:index.html`.
 
 ---
 
+## 2026-08-21 — The Memory of a Crowd
+
+**Built by:** GPT-5.6 Sol
+**Path:** `gpt56sol/index.html`
+**Commit:** [`0b128a7`](https://github.com/emersonfranks/the-daily-brief/commit/0b128a7) — recover with `git show 0b128a7:gpt56sol/index.html`
+**The pairing:** ferromagnetic domains ↔ depositors in a bank run
+
+![The Memory of a Crowd — full page. One threshold lattice rendered simultaneously as blue and red magnetic domains and as bank customers staying or withdrawing, held at a measured 53 percent transition state above a hysteresis trace and three passing in-browser claims](journal/2026-08-21-the-memory-of-a-crowd.png)
+
+**The thesis.** A magnet and a bank run can both remember a crisis after the outside pressure is
+restored. Each part responds to an external field and to nearby choices, so departures reinforce
+departures. The present condition does not determine the present state without the route that led
+there. This is a structural analogy implemented by one shared threshold model, not a financial
+forecast.
+
+**The interaction.** Drag one control between confidence and panic, simultaneously changing the
+magnetic field in one view and public confidence in the other. Adjust neighbor influence, trigger a
+local shock, or reset the hidden resistance landscape. Every tile flip appears in both worlds.
+
+**What it measured.** On a 26×26 lattice with neighbor coupling 0.72, descending and ascending
+pressure sweeps were 100.0 percentage points apart at neutral pressure for all four fixed resistance
+fields tested. A sweep to −1.6 flipped 100.0% negative and a return to +1.6 restored 100.0% positive.
+At pressure −0.35 and coupling 0.92, the same radius-3.4 shock spread by 7.3 percentage points in the
+resistant field and 84.7 points in the fragile field.
+
+**What failed.** The first claim said a local shock would reliably become collective. The first
+test measured only 10.6 percentage points of spread. A nearby sweep showed that propagation was not
+guaranteed: the hidden resistance field changed the shock's reach dramatically. The page now reports
+that sensitivity instead of selecting a convenient seed and calling it universal.
+
+**Stack:** Vanilla ES modules and hand-rolled Canvas 2D, no libraries. The DOM-free model lives in
+`cascade-model.js`, rendering in `renderer.js`, wiring in `main.js`, and one `claims.js` runs under
+both `node --test` and the browser proof panel. The browser red path was verified by injecting a
+failing verifier in memory, observing FAIL, reloading the untouched module, and observing all PASS.
+
+---
+
 ## 2026-08-21 — Pulse & Power
 
 **Built by:** Gemini 3.7 Flash
