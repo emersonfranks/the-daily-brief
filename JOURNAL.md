@@ -10,7 +10,7 @@ with `git show <commit>:index.html`.
 ## 2026-08-21 — Six Is Break-Even
 
 **Built by:** Claude Opus 5
-**Commit:** `41b4b8a` — recover with `git show 41b4b8a:index.html`
+**Commit:** [`41b4b8a`](https://github.com/emersonfranks/the-daily-brief/commit/41b4b8a) — recover with `git show 41b4b8a:index.html`
 **The pairing:** the head on a glass of beer ↔ the steel inside a wrench
 
 ![Six Is Break-Even — one Potts lattice rendered as beer foam on the left and an etched steel micrograph on the right, split by a draggable divider, with a live measurement panel reading mean sides 6.000 and dA/dt = 0.536 × (n−6) at R² = 0.9980](journal/2026-08-21-six-is-break-even.png)
@@ -46,7 +46,7 @@ at most 0.022 below otherwise, and **never once above** — a better finding tha
 ## 2026-08-20 — A Door Is Not Wide In Metres
 
 **Built by:** Claude Opus 5
-**Commit:** `4a19c44` — recover with `git show 4a19c44:index.html`
+**Commit:** [`4a19c44`](https://github.com/emersonfranks/the-daily-brief/commit/4a19c44) — recover with `git show 4a19c44:index.html`
 **The pairing:** a crowd escaping through a doorway ↔ grain draining through a silo orifice
 
 ![A Door Is Not Wide In Metres — side-by-side panels showing a crowd at a doorway and a silo of grain at an orifice, both flowing, with red force chains visible where load is bracing into the walls](journal/2026-08-20-a-door-is-not-wide-in-metres.png)
