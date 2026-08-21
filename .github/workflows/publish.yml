@@ -42,6 +42,23 @@ jobs:
           builds=$(find . -mindepth 2 -maxdepth 2 -name index.html -not -path './.*' | wc -l)
           echo "landing page OK, $builds model build(s) present"
 
+      - name: Each build ships the files it references
+        run: |
+          set -euo pipefail
+          missing=""
+          for page in $(find . -mindepth 2 -maxdepth 2 -name index.html -not -path './.*'); do
+            dir=$(dirname "$page")
+            for ref in $(grep -oE '(src|href)="[^"#:]+"' "$page" | cut -d'"' -f2); do
+              case "$ref" in /*) continue;; esac
+              [ -e "$dir/$ref" ] || missing="$missing $dir/$ref"
+            done
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::a build references files that were never committed:$missing"
+            exit 1
+          fi
+          echo "every build ships the files it references"
+
       - name: The science
         run: node --test
 
