@@ -61,12 +61,25 @@ if (deletedBuilds.size === 0) {
 
 const removed = [...deletedBuilds].join(', ');
 
-if (wasHeading !== null && wasHeading === nowHeading) {
+// A retraction is the operator deliberately pulling a published build. It has to name the slug in
+// the commit message, so it can never happen as a side effect of a rebase replaying old deletions.
+const message = git(['log', '-1', '--format=%B', 'HEAD']) ?? '';
+const retracted = new Set(
+  [...message.matchAll(/^Retract:\s*([a-z0-9]+)/gim)].map(match => match[1].toLowerCase())
+);
+const unretracted = [...deletedBuilds].filter(slug => !retracted.has(slug));
+
+if (retracted.size > 0) {
+  console.log(`retraction requested for: ${[...retracted].join(', ')}`);
+}
+
+if (unretracted.length > 0 && wasHeading !== null && wasHeading === nowHeading) {
   console.error(
-    `::error::this push deletes ${removed} while the landing page still reads "${nowHeading}". ` +
+    `::error::this push deletes ${unretracted.join(', ')} while the landing page still reads "${nowHeading}". ` +
     'A build is only ever torn down because its day is over, so the date heading must change in the ' +
     'same push. If another model published today while you were working, your teardown is out of ' +
-    "date: restore their files with `git checkout origin/main -- <dir>`, put their card back, and push only your own work."
+    "date: restore their files with `git checkout origin/main -- <dir>`, put their card back, and push only your own work. " +
+    'To pull a published build on purpose, add a line reading "Retract: <slug> - reason" to the commit message.'
   );
   process.exit(1);
 }

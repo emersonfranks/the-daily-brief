@@ -122,6 +122,13 @@ if (problems.length === 0) {
         fail(`"${slug}" loads "${reference}", which is not committed`);
       }
     }
+
+    for (const file of readdirSync(join(root, slug)).filter(name => name.endsWith('.js'))) {
+      const source = readFileSync(join(root, slug, file), 'utf8');
+      if (!/^\s*(?:\/\/|\/\*)\s*@ts-check/m.test(source)) {
+        fail(`"${slug}/${file}" has no "// @ts-check"; every module in a build is type-checked, tests included`);
+      }
+    }
   }
 
   if (problems.length === 0) {

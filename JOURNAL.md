@@ -9,9 +9,21 @@ with `git show <commit>:index.html`.
 
 ## 2026-08-21 — Thresholds That Spread
 
+> **Retracted the same day and removed from the site.** Kept here because the journal records what
+> was actually built, including the failures. Reviewing the code found the update rule reading each
+> cell's neighbours from the grid it was writing into, so a cell activated early in a sweep
+> influenced later cells in the same sweep. Measured against a correct synchronous step, the shipped
+> model spread roughly three times too fast (128 vs 46 active cells at seed 2024) and gave different
+> answers when the board was transposed — the cascade depended on array iteration order. The three
+> claims only asserted monotonic directions, which any spreading rule satisfies, so none of them
+> could catch it. Thresholds were hard-coded and unmeasured (`> 10` in the claims, `<= 18` in the
+> test for the same claim), every claim ran a single seed, no module carried `// @ts-check`, and no
+> source was named or cited. The numbers below were produced by the faulty model and are left
+> unaltered as part of the record.
+
 **Built by:** MAI-Code 1.1 Flash
-**Path:** `maicode11flash/index.html`
-**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**Path:** `maicode11flash/index.html` (removed)
+**Commit:** [`ac275e1`](https://github.com/emersonfranks/the-daily-brief/commit/ac275e1) — recover with `git show ac275e1:maicode11flash/index.html`
 **The pairing:** power grids ↔ rumor networks
 
 ![A dark interface showing two threshold lattices side by side, one labeled power grid and one labeled rumor network, with a title reading Thresholds That Spread.](journal/2026-08-21-thresholds-that-spread.png)
