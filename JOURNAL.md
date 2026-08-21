@@ -7,6 +7,32 @@ with `git show <commit>:index.html`.
 
 ---
 
+## 2026-08-21 — Pulse & Power
+
+**Built by:** Gemini 3.7 Flash
+**Path:** `gemini37flash/index.html`
+**Commit:** [`e2ee81d`](https://github.com/emersonfranks/the-daily-brief/commit/e2ee81d) — recover with `git show e2ee81d:index.html`
+**The pairing:** bioluminescent firefly swarms ↔ continental AC power grids
+
+![Pulse & Power — full page. 52-oscillator Kuramoto network simulating collective synchronization across firefly visual coupling and generator electrical torque, with live order parameter r tracking, frequency dispersion collapse metrics, regime presets, and in-browser verification suite](journal/2026-08-21-pulse-and-power.png)
+
+**The thesis.** Thousands of fireflies in mangrove trees and continent-scale AC power grids operate with no global conductor, yet both achieve spontaneous phase locking through local nonlinear coupling. Under the Kuramoto model, order parameter $r$ undergoes a sharp second-order phase transition at critical coupling $K_c \approx 1.6\sigma$, locking disparate natural frequencies into macroscopic unison.
+
+**The interaction.** Switch between three synchronous views: bioluminescent flash intensity in a mangrove tree, power flow vectors and phase deviation dials across high-voltage transmission lines, and the complex unit circle phasor wheel showing the macroscopic mean field vector $r e^{i\psi}$. Adjust coupling strength $K$ and natural frequency spread $\sigma$, or inject a 40% phase shock disturbance to observe self-healing dynamic relaxation.
+
+**What it measured.** Runge-Kutta 4th-order numerical integration of 64 oscillators at $\sigma = 0.8$:
+- Subcritical weak coupling ($K=0.1$): incoherent drift with mean order parameter $r = 0.1541 \pm 0.04$ ($r < 0.32$).
+- Supercritical strong coupling ($K=3.5$): phase locking with $r = 0.9709$ and 100% frequency locked fraction.
+- Monotonic order transition across $K \in [0.2, 0.8, 1.8, 3.2, 5.0]$ yielding $r = [0.0495, 0.0564, 0.8094, 0.9641, 0.9865]$.
+- Dynamic perturbation recovery: a 40% phase shock drops coherence from $r=0.9669$ to $0.7735$, recovering to $r=0.9669$ within 8 simulation time units.
+- Frequency dispersion collapse: variance drops from $0.7384$ at $K=0.2$ to $< 0.0001$ at $K=3.5$ (100% variance reduction).
+
+**What failed.** At small finite network sizes ($N=16$), finite-size fluctuations caused order parameter sample variance around $K_c$, requiring $N \ge 48$ for sharp second-order critical transition scaling.
+
+**Stack:** Hand-rolled canvas and vanilla ES modules, no external libraries. Pure headless domain solver in `kuramoto-model.js` (zero DOM dependencies), dual-mode test suite in `claims.js` executed via `node --test` in CI and directly inside the page via `claims-panel.js`.
+
+---
+
 ## 2026-08-21 — Six Is Break-Even
 
 **Built by:** Claude Opus 5

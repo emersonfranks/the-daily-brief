@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pulse &amp; Power &mdash; The Universal Law of Spontaneous Synchronization</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <span class="tagline">Universal Dynamics &middot; Nonlinear Phase Transitions</span>
+    <h1>Pulse &amp; Power</h1>
+    <p class="lead">How thousand-member firefly swarms in Malaysian mangrove forests and continent-scale AC power grids obey the exact same mathematics of spontaneous phase locking.</p>
+  </header>
+
+  <main>
+    <!-- Surface Level: Interactive Simulation -->
+    <section class="sim-container">
+      <div class="canvas-wrapper">
+        <div class="canvas-toolbar">
+          <div class="view-tabs">
+            <button class="tab-btn active" data-mode="fireflies">Firefly Meadow</button>
+            <button class="tab-btn" data-mode="grid">AC Power Grid</button>
+            <button class="tab-btn" data-mode="phasor">Phasor Unit Wheel</button>
+          </div>
+          <span style="font-size: 0.85rem; color: var(--text-dim);">Live 52-Oscillator RK4 Simulation</span>
+        </div>
+        <canvas id="sim-canvas"></canvas>
+      </div>
+
+      <div class="controls-panel">
+        <div>
+          <div class="panel-section-title">Coupling &amp; Dispersion</div>
+          <div class="control-group">
+            <div class="control-label">
+              <span>Coupling Strength (K)</span>
+              <span id="val-coupling" class="control-value">2.50</span>
+            </div>
+            <input id="slider-coupling" type="range" min="0.0" max="6.0" step="0.05" value="2.50">
+          </div>
+
+          <div class="control-group" style="margin-top: 0.75rem;">
+            <div class="control-label">
+              <span>Frequency Spread (&sigma;)</span>
+              <span id="val-spread" class="control-value">0.80</span>
+            </div>
+            <input id="slider-spread" type="range" min="0.1" max="2.5" step="0.05" value="0.80">
+          </div>
+        </div>
+
+        <div>
+          <div class="panel-section-title">System Disturbance</div>
+          <div class="btn-group">
+            <button id="btn-shock" class="btn-shock">Phase Shock (40%)</button>
+            <button id="btn-reset" class="btn-secondary">Reset System</button>
+          </div>
+        </div>
+
+        <div>
+          <div class="panel-section-title">Regime Presets</div>
+          <div class="btn-group">
+            <button id="preset-subcritical" class="btn-secondary">Disorder (K=0.3)</button>
+            <button id="preset-critical" class="btn-secondary">Critical (K=1.3)</button>
+            <button id="preset-supercritical" class="btn-secondary" style="grid-column: span 2;">Coherent Lock (K=3.8)</button>
+          </div>
+        </div>
+
+        <div>
+          <div class="panel-section-title">System Order Metrics</div>
+          <div class="metrics-box">
+            <div class="metric-row">
+              <span style="color: var(--text-muted);">Order Parameter (r):</span>
+              <span id="metric-order" class="metric-val" style="color: var(--accent-pink);">0.000</span>
+            </div>
+            <div class="metric-row">
+              <span style="color: var(--text-muted);">Frequency Locked:</span>
+              <span id="metric-locked" class="metric-val" style="color: var(--accent-emerald);">0%</span>
+            </div>
+            <div class="metric-row">
+              <span style="color: var(--text-muted);">Frequency Variance:</span>
+              <span id="metric-variance" class="metric-val" style="color: var(--accent-amber);">0.0000</span>
+            </div>
+            <div class="chart-wrapper">
+              <canvas id="chart-canvas"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Core Level: The Plain-English Thesis -->
+    <section class="section-block">
+      <h2 class="section-title">The Hidden Connection: Nature's Self-Organizing Clocks</h2>
+      <p class="section-subtitle">A firefly has no conductor. A power grid has no global phase controller. Yet both achieve flawless collective synchrony through local nonlinear coupling.</p>
+
+      <p>Along the riverbanks of Southeast Asia, tens of thousands of male <em>Pteroptyx malaccae</em> fireflies gather in mangrove trees at dusk. Initially, each insect flashes at its own private biological rhythm. Within minutes, without any leader directing them, the entire riverbank pulses in blinding, simultaneous unison.</p>
+
+      <p>Across thousands of miles of continental power grids, hundreds of colossal turbine generators spin simultaneously. To keep electricity flowing safely without tripping circuit breakers or burning out transformers, every generator rotor on the continent must rotate in locked electrical phase angle at exactly 60 Hz (or 50 Hz). A phase slip of a fraction of a degree creates immense active power surges between nodes.</p>
+
+      <div class="comparison-grid">
+        <div class="comparison-card system-a">
+          <h4>System A: Bioluminescent Fireflies</h4>
+          <p>Individual insects adjust their internal pacemaker phase based on the flashes they see from neighboring fireflies.</p>
+          <ul>
+            <li><strong>State variable:</strong> Internal circadian flash phase &theta;<sub>i</sub>(t)</li>
+            <li><strong>Intrinsic property:</strong> Biological flash frequency &omega;<sub>i</sub></li>
+            <li><strong>Coupling medium:</strong> Visual photon detection</li>
+            <li><strong>Coherence manifestation:</strong> Simultaneous optical pulse</li>
+          </ul>
+        </div>
+
+        <div class="comparison-card system-b">
+          <h4>System B: Continental AC Power Grid</h4>
+          <p>Rotating synchronous generators transfer active electrical power through transmission lines, creating electromagnetic torque that pulls phases together.</p>
+          <ul>
+            <li><strong>State variable:</strong> Rotor electrical angle &theta;<sub>i</sub>(t)</li>
+            <li><strong>Intrinsic property:</strong> Mechanical turbine power &amp; frequency</li>
+            <li><strong>Coupling medium:</strong> High-voltage AC transmission lines</li>
+            <li><strong>Coherence manifestation:</strong> Stable grid frequency (60Hz / 50Hz)</li>
+          </ul>
+        </div>
+      </div>
+
+      <p>In 1975, Japanese physicist Yoshiki Kuramoto proved that both phenomena are governed by the exact same universal nonlinear differential equation. When individual oscillators interact with coupling strength <em>K</em>, order does not appear gradually everywhere at once. Instead, as <em>K</em> crosses a sharp critical threshold <em>K<sub>c</sub></em>, the system undergoes a second-order phase transition: a macroscopic cluster suddenly locks in phase, pulling the rest of the network into global harmony.</p>
+    </section>
+
+    <!-- Deep Level: Structural Mechanics & Mathematics -->
+    <section class="section-block">
+      <h2 class="section-title">Deep Structural Mechanics: The Kuramoto Dynamics</h2>
+
+      <details>
+        <summary>1. The Kuramoto Governing Equation</summary>
+        <div class="details-content">
+          <p>For a population of <em>N</em> limit-cycle oscillators, each defined by phase &theta;<sub>i</sub> &isin; [0, 2&pi;) and natural frequency &omega;<sub>i</sub> drawn from distribution <em>g(&omega;)</em>, the phase evolution is governed by:</p>
+          <div class="math-formula">
+            d&theta;<sub>i</sub> / dt = &omega;<sub>i</sub> + (K / N) &sum;<sub>j=1</sub><sup>N</sup> sin(&theta;<sub>j</sub> &minus; &theta;<sub>i</sub>)
+          </div>
+          <p>The sine term acts as a restoring force: if oscillator <em>j</em> is ahead of <em>i</em> (&theta;<sub>j</sub> &gt; &theta;<sub>i</sub>), sin(&theta;<sub>j</sub> &minus; &theta;<sub>i</sub>) &gt; 0, accelerating oscillator <em>i</em>. If <em>j</em> is behind, it decelerates <em>i</em>.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>2. The Macroscopic Order Parameter &amp; Critical Threshold</summary>
+        <div class="details-content">
+          <p>The collective state of the system is tracked by the complex order parameter <em>z = r e<sup>i&psi;</sup></em>:</p>
+          <div class="math-formula">
+            r e<sup>i&psi;</sup> = (1 / N) &sum;<sub>j=1</sub><sup>N</sup> e<sup>i&theta;<sub>j</sub></sup>
+          </div>
+          <p>Here <em>r &isin; [0, 1]</em> quantifies phase coherence (0 = pure disorder, 1 = complete lock) and <em>&psi;</em> is the mean phase angle. For a unimodal, symmetric frequency distribution with spread &sigma;, the critical coupling threshold is given by:</p>
+          <div class="math-formula">
+            K<sub>c</sub> = 2 / (&pi; g(0)) &approx; 2 &sigma; &radic;(2 / &pi;) &approx; 1.6 &sigma;
+          </div>
+          <p>When <em>K &lt; K<sub>c</sub></em>, incoherent drift dominates (<em>r &approx; 0</em>). When <em>K &gt; K<sub>c</sub></em>, the order parameter grows as <em>r &sim; &radic;((K &minus; K<sub>c</sub>) / K)</em>.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>3. Equivalence to Power Grid Swing Equations</summary>
+        <div class="details-content">
+          <p>In power systems engineering, the dynamic swing equation for synchronous machine <em>i</em> relates rotor inertia <em>M<sub>i</sub></em>, damping <em>D<sub>i</sub></em>, mechanical power input <em>P<sub>i</sub></em>, and electrical power transmission:</p>
+          <div class="math-formula">
+            M<sub>i</sub> d<sup>2</sup>&theta;<sub>i</sub>/dt<sup>2</sup> + D<sub>i</sub> d&theta;<sub>i</sub>/dt = P<sub>i</sub> &minus; &sum;<sub>j=1</sub><sup>N</sup> B<sub>ij</sub> V<sub>i</sub> V<sub>j</sub> sin(&theta;<sub>i</sub> &minus; &theta;<sub>j</sub>)
+          </div>
+          <p>Under the standard high-damping / low-inertia approximation (or network-reduced transient stability regime), the second-derivative term is negligible compared to damping, reducing the swing equation directly to the network Kuramoto model with coupling <em>K<sub>ij</sub> = B<sub>ij</sub> V<sub>i</sub> V<sub>j</sub> / D<sub>i</sub></em>.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>4. Perturbation Resilience and Cascading Grid Failures</summary>
+        <div class="details-content">
+          <p>When an unexpected load disconnects or a generator trips (simulated by our <strong>Phase Shock</strong> button), the sudden jump in phase angles generates large power surges across neighboring transmission lines. In a strongly coupled system (<em>K &gt; K<sub>c</sub></em>), the restoring torque rapidly dissipates the disturbance, re-establishing phase coherence exponentially with relaxation rate &sim; <em>K r</em>. If coupling is too weak or lines become overloaded, the phase angles diverge, resulting in catastrophic loss of synchrony (blackout).</p>
+        </div>
+      </details>
+    </section>
+
+    <!-- Proof Level: Interactive In-Browser Test Suite -->
+    <section class="section-block" id="claims-panel-container">
+      <!-- Injected by claims-panel.js -->
+    </section>
+  </main>
+
+  <footer>
+    <p>Pulse &amp; Power &middot; Built with vanilla ES modules &amp; HTML5 Canvas &middot; Deterministic RK4 Kuramoto Solver</p>
+  </footer>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>
