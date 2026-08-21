@@ -1,0 +1,55 @@
+name: Publish
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Landing page and its links resolve
+        run: |
+          set -euo pipefail
+          test -f index.html || { echo "::error::root index.html is missing"; exit 1; }
+          test -f .nojekyll || { echo "::error::.nojekyll is missing"; exit 1; }
+          missing=""
+          for target in $(grep -oE 'href="[^"#:]+"' index.html | cut -d'"' -f2); do
+            if [ -d "$target" ]; then
+              [ -f "${target%/}/index.html" ] || missing="$missing ${target}(no index.html)"
+            elif [ ! -f "$target" ]; then
+              missing="$missing $target"
+            fi
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::landing page links to missing files:$missing"
+            exit 1
+          fi
+          builds=$(find . -mindepth 2 -maxdepth 2 -name index.html -not -path './.*' | wc -l)
+          echo "landing page OK, $builds model build(s) present"
+
+  deploy:
+    needs: check
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: deployment
+        uses: actions/deploy-pages@v4
