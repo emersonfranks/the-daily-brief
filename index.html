@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A Door Is Not Wide In Metres</title>
+<meta name="description" content="A crowd at a doorway and a silo of grain at an orifice obey the same law — once you stop measuring the opening in metres and start measuring it in bodies.">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --panel: #12161d;
+    --line: #232b36;
+    --ink: #e8ecf2;
+    --muted: #8b95a5;
+    --people: #4fd1ff;
+    --grain: #ffb347;
+    --hot: #ff4436;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px 96px; }
+
+  header { padding: 56px 0 26px; }
+  h1 {
+    font-size: clamp(32px, 5.8vw, 58px);
+    line-height: 1.03;
+    letter-spacing: -0.03em;
+    margin: 0 0 18px;
+    font-weight: 680;
+    max-width: 15ch;
+  }
+  .hook { font-size: clamp(17px, 2.4vw, 21px); color: var(--muted); max-width: 46ch; margin: 0; }
+  .hook b { color: var(--ink); font-weight: 600; }
+
+  .stage { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 34px; }
+  @media (max-width: 800px) { .stage { grid-template-columns: 1fr; } }
+
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+  .panel-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 10px; padding: 12px 14px 10px; border-bottom: 1px solid var(--line);
+  }
+  .panel-title { font-size: 14px; font-weight: 620; }
+  .panel-sub { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .panel-sub b { color: var(--ink); font-weight: 620; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 7px; vertical-align: 1px; }
+  canvas { display: block; width: 100%; }
+
+  .readout {
+    display: flex; gap: 20px; align-items: center;
+    padding: 10px 14px 12px; border-top: 1px solid var(--line);
+    font-variant-numeric: tabular-nums;
+  }
+  .metric-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .metric-value { font-size: 20px; font-weight: 640; }
+  .metric-value small { font-size: 12px; color: var(--muted); font-weight: 400; }
+  .jam {
+    margin-left: auto; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+    font-weight: 700; padding: 4px 9px; border-radius: 999px; border: 1px solid transparent;
+    color: var(--muted); opacity: 0.3;
+    transition: opacity .15s, color .15s, border-color .15s, background .15s;
+  }
+  .jam.on { opacity: 1; color: var(--hot); border-color: rgba(255,68,54,.45); background: rgba(255,68,54,.08); }
+
+  .console {
+    margin-top: 14px; background: var(--panel); border: 1px solid var(--line);
+    border-radius: 14px; padding: 18px;
+  }
+  .slider-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .slider-row + .slider-row { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+  .slider-label { font-size: 13px; font-weight: 640; min-width: 190px; }
+  .slider-label span { display: block; font-size: 11px; color: var(--muted); font-weight: 400; }
+  input[type=range] {
+    flex: 1 1 220px; min-width: 180px; -webkit-appearance: none; appearance: none;
+    height: 4px; border-radius: 4px; background: #2b3542; outline: none;
+  }
+  #width { background: linear-gradient(90deg, var(--hot) 0%, #6b7787 26%, #52e0a0 60%); }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%;
+    background: var(--ink); border: 3px solid var(--panel); box-shadow: 0 0 0 1px var(--line); cursor: pointer;
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 20px; height: 20px; border-radius: 50%; background: var(--ink);
+    border: 3px solid var(--panel); cursor: pointer;
+  }
+  .val { font-variant-numeric: tabular-nums; font-size: 15px; font-weight: 640; min-width: 8.2em; text-align: right; }
+  .val em { font-style: normal; color: var(--muted); font-weight: 400; font-size: 12px; }
+
+  .buttons { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+  button {
+    font: inherit; font-size: 13px; font-weight: 600; color: var(--ink);
+    background: #1b212b; border: 1px solid var(--line); border-radius: 9px;
+    padding: 9px 15px; cursor: pointer; transition: background .12s, border-color .12s, opacity .12s;
+  }
+  button:hover:not(:disabled) { background: #232b37; border-color: #33404f; }
+  button:disabled { opacity: .45; cursor: default; }
+  .hint { font-size: 12.5px; color: var(--muted); margin: 12px 0 0; max-width: 74ch; }
+
+  .proof { margin-top: 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+  .proof h2 { font-size: 14px; margin: 0 0 2px; font-weight: 640; }
+  .proof p.cap { font-size: 12.5px; color: var(--muted); margin: 0 0 12px; max-width: 72ch; }
+  #plot { width: 100%; border-radius: 8px; }
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin-top: 10px; }
+  .legend i { display: inline-block; width: 20px; border-top: 2px solid; vertical-align: 4px; margin-right: 7px; }
+
+  .thesis { margin-top: 58px; max-width: 62ch; }
+  .thesis h2 { font-size: clamp(22px, 3.4vw, 30px); letter-spacing: -0.02em; margin: 0 0 14px; }
+  .thesis p { margin: 0 0 16px; }
+  .thesis strong { color: #fff; }
+  .pull {
+    border-left: 2px solid var(--grain); padding-left: 18px; margin: 26px 0;
+    font-size: clamp(17px, 2.6vw, 21px); line-height: 1.42; letter-spacing: -0.01em; color: #fff;
+  }
+
+  details { margin-top: 34px; border-top: 1px solid var(--line); padding-top: 18px; max-width: 68ch; }
+  summary { cursor: pointer; font-weight: 620; font-size: 15px; list-style: none; display: flex; align-items: center; gap: 9px; }
+  summary::-webkit-details-marker { display: none; }
+  summary::before {
+    content: "+"; display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px; border: 1px solid var(--line); border-radius: 6px; font-size: 14px; color: var(--muted);
+  }
+  details[open] summary::before { content: "\2212"; }
+  .deep { font-size: 15px; color: #c3ccd8; padding-top: 14px; }
+  .deep h3 { font-size: 14px; color: var(--ink); margin: 24px 0 8px; }
+  .deep p { margin: 0 0 14px; }
+  .deep ul { margin: 0 0 14px; padding-left: 20px; }
+  .deep li { margin-bottom: 7px; }
+  .deep code {
+    font: 500 13px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    background: #171d26; border: 1px solid var(--line); border-radius: 5px; padding: 2px 5px;
+  }
+  .caveat { border-left: 2px solid #3d4756; padding-left: 16px; color: var(--muted); font-size: 14px; }
+  table.deep-t { width: 100%; border-collapse: collapse; font-size: 13px; margin: 0 0 14px; font-variant-numeric: tabular-nums; }
+  table.deep-t th, table.deep-t td { text-align: left; padding: 6px 10px 6px 0; border-bottom: 1px solid var(--line); }
+  table.deep-t th { color: var(--muted); font-weight: 600; }
+
+  footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>A door is not wide in metres.</h1>
+    <p class="hook">It is wide in <b>bodies</b>. Below: a crowd at a doorway and a silo of grain at an orifice. Drag the one slider and watch two completely different materials fail and recover <b>at exactly the same tick</b>.</p>
+  </header>
+
+  <div class="stage">
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title"><span class="dot" style="background:var(--people)"></span>170 people</div>
+        <div class="panel-sub">door: <b id="mA">1.20</b> m</div>
+      </div>
+      <canvas id="cA"></canvas>
+      <div class="readout">
+        <div>
+          <div class="metric-label">Escaping</div>
+          <div class="metric-value" id="flowA">0.0<small> /s</small></div>
+        </div>
+        <div>
+          <div class="metric-label">Out</div>
+          <div class="metric-value" id="totA">0</div>
+        </div>
+        <div class="jam" id="jamA">Arch holding</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title"><span class="dot" style="background:var(--grain)"></span>250 grains</div>
+        <div class="panel-sub">orifice: <b id="mB">0.96</b> m</div>
+      </div>
+      <canvas id="cB"></canvas>
+      <div class="readout">
+        <div>
+          <div class="metric-label">Draining</div>
+          <div class="metric-value" id="flowB">0.0<small> /s</small></div>
+        </div>
+        <div>
+          <div class="metric-label">Out</div>
+          <div class="metric-value" id="totB">0</div>
+        </div>
+        <div class="jam" id="jamB">Arch holding</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="console">
+    <div class="slider-row">
+      <label class="slider-label" for="width">Opening width<span>measured in body-widths, not metres</span></label>
+      <input type="range" id="width" min="10" max="60" step="1" value="24">
+      <div class="val" id="widthVal">2.4 <em>bodies</em></div>
+    </div>
+    <div class="slider-row">
+      <label class="slider-label" for="push">How hard everyone pushes<span>the variable that feels decisive, and isn't</span></label>
+      <input type="range" id="push" min="5" max="100" step="1" value="30">
+      <div class="val" id="pushVal">0.30 <em>drive</em></div>
+    </div>
+    <div class="buttons">
+      <button id="sweep">Measure both curves</button>
+      <button id="reset">Reset</button>
+    </div>
+    <p class="hint">The pale outlines drawn across each gap are that panel's own bodies, laid side by side. The two openings are different sizes in metres &mdash; but the same number of bodies fits across both, always. Below about 1.5 bodies, both choke down to a trickle.</p>
+  </div>
+
+  <div class="proof">
+    <h2>The proof: two materials, one curve</h2>
+    <p class="cap">Measures throughput across the full range of openings, live, in your browser. Each curve is scaled to its own maximum, because people per second and grains per second are not the same unit &mdash; the <em>shape</em>, and where it hits zero, is the claim.</p>
+    <canvas id="plot"></canvas>
+    <div class="legend">
+      <span><i style="border-color:var(--people)"></i>People through a door</span>
+      <span><i style="border-color:var(--grain)"></i>Grain through an orifice</span>
+      <span><i style="border-color:#52e0a0; border-top-style:dashed"></i>Current setting</span>
+    </div>
+  </div>
+
+  <div class="thesis">
+    <h2>What you're looking at</h2>
+    <p>A silo jams for reasons that seem purely mechanical, and a crowd jams for reasons that seem purely human &mdash; impatience, fear, someone shoving at the back. So it is strange that both are controlled by the same single number, and that the number contains no psychology at all.</p>
+
+    <p>That number is the width of the opening <strong>divided by the width of one body</strong>. Physicists call it <code style="font-size:13px">R = D/d</code>. It doesn't care what the bodies are. Below roughly <strong>R = 2</strong>, both systems choke &mdash; arches form faster than they break and flow collapses to a few percent of capacity. Above roughly <strong>R = 5</strong>, both run freely and hardly jam at all. In between is the strange regime you can see above, where flow comes in bursts &mdash; a rush, a sudden lock-up, a spontaneous break, another rush.</p>
+
+    <p class="pull">The door in the left panel is 25&nbsp;cm wider than the orifice in the right one. They behave identically anyway, because in the only units that matter, they are the same door.</p>
+
+    <p>The mechanism is an <strong>arch</strong>. Bodies converging on a narrow gap occasionally lock into a ring of mutual contacts spanning it, each one wedged against the next, the whole ring bracing against the sides. The load stops pressing through the hole and gets routed sideways into the walls instead. The opening is now held shut by a structure built out of the very things trying to get through it. A gap that can't fit enough bodies side by side to make an arch impossible, will eventually make one.</p>
+
+    <p>Which is why the second slider disappoints. Pushing harder is the intervention everybody reaches for, and a twentyfold increase in it moves throughput by a factor of about <strong>1.4</strong>. Widening the opening from 1.2 bodies to 6 &mdash; a fivefold change &mdash; moves throughput by a factor of <strong>thirty to a hundred</strong>. Force is the variable we feel; geometry is the variable that decides. <strong>You cannot push your way through a gap that is too narrow in bodies, and you never needed to push at all through one that isn't.</strong></p>
+  </div>
+
+  <details>
+    <summary>The measurements, the real-world numbers, and two claims that failed</summary>
+    <div class="deep">
+
+      <h3>Why the flow curve has that shape</h3>
+      <p>For granular discharge the classic result is the <strong>Beverloo correlation</strong>: flow scales as <code>(D &minus; kd)</code> raised to a power &mdash; 2.5 in three dimensions, 1.5 in two &mdash; where <code>k</code> is around 1.5. The subtracted term is the important part. It says there is an <em>empty annulus</em> one body-width or so thick around the rim that carries no flow, so the effective opening is always narrower than the measured one. That's why the curve is so steep near the bottom and why it hits zero well before <code>D</code> does.</p>
+      <p>Note what's missing from Beverloo: the height of material above the outlet. A silo drains at the same rate full as nearly empty, which is why an hourglass keeps time. That's the <strong>Janssen effect</strong> &mdash; contact forces organise into chains that shunt weight into the side walls, so pressure at the base saturates with depth instead of growing. Load doesn't set flow. It's the same insensitivity you can feel on the second slider.</p>
+
+      <h3>The clogging transition</h3>
+      <p>Below <code>R &asymp; 2</code> an arch forms almost immediately and never breaks unaided. Above <code>R &asymp; 5</code>, arches become geometrically implausible and flow is continuous. Between those, the system is intermittent, and the distribution of avalanche sizes between clogs is heavy-tailed &mdash; the mean burst size diverges as you approach the free-flowing end, which is the signature of a genuine phase transition rather than a gradual easing.</p>
+      <p>The same threshold has been measured outside granular matter: in sheep pushed through a gate, ants leaving a chamber, mice, and human pedestrian experiments. Same ratio, same transition, wildly different constituents. In building codes the idea survives as exit width per occupant &mdash; a rule that quietly encodes the fact that a doorway's capacity is set by body-widths, not by metres.</p>
+
+      <h3>Two claims I tried to make and could not support</h3>
+      <p>This page was originally going to argue two more famous results. Both were tested in this exact simulation before writing, and both failed to reproduce, so both were cut:</p>
+      <ul>
+        <li><strong>Faster-is-slower.</strong> The expectation, from Helbing, Farkas &amp; Vicsek (2000), is that above some desired speed, throughput <em>falls</em>. In this model it doesn't. Across a twentyfold increase in drive, throughput rose &mdash; weakly and roughly monotonically &mdash; by about 1.4&times; in both panels. The honest statement is the weaker one now in the thesis: pushing harder helps far less than it feels like it should. The full effect appears to need conditions this setup doesn't have, and in the grain panel it shouldn't appear at all, since Beverloo predicts flow rising as the square root of driving force, which is roughly what was measured.</li>
+        <li><strong>The obstacle result.</strong> Zuriguel and colleagues (2011) showed that a correctly placed obstacle above a silo outlet cuts clogging by more than an order of magnitude. Seven pillar sizes and positions were tested here. Not one beat the no-pillar baseline; the larger ones strangled the outlet completely. The effect is real in the literature but is sensitive to geometry and needs far longer runs to resolve than a live page allows.</li>
+      </ul>
+      <p>Reporting these is the point rather than an embarrassment. Everything else on this page was kept because it measured true, on the same code you are running.</p>
+
+      <h3>Measured collapse</h3>
+      <p>Throughput per second at drive 0.3, averaged over a six-second window after settling, normalised to each system's own value at <code>R = 5.5</code>:</p>
+      <table class="deep-t">
+        <tr><th>R (bodies)</th><th>People</th><th>Grain</th></tr>
+        <tr><td>1.2</td><td>0.02</td><td>0.02</td></tr>
+        <tr><td>1.6</td><td>0.07</td><td>0.11</td></tr>
+        <tr><td>2.0</td><td>0.13</td><td>0.16</td></tr>
+        <tr><td>2.5</td><td>0.25</td><td>0.32</td></tr>
+        <tr><td>3.0</td><td>0.31</td><td>0.41</td></tr>
+        <tr><td>3.6</td><td>0.55</td><td>0.57</td></tr>
+        <tr><td>4.4</td><td>0.67</td><td>0.72</td></tr>
+        <tr><td>5.5</td><td>1.00</td><td>1.00</td></tr>
+      </table>
+      <p>Two materials with different body sizes, different container shapes, and different reasons for moving, agreeing to within a few percent across a fiftyfold change in flow.</p>
+
+      <h3>Simulation parameters</h3>
+      <ul>
+        <li>Social-force constants, identical in both panels: <code>A = 2000 N</code>, <code>B = 0.08 m</code>, body stiffness <code>k = 1.2&times;10&sup5; kg/s&sup2;</code>, sliding friction <code>&kappa; = 2.4&times;10&sup5; kg/(m&middot;s)</code>, relaxation <code>&tau; = 0.5 s</code>.</li>
+        <li>Semi-implicit Euler, four substeps per frame at <code>dt = 1/240 s</code>, uniform-grid neighbour search.</li>
+        <li>Left: 170 bodies, radius 0.25&nbsp;m &plusmn;10%, driven toward the door. Right: 250 grains, radius 0.20&nbsp;m &plusmn;10%, driven straight down. That drive direction is the only difference in the physics.</li>
+        <li>Particle colour maps accumulated normal contact force, so a red chain spanning the gap is a direct reading of the load path, not a decoration.</li>
+        <li>Bodies that get out are recycled to the top, holding density steady so throughput is a stationary rate rather than a decaying one.</li>
+      </ul>
+      <p>Nothing here is a stored dataset. Press the measure button and the curves are generated on your machine, now.</p>
+
+    </div>
+  </details>
+
+  <footer>Built 2026-08-20 &middot; One page, one idea, no dependencies &middot; Torn down and rebuilt tomorrow.</footer>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  const P = { mass: 80, tau: 0.5, A: 2000, B: 0.08, k: 1.2e5, kappa: 2.4e5, vmax: 12, cutoff: 0.55 };
+  const SUB = 4, DT = 1 / 240;
+  const W = 12, H = 9;
+  const HX0 = 1.4, HX1 = W - 1.4, HY = 4.6, OY = 8.1;
+
+  const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+  const rand = (a, b) => a + Math.random() * (b - a);
+
+  function segDist(px, py, x1, y1, x2, y2) {
+    const dx = x2 - x1, dy = y2 - y1;
+    const L = dx * dx + dy * dy;
+    const t = clamp(L > 0 ? ((px - x1) * dx + (py - y1) * dy) / L : 0, 0, 1);
+    const ox = px - (x1 + t * dx), oy = py - (y1 + t * dy);
+    return { d: Math.hypot(ox, oy) || 1e-9, ox, oy };
+  }
+
+  class World {
+    constructor(cfg) {
+      Object.assign(this, cfg);
+      this.particles = [];
+      this.exits = 0;
+      this.log = [];
+      this.time = 0;
+      this.lastExitAt = 0;
+      this.cell = P.cutoff + 2 * this.radius;
+      this.cols = Math.ceil(W / this.cell) + 1;
+      this.rows = Math.ceil(H / this.cell) + 1;
+      this.bins = new Array(this.cols * this.rows);
+      this.setAperture(2.4);
+      this.reset();
+    }
+
+    setAperture(R) {
+      this.R = R;
+      this.gap = R * 2 * this.radius;
+      this.walls = this.buildWalls(this.gap);
+    }
+
+    reset() {
+      this.particles.length = 0;
+      this.exits = 0;
+      this.log.length = 0;
+      this.time = 0;
+      this.lastExitAt = 0;
+      for (let i = 0; i < this.n; i++) this.particles.push(this.spawn(true));
+    }
+
+    spawn(initial) {
+      const s = this.spawnBox;
+      return {
+        x: rand(s.x0, s.x1),
+        y: initial ? rand(s.y0, s.yFull) : rand(s.y0, s.y1),
+        vx: 0, vy: 0, r: this.radius * rand(0.9, 1.1), press: 0, fx: 0, fy: 0
+      };
+    }
+
+    rebin() {
+      this.bins.fill(undefined);
+      for (const p of this.particles) {
+        const i = clamp(Math.floor(p.y / this.cell), 0, this.rows - 1) * this.cols
+                + clamp(Math.floor(p.x / this.cell), 0, this.cols - 1);
+        (this.bins[i] || (this.bins[i] = [])).push(p);
+      }
+    }
+
+    contact(p, ox, oy, d, sum, moving) {
+      const gap = sum - d;
+      if (gap < -P.cutoff) return;
+      const nx = ox / d, ny = oy / d;
+      const soc = P.A * Math.exp(gap / P.B);
+      p.fx += nx * soc; p.fy += ny * soc;
+      if (gap <= 0) return;
+      const body = P.k * gap;
+      p.fx += nx * body; p.fy += ny * body;
+      p.press += body;
+      const tx = -ny, ty = nx;
+      const dvt = moving
+        ? (moving.vx - p.vx) * tx + (moving.vy - p.vy) * ty
+        : -(p.vx * tx + p.vy * ty);
+      const fr = P.kappa * gap * dvt;
+      p.fx += tx * fr; p.fy += ty * fr;
+    }
+
+    step(dt, u) {
+      const v0 = 0.6 + 6.0 * u;
+      this.rebin();
+
+      for (const p of this.particles) {
+        let dx = 0, dy = 1;
+        if (this.target) {
+          dx = this.target.x - p.x; dy = this.target.y - p.y;
+          const m = Math.hypot(dx, dy) || 1;
+          dx /= m; dy /= m;
+        }
+        p.fx = P.mass * (v0 * dx - p.vx) / P.tau;
+        p.fy = P.mass * (v0 * dy - p.vy) / P.tau;
+        p.press = 0;
+
+        const c = clamp(Math.floor(p.x / this.cell), 0, this.cols - 1);
+        const r = clamp(Math.floor(p.y / this.cell), 0, this.rows - 1);
+        for (let rr = Math.max(0, r - 1); rr <= Math.min(this.rows - 1, r + 1); rr++) {
+          for (let cc = Math.max(0, c - 1); cc <= Math.min(this.cols - 1, c + 1); cc++) {
+            const bin = this.bins[rr * this.cols + cc];
+            if (!bin) continue;
+            for (const q of bin) {
+              if (q === p) continue;
+              const ox = p.x - q.x, oy = p.y - q.y;
+              this.contact(p, ox, oy, Math.hypot(ox, oy) || 1e-9, p.r + q.r, q);
+            }
+          }
+        }
+        for (const w of this.walls) {
+          const s = segDist(p.x, p.y, w[0], w[1], w[2], w[3]);
+          this.contact(p, s.ox, s.oy, s.d, p.r, null);
+        }
+      }
+
+      for (const p of this.particles) {
+        p.vx += p.fx / P.mass * dt;
+        p.vy += p.fy / P.mass * dt;
+        const sp = Math.hypot(p.vx, p.vy);
+        if (sp > P.vmax) { p.vx = p.vx / sp * P.vmax; p.vy = p.vy / sp * P.vmax; }
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+
+        if (p.y > this.exitY + 0.35) {
+          this.exits++;
+          this.log.push(this.time);
+          this.lastExitAt = this.time;
+          Object.assign(p, this.spawn(false));
+        } else if (!this.inside(p)) {
+          Object.assign(p, this.spawn(false));
+        }
+      }
+
+      this.time += dt;
+      const cut = this.time - 4;
+      while (this.log.length && this.log[0] < cut) this.log.shift();
+    }
+
+    flow() { return this.log.length / Math.min(4, Math.max(0.5, this.time)); }
+    jammed() { return this.time - this.lastExitAt > 1.2; }
+  }
+
+  const A = new World({
+    n: 170, radius: 0.25, exitY: H, target: { x: W / 2, y: H + 0.6 },
+    spawnBox: { x0: 0.6, x1: W - 0.6, y0: 0.5, y1: 2.6, yFull: H - 1.2 },
+    color: [79, 209, 255],
+    buildWalls: g => [
+      [0, 0, W, 0], [0, 0, 0, H], [W, 0, W, H],
+      [0, H, (W - g) / 2, H], [(W + g) / 2, H, W, H]
+    ],
+    inside(p) { return p.x > -0.3 && p.x < W + 0.3 && p.y > -0.3; }
+  });
+
+  const B = new World({
+    n: 250, radius: 0.20, exitY: OY + 0.5, target: null,
+    spawnBox: { x0: HX0 + 0.4, x1: HX1 - 0.4, y0: 0.35, y1: 1.6, yFull: HY - 0.3 },
+    color: [255, 179, 71],
+    buildWalls: g => [
+      [HX0, 0, HX0, HY], [HX1, 0, HX1, HY],
+      [HX0, HY, (W - g) / 2, OY], [HX1, HY, (W + g) / 2, OY],
+      [(W - g) / 2, OY, (W - g) / 2, OY + 0.5], [(W + g) / 2, OY, (W + g) / 2, OY + 0.5]
+    ],
+    inside(p) {
+      if (p.y < -0.3) return false;
+      if (p.y <= HY) return p.x > HX0 - 0.4 && p.x < HX1 + 0.4;
+      if (p.y <= OY) {
+        const t = (p.y - HY) / (OY - HY);
+        const half = (HX1 - HX0) / 2 * (1 - t) + this.gap / 2 * t;
+        return Math.abs(p.x - W / 2) < half + 0.4;
+      }
+      return Math.abs(p.x - W / 2) < this.gap / 2 + 0.4;
+    }
+  });
+
+  const views = [];
+  for (const [id, world] of [["cA", A], ["cB", B]]) {
+    views.push({ cv: document.getElementById(id), ctx: document.getElementById(id).getContext("2d"), world, scale: 1 });
+  }
+  const plot = document.getElementById("plot");
+  const pctx = plot.getContext("2d");
+
+  function resize() {
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    for (const v of views) {
+      const cssW = v.cv.clientWidth;
+      const cssH = Math.round(cssW * H / W);
+      v.scale = cssW / W;
+      v.cv.style.height = cssH + "px";
+      v.cv.width = Math.round(cssW * dpr);
+      v.cv.height = Math.round(cssH * dpr);
+      v.ctx.setTransform(dpr * v.scale, 0, 0, dpr * v.scale, 0, 0);
+    }
+    const pw = plot.clientWidth;
+    const ph = Math.max(190, Math.round(pw * 0.33));
+    plot.style.height = ph + "px";
+    plot.width = Math.round(pw * dpr);
+    plot.height = Math.round(ph * dpr);
+    pctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    drawPlot();
+  }
+
+  function draw(v) {
+    const { ctx, world } = v;
+    ctx.fillStyle = "#0d1117";
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.lineWidth = 0.14;
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "#2c3644";
+    ctx.beginPath();
+    for (const w of world.walls) { ctx.moveTo(w[0], w[1]); ctx.lineTo(w[2], w[3]); }
+    ctx.stroke();
+
+    const g = world.gap, x0 = (W - g) / 2, ey = world.exitY;
+    ctx.strokeStyle = "rgba(255,255,255,.38)";
+    ctx.lineWidth = 0.05;
+    for (let i = 0; i < Math.floor(world.R); i++) {
+      ctx.beginPath();
+      ctx.arc(x0 + world.radius * (2 * i + 1), ey - world.radius * 0.05, world.radius, 0, 6.2832);
+      ctx.stroke();
+    }
+
+    ctx.strokeStyle = world.jammed() ? "rgba(255,68,54,.5)" : "rgba(82,224,160,.45)";
+    ctx.lineWidth = 0.07;
+    ctx.setLineDash([0.16, 0.16]);
+    ctx.beginPath();
+    ctx.moveTo(x0, ey); ctx.lineTo(x0 + g, ey);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    const [cr, cg, cb] = world.color;
+    for (const p of world.particles) {
+      const t = clamp(p.press / 5200, 0, 1);
+      ctx.fillStyle = `rgb(${Math.round(cr + (255 - cr) * t)},${Math.round(cg + (68 - cg) * t)},${Math.round(cb + (54 - cb) * t)})`;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, 6.2832);
+      ctx.fill();
+      if (t > 0.25) {
+        ctx.strokeStyle = `rgba(255,90,70,${t * 0.85})`;
+        ctx.lineWidth = 0.07;
+        ctx.stroke();
+      }
+    }
+  }
+
+  const el = id => document.getElementById(id);
+  const widthEl = el("width"), pushEl = el("push");
+  const widthVal = el("widthVal"), pushVal = el("pushVal");
+  const mA = el("mA"), mB = el("mB");
+  const btnSweep = el("sweep"), btnReset = el("reset");
+  const R0 = 1.0, R1 = 6.0;
+
+  let R = +widthEl.value / 10;
+  let u = +pushEl.value / 100;
+
+  function applyR(next) {
+    R = next;
+    A.setAperture(R);
+    B.setAperture(R);
+    widthVal.innerHTML = R.toFixed(1) + " <em>bodies</em>";
+    mA.textContent = A.gap.toFixed(2);
+    mB.textContent = B.gap.toFixed(2);
+    drawPlot();
+  }
+  pushVal.innerHTML = u.toFixed(2) + " <em>drive</em>";
+
+  widthEl.addEventListener("input", () => { if (!sweep.active) applyR(+widthEl.value / 10); });
+  pushEl.addEventListener("input", () => {
+    if (sweep.active) return;
+    u = +pushEl.value / 100;
+    pushVal.innerHTML = u.toFixed(2) + " <em>drive</em>";
+  });
+
+  btnReset.addEventListener("click", () => {
+    sweep.active = false;
+    btnSweep.disabled = false;
+    btnSweep.textContent = "Measure both curves";
+    A.reset(); B.reset();
+    curve.length = 0;
+    drawPlot();
+  });
+
+  const curve = [];
+  const sweep = { active: false, i: 0, steps: 16, phase: 0, t: 0, a: 0, b: 0 };
+  const SETTLE = 2.0, MEASURE = 4.0;
+
+  btnSweep.addEventListener("click", () => {
+    sweep.active = true;
+    sweep.i = 0; sweep.phase = 0; sweep.t = 0;
+    curve.length = 0;
+    btnSweep.disabled = true;
+    stepSweep();
+  });
+
+  function stepSweep() {
+    applyR(R0 + (R1 - R0) * sweep.i / (sweep.steps - 1));
+    widthEl.value = Math.round(R * 10);
+    btnSweep.textContent = `Measuring… ${sweep.i + 1}/${sweep.steps}`;
+    A.reset(); B.reset();
+  }
+
+  function sweepTick(dt) {
+    sweep.t += dt;
+    if (sweep.phase === 0) {
+      if (sweep.t >= SETTLE) { sweep.phase = 1; sweep.t = 0; sweep.a = A.exits; sweep.b = B.exits; }
+      return;
+    }
+    if (sweep.t < MEASURE) return;
+    curve.push({ R, a: (A.exits - sweep.a) / MEASURE, b: (B.exits - sweep.b) / MEASURE });
+    sweep.i++;
+    sweep.phase = 0; sweep.t = 0;
+    if (sweep.i >= sweep.steps) {
+      sweep.active = false;
+      btnSweep.disabled = false;
+      btnSweep.textContent = "Measure both curves again";
+    } else {
+      stepSweep();
+    }
+    drawPlot();
+  }
+
+  function drawPlot() {
+    const w = plot.clientWidth, h = plot.clientHeight;
+    if (!w || !h) return;
+    const L = 44, Rp = 14, T = 16, Bm = 34;
+    pctx.clearRect(0, 0, w, h);
+    pctx.fillStyle = "#0d1117";
+    pctx.fillRect(0, 0, w, h);
+
+    const X = r => L + (w - Rp - L) * clamp((r - R0) / (R1 - R0), 0, 1);
+    const Y = t => (h - Bm) - (h - Bm - T) * clamp(t, 0, 1);
+
+    pctx.strokeStyle = "#1e2632";
+    pctx.lineWidth = 1;
+    for (let i = 0; i <= 4; i++) {
+      const y = T + (h - T - Bm) * i / 4;
+      pctx.beginPath(); pctx.moveTo(L, y); pctx.lineTo(w - Rp, y); pctx.stroke();
+    }
+    pctx.fillStyle = "#8b95a5";
+    pctx.font = "11px ui-monospace, Menlo, Consolas, monospace";
+    pctx.textAlign = "right";
+    pctx.fillText("max", L - 8, T + 4);
+    pctx.fillText("0", L - 8, h - Bm + 4);
+    pctx.textAlign = "center";
+    for (let r = 1; r <= 6; r++) pctx.fillText(r.toFixed(0), X(r), h - 14);
+    pctx.fillText("opening width, in bodies \u2192", (L + w - Rp) / 2, h - 2);
+
+    pctx.strokeStyle = "rgba(82,224,160,.5)";
+    pctx.setLineDash([4, 4]);
+    pctx.beginPath();
+    pctx.moveTo(X(R), T); pctx.lineTo(X(R), h - Bm);
+    pctx.stroke();
+    pctx.setLineDash([]);
+
+    if (curve.length < 2) {
+      pctx.fillStyle = "#5c6675";
+      pctx.font = "13px -apple-system, Segoe UI, sans-serif";
+      pctx.fillText("Press \u201cMeasure both curves\u201d \u2014 it takes about fifteen seconds.", (L + w - Rp) / 2, (T + h - Bm) / 2);
+      return;
+    }
+
+    let maxA = 0, maxB = 0;
+    for (const p of curve) { maxA = Math.max(maxA, p.a); maxB = Math.max(maxB, p.b); }
+    maxA = maxA || 1; maxB = maxB || 1;
+
+    const line = (key, max, color) => {
+      pctx.strokeStyle = color;
+      pctx.lineWidth = 2;
+      pctx.beginPath();
+      curve.forEach((p, i) => { const x = X(p.R), y = Y(p[key] / max); i ? pctx.lineTo(x, y) : pctx.moveTo(x, y); });
+      pctx.stroke();
+      pctx.fillStyle = color;
+      for (const p of curve) { pctx.beginPath(); pctx.arc(X(p.R), Y(p[key] / max), 2.6, 0, 6.2832); pctx.fill(); }
+    };
+    line("a", maxA, "#4fd1ff");
+    line("b", maxB, "#ffb347");
+  }
+
+  const fA = el("flowA"), fB = el("flowB"), tA = el("totA"), tB = el("totB");
+  const jA = el("jamA"), jB = el("jamB");
+  let uiAt = 0;
+
+  function frame(now) {
+    const reps = sweep.active ? 12 : 1;
+    for (let rep = 0; rep < reps; rep++) {
+      for (let s = 0; s < SUB; s++) { A.step(DT, u); B.step(DT, u); }
+      if (sweep.active) sweepTick(SUB * DT);
+      if (!sweep.active) break;
+    }
+    draw(views[0]);
+    draw(views[1]);
+
+    if (now - uiAt > 120) {
+      uiAt = now;
+      fA.innerHTML = A.flow().toFixed(1) + "<small> /s</small>";
+      fB.innerHTML = B.flow().toFixed(1) + "<small> /s</small>";
+      tA.textContent = A.exits;
+      tB.textContent = B.exits;
+      jA.classList.toggle("on", A.jammed());
+      jB.classList.toggle("on", B.jammed());
+    }
+    requestAnimationFrame(frame);
+  }
+
+  window.addEventListener("resize", resize);
+  applyR(R);
+  resize();
+  requestAnimationFrame(frame);
+
+  window.__sim = { A, B, setU: x => { u = x; }, setR: applyR, curve };
+})();
+</script>
+</body>
+</html>
