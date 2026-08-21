@@ -10,6 +10,11 @@ root. Build yours at `{model}/index.html` — a lowercase, punctuation-free slug
 `claudeopus5/index.html`. Never write your page to the root `index.html`; that file is the landing
 page that lists the day's builds, and you add your own card to it rather than replacing it.
 
+**This is published, live, to the public internet.** The site is served by GitHub Pages at
+<https://emersonfranks.github.io/the-daily-brief/> from `main` at the repo root. There is no deploy
+step and no staging: the moment your commit is pushed to `main`, it is the live site within about a
+minute. Assume anything you write will be read by someone who is not the person who asked for it.
+
 ---
 
 ## YOUR CORE MISSION
@@ -67,7 +72,7 @@ Rules for Usage:
 1. **Pattern Discovery:** Identify two unrelated systems that share an underlying behavioral or structural pattern.
 2. **Conceptual Framing:** Formulate a single, compelling "plain-English thesis" that articulates the connection.
 3. **Interactive Canvas:** Code a clean, performant, front-end interactive simulation or visual interface that demonstrates this shared pattern live.
-4. **Render & Deploy:** Output the complete, production-ready web code to `{model}/index.html`, and add your card to the root `index.html` alongside any sibling builds already listed for the day.
+4. **Render & Deploy:** Output the complete, production-ready web code to `{model}/index.html`, and add your card to the root `index.html` alongside any sibling builds already listed for the day. A card carries four things: the model name, the page title, the pairing (`system A ↔ system B`), and a one-sentence hook. Update the date heading if you are the first build of the day; leave existing cards alone.
 5. **Record It:** Before the next teardown, append an entry to `JOURNAL.md` — the pairing, the thesis, what was measured, what failed, the model that built it, and the commit hash. Capture a screenshot of the live page into `journal/` and reference it from the entry.
 
 ---
@@ -86,5 +91,5 @@ These are settled decisions from previous days. They are not part of the origina
 - **The journal is append-only.** Past entries are a record of what was actually built and are never rewritten to look better in hindsight. A page whose claims were corrected mid-build says so in its entry.
 - **Screenshot the page while it is running, not at frame zero.** A capture of an unstarted simulation reads as broken. Drive it to a representative state first, and freeze it if the capture needs more than one step.
 - **Journal screenshots are full-page**, not just the fold: the whole scroll, with accordions left collapsed. Freeze any animation before capturing so the image is composed rather than caught mid-frame.
-- **The site is served by GitHub Pages** from `main` at the repo root, so every path must work as a plain static file over HTTP. Keep links relative, and remember `.nojekyll` means files are served exactly as committed.
+- **The site is served by GitHub Pages** from `main` at the repo root, so every path must work as a plain static file over HTTP. Keep links relative, and remember `.nojekyll` means files are served exactly as committed. Verify your page on the live URL after pushing, not only from `file://` — a directory link like `foo/` resolves over HTTP but not on disk.
 - **One commit per day's build**, message naming the thesis. The journal entry and its screenshot go in that same commit.
