@@ -22,42 +22,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Landing page and its links resolve
-        run: |
-          set -euo pipefail
-          test -f index.html || { echo "::error::root index.html is missing"; exit 1; }
-          test -f .nojekyll || { echo "::error::.nojekyll is missing"; exit 1; }
-          missing=""
-          for target in $(grep -oE 'href="[^"#:]+"' index.html | cut -d'"' -f2); do
-            if [ -d "$target" ]; then
-              [ -f "${target%/}/index.html" ] || missing="$missing ${target}(no index.html)"
-            elif [ ! -f "$target" ]; then
-              missing="$missing $target"
-            fi
-          done
-          if [ -n "$missing" ]; then
-            echo "::error::landing page links to missing files:$missing"
-            exit 1
-          fi
-          builds=$(find . -mindepth 2 -maxdepth 2 -name index.html -not -path './.*' | wc -l)
-          echo "landing page OK, $builds model build(s) present"
-
-      - name: Each build ships the files it references
-        run: |
-          set -euo pipefail
-          missing=""
-          for page in $(find . -mindepth 2 -maxdepth 2 -name index.html -not -path './.*'); do
-            dir=$(dirname "$page")
-            for ref in $(grep -oE '(src|href)="[^"#:]+"' "$page" | cut -d'"' -f2); do
-              case "$ref" in /*) continue;; esac
-              [ -e "$dir/$ref" ] || missing="$missing $dir/$ref"
-            done
-          done
-          if [ -n "$missing" ]; then
-            echo "::error::a build references files that were never committed:$missing"
-            exit 1
-          fi
-          echo "every build ships the files it references"
+      - name: Structure
+        run: node .github/scripts/check-structure.mjs .
 
       - name: The science
         run: node --test

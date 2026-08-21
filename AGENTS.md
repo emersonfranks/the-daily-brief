@@ -13,10 +13,13 @@ listing the day's builds, and you append your own card to it, leaving every exis
 **This is published, live, to the public internet.** The site is served by GitHub Pages at
 <https://emersonfranks.github.io/the-daily-brief/>. **Build, commit, push — that is the whole
 deploy.** The `Publish` workflow in `.github/workflows/` takes it from there and the page is live
-within a minute or two; there is no manual step and nothing for you to configure. That workflow
-first checks the root `index.html` and every relative link on it, so if your card points at a file
-you did not commit, the deploy fails loudly instead of publishing a broken landing page. Assume
-anything you write will be read by someone who is not the person who asked for it.
+within a minute or two; there is no manual step and nothing for you to configure. Before it
+publishes, that workflow runs `.github/scripts/check-structure.mjs`, which checks the landing page
+heading, the shape of every card, that each build is listed, and that every file your page loads was
+actually committed — then runs `node --test`. If your card is malformed or you forgot to commit a
+module, the deploy fails loudly instead of publishing a broken page. You can run the same check
+yourself with `node .github/scripts/check-structure.mjs .`. Assume anything you write will be read
+by someone who is not the person who asked for it.
 
 **Work blind. Do not look at what has already been built.** Until your own page is finished, do not
 open any other `{model}/` directory, do not read `JOURNAL.md`, do not read the existing cards on the
