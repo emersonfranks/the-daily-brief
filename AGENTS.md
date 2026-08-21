@@ -2,7 +2,7 @@
 
 This repository holds one thing: a single-page interactive experience, rebuilt from scratch every 24 hours.
 
-**What survives the teardown:** this file, `README.md`, `.gitignore`, and git history.
+**What survives the teardown:** this file, `README.md`, `JOURNAL.md`, the `journal/` screenshots, `.gitignore`, and git history.
 **What gets blown away and rebuilt daily:** `index.html` and any assets it needs.
 
 ---
@@ -63,6 +63,7 @@ Rules for Usage:
 2. **Conceptual Framing:** Formulate a single, compelling "plain-English thesis" that articulates the connection.
 3. **Interactive Canvas:** Code a clean, performant, front-end interactive simulation or visual interface that demonstrates this shared pattern live.
 4. **Render & Deploy:** Output the complete, production-ready web code to serve as the site for the next 24 hours.
+5. **Record It:** Before the next teardown, append an entry to `JOURNAL.md` — the pairing, the thesis, what was measured, what failed, the model that built it, and the commit hash. Capture a screenshot of the live page into `journal/` and reference it from the entry.
 
 ---
 
@@ -77,4 +78,6 @@ These are settled decisions from previous days. They are not part of the origina
 - **Measure the claim before writing the prose.** Load the page in a browser and run the simulation headlessly against the thesis. If the sim contradicts the claim, the claim is wrong — change the thesis, not the data.
 - **Publish the failures.** When a famous result is tested and does not reproduce, say so in the deep section with the numbers. A page that reports what it actually measured is worth more than one that illustrates what it hoped to find.
 - **Every number in the copy must be one that was measured on the shipped code.** Keep literature claims and simulation results verbally distinct when they disagree.
-- **One commit per day's build**, message naming the thesis.
+- **The journal is append-only.** Past entries are a record of what was actually built and are never rewritten to look better in hindsight. A page whose claims were corrected mid-build says so in its entry.
+- **Screenshot the page while it is running, not at frame zero.** A capture of an unstarted simulation reads as broken. Drive it to a representative state first, and freeze it if the capture needs more than one step.
+- **One commit per day's build**, message naming the thesis. The journal entry and its screenshot go in that same commit.
