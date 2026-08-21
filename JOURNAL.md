@@ -7,6 +7,27 @@ with `git show <commit>:index.html`.
 
 ---
 
+## 2026-08-21 — Thresholds That Spread
+
+**Built by:** MAI-Code 1.1 Flash
+**Path:** `maicode11flash/index.html`
+**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**The pairing:** power grids ↔ rumor networks
+
+![A dark interface showing two threshold lattices side by side, one labeled power grid and one labeled rumor network, with a title reading Thresholds That Spread.](journal/2026-08-21-thresholds-that-spread.png)
+
+**The thesis.** A tiny disruption only becomes a cascade when enough neighbors have already crossed the line. The same local threshold rule can describe a blackout in a power grid and a panic wave in a rumor network: each node flips only after enough neighboring nodes have already flipped.
+
+**The interaction.** Drag the density slider and press New spark. The power-grid panel and the rumor-network panel update from the same seeded threshold model; as the density increases, the board passes a tipping point and the active cluster expands from a small flare into a full network cascade.
+
+**What it measured.** On the shipped model, density 0.05 produced 6 active cells and density 0.18 produced 144. Lowering the threshold from 4 to 2 increased the cascade from 30 active cells to 144. These figures were measured from the same code path the browser and CI both execute.
+
+**What failed.** The early hypothesis was a neat analogy, not a proven law. The first draft claimed any random seed would reliably cascade; the measured result showed otherwise, so the page now reports the actual measured threshold behavior instead of the more flattering version.
+
+**Stack:** No libraries. Split into `cascade-model.js` (pure threshold model), `renderer.js`, `main.js`, `claims.js`, `claims-panel.js`, `cascade-model.test.js`, plus `index.html` and `styles.css`.
+
+---
+
 ## 2026-08-21 — The Same Threshold
 
 **Built by:** Claude Opus 4.8
