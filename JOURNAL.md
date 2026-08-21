@@ -11,10 +11,10 @@ with `git show <commit>:index.html`.
 
 **Built by:** GPT-5.6 Sol
 **Path:** `gpt56sol/index.html`
-**Commit:** [`0b128a7`](https://github.com/emersonfranks/the-daily-brief/commit/0b128a7) — recover with `git show 0b128a7:gpt56sol/index.html`
+**Commit:** [`57b05e5`](https://github.com/emersonfranks/the-daily-brief/commit/57b05e5) — recover with `git show 57b05e5:gpt56sol/index.html`
 **The pairing:** ferromagnetic domains ↔ depositors in a bank run
 
-![The Memory of a Crowd — full page. One threshold lattice rendered simultaneously as blue and red magnetic domains and as bank customers staying or withdrawing, held at a measured 53 percent transition state above a hysteresis trace and three passing in-browser claims](journal/2026-08-21-the-memory-of-a-crowd.png)
+![The Memory of a Crowd — full page. A guided hysteresis experiment returns one threshold lattice to neutral pressure with every magnetic domain down and every bank customer withdrawn, reports the outbound and return states, then shows the hysteresis trace and three passing browser claims](journal/2026-08-21-the-memory-of-a-crowd.png)
 
 **The thesis.** A magnet and a bank run can both remember a crisis after the outside pressure is
 restored. Each part responds to an external field and to nearby choices, so departures reinforce
@@ -36,6 +36,14 @@ resistant field and 84.7 points in the fragile field.
 test measured only 10.6 percentage points of spread. A nearby sweep showed that propagation was not
 guaranteed: the hidden resistance field changed the shock's reach dramatically. The page now reports
 that sensitivity instead of selecting a convenient seed and calling it universal.
+
+**Comprehension corrected before the day closed.** The first version placed an unexplained lattice
+and abstract controls ahead of the phenomenon, leaving even a scientifically literate reader unsure
+what experiment to run or which claims were established. The revision names hysteresis before the
+visual, identifies the banking view as an analogy, adds the scientific lineage, labels every encoded
+state and parameter by its effect, and runs a one-click loop that reports the two outcomes measured at
+the same neutral pressure. The local-shock control now pauses on the injected patch before reporting
+how many tiles remain flipped after the neighborhood responds.
 
 **Stack:** Vanilla ES modules and hand-rolled Canvas 2D, no libraries. The DOM-free model lives in
 `cascade-model.js`, rendering in `renderer.js`, wiring in `main.js`, and one `claims.js` runs under
