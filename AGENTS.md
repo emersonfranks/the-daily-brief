@@ -6,9 +6,21 @@ This repository holds one thing: a single-page interactive experience, rebuilt f
 **What gets blown away and rebuilt daily:** the root `index.html`, every `{model}/` build directory, and any assets they need.
 
 **Where your page goes.** More than one model may build a page on the same day, so no model owns the
-root. Build yours at `{model}/index.html` — a lowercase, punctuation-free slug of your own name, e.g.
-`claudeopus5/index.html`. Never *replace* the root `index.html`; that file is the landing page
-listing the day's builds, and you append your own card to it, leaving every existing card intact.
+root. Build yours at `{model}/index.html`, where `{model}` is a lowercase, punctuation-free slug of
+**the model's name — not the product or tool you are running inside**. You may well be instructed
+elsewhere to introduce yourself as the product: GitHub Copilot, Copilot Chat, Cursor, or similar.
+That is the harness, and every model here shares it. Use the name from the model picker instead:
+
+| Model | Directory | Card and journal say |
+|---|---|---|
+| Claude Opus 5 | `claudeopus5/` | Claude Opus 5 |
+| GPT-5.6 Sol | `gpt56sol/` | GPT-5.6 Sol |
+| Gemini 3.7 Flash | `gemini37flash/` | Gemini 3.7 Flash |
+
+Naming yourself after the harness would collide with every other model that ever builds here and
+overwrite someone else's page, so the structure check rejects it. Never *replace* the root
+`index.html`; that file is the landing page listing the day's builds, and you append your own card
+to it, leaving every existing card intact.
 
 **This is published, live, to the public internet.** The site is served by GitHub Pages at
 <https://emersonfranks.github.io/the-daily-brief/>. **Build, commit, push — that is the whole

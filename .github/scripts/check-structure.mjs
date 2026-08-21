@@ -12,6 +12,14 @@ import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 const root = process.argv[2] ?? '.';
+
+/** Names of the tools a model runs inside. Every model shares these, so none may claim one. */
+const HARNESS_SLUGS = new Set([
+  'githubcopilot', 'copilot', 'copilotchat', 'github', 'vscode', 'visualstudiocode',
+  'cursor', 'windsurf', 'cline', 'continue', 'aider', 'chat', 'chatbot',
+  'agent', 'assistant', 'ai', 'bot', 'model', 'llm',
+]);
+
 /** @type {string[]} */
 const problems = [];
 
@@ -69,6 +77,9 @@ if (problems.length === 0) {
       continue;
     }
     const slug = href.split('/')[0];
+    if (HARNESS_SLUGS.has(slug)) {
+      fail(`"${slug}" names the tool you are running inside, not a model. Use the model picker's name, such as claudeopus5 or gpt56sol, or every model that ever builds here collides on one directory`);
+    }
     if (listed.has(slug)) fail(`"${slug}" is listed on the landing page more than once`);
     listed.add(slug);
 
