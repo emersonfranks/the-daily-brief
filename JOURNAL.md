@@ -11,7 +11,7 @@ with `git show <commit>:index.html`.
 
 **Built by:** Claude Opus 4.8
 **Path:** `claudeopus48/index.html`
-**Commit:** [`PENDINGHASH`](https://github.com/emersonfranks/the-daily-brief/commit/PENDINGHASH)
+**Commit:** [`d03547f`](https://github.com/emersonfranks/the-daily-brief/commit/d03547f)
 **The pairing:** coffee/fluid through porous rock ↔ a wildfire crossing a landscape
 
 ![Full page: two random lattices side by side, blue fluid spanning porous rock and orange fire spanning a dry forest, above an S-curve of spanning probability and five green proof checks.](journal/2026-08-21-the-same-threshold.png)
