@@ -10,10 +10,11 @@ with `git show <commit>:index.html`.
 ## 2026-08-21 — Six Is Break-Even
 
 **Built by:** Claude Opus 5
+**Path:** `claudeopus5/index.html`
 **Commit:** [`41b4b8a`](https://github.com/emersonfranks/the-daily-brief/commit/41b4b8a) — recover with `git show 41b4b8a:index.html`
 **The pairing:** the head on a glass of beer ↔ the steel inside a wrench
 
-![Six Is Break-Even — one Potts lattice rendered as beer foam on the left and an etched steel micrograph on the right, split by a draggable divider, with a live measurement panel reading mean sides 6.000 and dA/dt = 0.536 × (n−6) at R² = 0.9980](journal/2026-08-21-six-is-break-even.png)
+![Six Is Break-Even — full page. One Potts lattice rendered as beer foam on the left and an etched steel micrograph on the right, split by a draggable divider, with a live measurement panel reading mean sides 5.992 and dA/dt = 0.547 × (n−6) at R² = 0.9994, a growth-rate bar chart crossing zero at six, a side-count histogram peaking at six, and six collapsed deep-dive sections](journal/2026-08-21-six-is-break-even.png)
 
 **The thesis.** In any 2D cellular network whose walls move under their own curvature, a cell's
 growth rate depends on nothing but its neighbour count. Not its size. Not its shape. Six neighbours
@@ -46,10 +47,11 @@ at most 0.022 below otherwise, and **never once above** — a better finding tha
 ## 2026-08-20 — A Door Is Not Wide In Metres
 
 **Built by:** Claude Opus 5
+**Path:** `index.html` (built before the repo moved to per-model directories)
 **Commit:** [`4a19c44`](https://github.com/emersonfranks/the-daily-brief/commit/4a19c44) — recover with `git show 4a19c44:index.html`
 **The pairing:** a crowd escaping through a doorway ↔ grain draining through a silo orifice
 
-![A Door Is Not Wide In Metres — side-by-side panels showing a crowd at a doorway and a silo of grain at an orifice, both flowing, with red force chains visible where load is bracing into the walls](journal/2026-08-20-a-door-is-not-wide-in-metres.png)
+![A Door Is Not Wide In Metres — full page. Side-by-side panels showing a crowd at a doorway and a silo of grain at an orifice, both flowing, with red force chains visible where load is bracing into the walls, above a throughput-versus-opening chart in which the people curve and the grain curve lie on top of each other](journal/2026-08-20-a-door-is-not-wide-in-metres.png)
 
 **The thesis.** A doorway's capacity is not set by its width in metres but by its width in bodies —
 the ratio `R = D/d`. A silo jams for reasons that look purely mechanical and a crowd jams for reasons
@@ -79,6 +81,10 @@ Force is the variable we feel; geometry is the variable that decides.
 
 ### How this journal is made
 
-Entries are appended on the day a page is built, before the teardown. Screenshots are captured from
-the live page in a browser at ~1240px wide and committed under `journal/`. Because the entry names
-the commit, every page listed here can be resurrected and run locally at any time.
+Entries are appended on the day a page is built, before the teardown. Screenshots are **full-page**
+captures of the live experience — the entire scroll, driven to a representative state first, with the
+deep-dive accordions left collapsed — committed under `journal/`. Because each entry names the
+commit, every page listed here can be resurrected and run locally at any time.
+
+From 2026-08-21 onward, more than one model may build on the same day, so pages live at
+`{model}/index.html` and the root `index.html` is a landing page listing that day's builds.

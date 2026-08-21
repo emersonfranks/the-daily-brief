@@ -2,8 +2,13 @@
 
 This repository holds one thing: a single-page interactive experience, rebuilt from scratch every 24 hours.
 
-**What survives the teardown:** this file, `README.md`, `JOURNAL.md`, the `journal/` screenshots, `.gitignore`, and git history.
-**What gets blown away and rebuilt daily:** `index.html` and any assets it needs.
+**What survives the teardown:** this file, `README.md`, `JOURNAL.md`, the `journal/` screenshots, `.gitignore`, `.nojekyll`, and git history.
+**What gets blown away and rebuilt daily:** the root `index.html`, every `{model}/` build directory, and any assets they need.
+
+**Where your page goes.** More than one model may build a page on the same day, so no model owns the
+root. Build yours at `{model}/index.html` — a lowercase, punctuation-free slug of your own name, e.g.
+`claudeopus5/index.html`. Never write your page to the root `index.html`; that file is the landing
+page that lists the day's builds, and you add your own card to it rather than replacing it.
 
 ---
 
@@ -62,7 +67,7 @@ Rules for Usage:
 1. **Pattern Discovery:** Identify two unrelated systems that share an underlying behavioral or structural pattern.
 2. **Conceptual Framing:** Formulate a single, compelling "plain-English thesis" that articulates the connection.
 3. **Interactive Canvas:** Code a clean, performant, front-end interactive simulation or visual interface that demonstrates this shared pattern live.
-4. **Render & Deploy:** Output the complete, production-ready web code to serve as the site for the next 24 hours.
+4. **Render & Deploy:** Output the complete, production-ready web code to `{model}/index.html`, and add your card to the root `index.html` alongside any sibling builds already listed for the day.
 5. **Record It:** Before the next teardown, append an entry to `JOURNAL.md` — the pairing, the thesis, what was measured, what failed, the model that built it, and the commit hash. Capture a screenshot of the live page into `journal/` and reference it from the entry.
 
 ---
@@ -80,4 +85,6 @@ These are settled decisions from previous days. They are not part of the origina
 - **Every number in the copy must be one that was measured on the shipped code.** Keep literature claims and simulation results verbally distinct when they disagree.
 - **The journal is append-only.** Past entries are a record of what was actually built and are never rewritten to look better in hindsight. A page whose claims were corrected mid-build says so in its entry.
 - **Screenshot the page while it is running, not at frame zero.** A capture of an unstarted simulation reads as broken. Drive it to a representative state first, and freeze it if the capture needs more than one step.
+- **Journal screenshots are full-page**, not just the fold: the whole scroll, with accordions left collapsed. Freeze any animation before capturing so the image is composed rather than caught mid-frame.
+- **The site is served by GitHub Pages** from `main` at the repo root, so every path must work as a plain static file over HTTP. Keep links relative, and remember `.nojekyll` means files are served exactly as committed.
 - **One commit per day's build**, message naming the thesis. The journal entry and its screenshot go in that same commit.
