@@ -85,6 +85,7 @@ Rules for Usage:
 These are settled decisions from previous days. They are not part of the original brief; they are how the brief gets carried out here.
 
 - **Nothing gets installed on the machine.** No npm, no build step, no local tooling. The toolbelt above is loaded at runtime from a CDN, which is not an install. Ask before adding anything to the machine itself.
+- **Never contact npm or any package registry from the build machine.** It sits behind a corporate security control, and even a read-only version lookup against `registry.npmjs.org` trips an alert. A TLS failure reaching a registry is that control saying no — stop, do not retry, and do not route around it with a different tool. If a version number is genuinely needed, ask rather than probing. CI runners are a separate environment and are not covered by this, but prefer solutions that need no registry at all.
 - **Pin exact library versions.** Never `@latest`, never an unversioned URL — a page that silently changes when an upstream publishes is not a page that was measured. Add `integrity` hashes when the CDN publishes them.
 - **A library has to earn its place.** Reach for one when it buys real capability (3D, audio synthesis, tweening, force layout), not to avoid writing forty lines of canvas. Hand-rolled remains the default for simple 2D work.
 - **The page must survive a dead CDN.** If a script fails to load, the core experience should still render and explain itself rather than showing a blank frame.
@@ -96,4 +97,27 @@ These are settled decisions from previous days. They are not part of the origina
 - **Journal screenshots are full-page**, not just the fold: the whole scroll, with accordions left collapsed. Freeze any animation before capturing so the image is composed rather than caught mid-frame.
 - **The site is served by GitHub Pages** from `main` at the repo root, so every path must work as a plain static file over HTTP. Keep links relative, and remember `.nojekyll` means files are served exactly as committed. Verify your page on the live URL after pushing, not only from `file://` — a directory link like `foo/` resolves over HTTP but not on disk, so link `foo/index.html` explicitly.
 - **`.github/` is infrastructure, not part of the daily build.** It survives every teardown. Do not edit the publish workflow to get a page out; if the link check fails, the link is wrong.
+
+## How the code is expected to look
+
+The pages are a showcase of the build as much as the idea, so the code is read as well as run.
+
+- **Split the page into files that each do one thing:** `index.html` for markup, `styles.css`, a
+  domain module holding the simulation, a renderer, and a thin entry point that wires them together.
+  This is not decoration — it is what lets the domain module be imported and tested.
+- **The domain module must not touch the DOM.** No canvas, no `document`, no globals. If the physics
+  cannot be run headlessly, it cannot be proven.
+- **Ship tests that attack the claims, not the plumbing.** Use the built-in runner (`node --test`,
+  zero install). A good test fails when the science is wrong: the fitted law, the invariants, the
+  published failures. Testing that a button toggles proves nothing worth proving.
+- **Set thresholds from measurement.** Run several seeds, take the worst observed value, add headroom,
+  and say so in the file. Numbers tuned until one run passes are worthless.
+- **When a test contradicts the page, the page is what changes.** That has already happened once and
+  it produced a better result than the claim it killed. Say so on the page rather than quietly
+  editing the sentence.
+- **Type-check with `// @ts-check` and JSDoc**, verified by the editor against the repo `tsconfig.json`.
+  No TypeScript build, because a build step would mean the code being read is not the code that runs.
+- **SRP and dependency inversion are the parts of SOLID that apply here.** Do not invent inheritance
+  hierarchies, factories, or injection containers to satisfy the other three. Over-abstraction in a
+  400-line simulation is its own kind of slop.
 - **One commit per day's build**, message naming the thesis. The journal entry and its screenshot go in that same commit.

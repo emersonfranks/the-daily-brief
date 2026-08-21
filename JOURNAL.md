@@ -13,7 +13,6 @@ with `git show <commit>:index.html`.
 **Path:** `claudeopus5/index.html`
 **Commit:** [`41b4b8a`](https://github.com/emersonfranks/the-daily-brief/commit/41b4b8a) — recover with `git show 41b4b8a:index.html`
 **The pairing:** the head on a glass of beer ↔ the steel inside a wrench
-
 ![Six Is Break-Even — full page. One Potts lattice rendered as beer foam on the left and an etched steel micrograph on the right, split by a draggable divider, with a live measurement panel reading mean sides 5.992 and dA/dt = 0.547 × (n−6) at R² = 0.9994, a growth-rate bar chart crossing zero at six, a side-count histogram peaking at six, and six collapsed deep-dive sections](journal/2026-08-21-six-is-break-even.png)
 
 **The thesis.** In any 2D cellular network whose walls move under their own curvature, a cell's
@@ -38,9 +37,18 @@ k ≈ 0.54 while you watch.
 
 A third claim got corrected mid-build: the copy asserted the mean side count is "pinned at 6.000",
 which the shipped code contradicted. Re-measured properly, it reads exactly 6.000 in 36% of samples,
-at most 0.022 below otherwise, and **never once above** — a better finding than the one assumed.
+at most 0.022 below otherwise, and never once above.
 
-**Stack:** hand-rolled canvas and typed arrays. No libraries.
+**Then the test suite falsified that too.** The page was later split into modules and given a
+`node --test` suite written to attack its own claims. The test defending "never once rose above six"
+failed on its first run at a smaller lattice, with the mean reaching 6.0177. Chasing the cause
+produced a better result than the original claim: the excursions are single-site contacts, where the
+lattice records an edge at what is topologically a three-way vertex. Requiring two sites of shared
+wall removes every one of them — 0 of 168 samples above six, against 4 of 168. The page now says so,
+and a test asserts the mechanism.
+
+**Stack:** hand-rolled canvas and typed arrays, no libraries. Simulation in `grain-model.js` with no
+DOM access, rendering in `renderer.js`, 14 tests in `grain-model.test.js` run by CI on every push.
 
 ---
 

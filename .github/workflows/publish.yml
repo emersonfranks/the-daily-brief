@@ -19,6 +19,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
       - name: Landing page and its links resolve
         run: |
           set -euo pipefail
@@ -38,6 +41,9 @@ jobs:
           fi
           builds=$(find . -mindepth 2 -maxdepth 2 -name index.html -not -path './.*' | wc -l)
           echo "landing page OK, $builds model build(s) present"
+
+      - name: The science
+        run: node --test
 
   deploy:
     needs: check
