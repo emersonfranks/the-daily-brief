@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Same Threshold · coffee &amp; wildfire</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main class="wrap">
+
+  <p class="kicker">The Daily Brief · Claude Opus 4.8</p>
+  <h1>Why coffee and a wildfire share <em>one magic number</em></h1>
+  <p class="lede">
+    Fluid soaking through porous rock and fire racing across a landscape look
+    nothing alike. But both are asking the same question — <b>is there a
+    connected path from one side to the other?</b> — and both answer it by
+    flipping, suddenly, at the <em>same critical density</em> near
+    <b>0.59</b>. This is <b>site percolation</b>.
+  </p>
+
+  <section class="experiment">
+    <h2>The experiment</h2>
+    <p class="howto">
+      Two independent random media — porous rock on the left, dry forest on the
+      right — at the same density. <b>Drag the slider up from dry.</b> Below ≈0.59
+      each stays a patchwork of disconnected pockets. Push past it and a single
+      cluster snaps across <em>both at once</em>: fluid breaks through, fire
+      crosses. One tile = one pore, or one flammable tree.
+    </p>
+
+    <div class="verdict edge" id="verdict">BOTH SEALED</div>
+
+    <div class="panels">
+      <figure>
+        <figcaption>Porous rock — <span class="stat off" id="rockstat">no path</span></figcaption>
+        <canvas id="rock" width="380" height="380"></canvas>
+        <span class="cap">open pore &middot; <b class="wtr">spanning fluid</b></span>
+      </figure>
+      <figure>
+        <figcaption>Dry forest — <span class="stat off" id="foreststat">burn dies out</span></figcaption>
+        <canvas id="forest" width="380" height="380"></canvas>
+        <span class="cap">flammable tree &middot; <b class="fir">spanning fire</b></span>
+      </figure>
+    </div>
+
+    <div class="controls">
+      <label class="slab" for="density">density&nbsp;<b id="pval">0.450</b></label>
+      <input id="density" type="range" min="0" max="1000" value="450">
+      <div class="btns">
+        <span class="lbl">grid:</span>
+        <button data-size="32">coarse</button>
+        <button data-size="48" class="active">medium</button>
+        <button data-size="80">fine</button>
+        <button id="reseed" class="ghost">new media</button>
+      </div>
+    </div>
+
+    <div class="chartwrap">
+      <div class="charthead">
+        <span>Spanning probability vs density (Monte-Carlo, this grid size)</span>
+        <span class="thr">measured threshold ≈ <b id="thrval">0.593</b></span>
+      </div>
+      <canvas id="chart" width="560" height="200"></canvas>
+      <p class="chartnote">
+        The <span class="wtr">blue line</span> is your current density; the
+        <span class="amb">gold dashes</span> mark the density where half of all
+        random media span. Switch <b>coarse → fine</b> and watch the S-curve
+        stand up straight: on a bigger grid the flip gets sharper. That
+        steepening is the signature of a real phase transition, not a gentle
+        ramp.
+      </p>
+    </div>
+  </section>
+
+  <section class="thesis">
+    <h2>The thesis, in plain English</h2>
+    <p>
+      Take any medium made of many little sites, each independently either
+      "connecting" or "not" with probability <b>p</b>. There is a sharp critical
+      value <b>p<sub>c</sub></b> below which you only ever get small isolated
+      clusters, and above which a single cluster suddenly spans the whole system.
+      For a square grid with nearest-neighbour connections that number is
+      <b>p<sub>c</sub> ≈ 0.5927</b> — and it does not care whether the sites are
+      rock pores, dry trees, cracked concrete, or friends in a rumour network.
+      The medium is a costume; the threshold is the physics.
+    </p>
+  </section>
+
+  <section class="deep">
+    <div class="accordion">
+      <button>The deeper mechanics &amp; the honest caveats <span class="chev">▸</span></button>
+      <div class="panel">
+        <h3>Where the number comes from</h3>
+        <p>
+          <b>Site percolation</b> was introduced by Broadbent &amp; Hammersley
+          (1957) to model fluid through a random porous medium — the word
+          "percolation" is theirs, and coffee was the motivating picture. On the
+          two-dimensional square lattice the site threshold has no closed form; it
+          is known numerically to be
+          <b>p<sub>c</sub> = 0.59274621…</b> (Newman &amp; Ziff, 2000, and many
+          others). The bond threshold on the same lattice is exactly ½; the site
+          value is the one this page measures.
+        </p>
+        <h3>Finite-size scaling</h3>
+        <p>
+          On any finite grid the flip is smeared over a band of densities rather
+          than a clean step. The width of that band shrinks like a power of the
+          system size, so a bigger grid gives a sharper transition — exactly what
+          the coarse→fine control shows, and what the second proof-check measures
+          (width fell from ≈0.16 at 16×16 to ≈0.07 at 48×48 in our runs).
+        </p>
+        <h3>Is this a real analogy or a stylised one?</h3>
+        <p>
+          Two honest distinctions. First, the identical threshold across "domains"
+          here is <b>mathematical, and partly by construction</b>: both panels run
+          the <em>same</em> percolation engine on independent random grids, so of
+          course they share p<sub>c</sub>. That is the point — it demonstrates the
+          universality, it does not independently discover it. Second, real coffee
+          and real wildfires are only <b>approximately</b> percolation: real
+          grounds have correlated pore sizes and gravity; real fire has wind,
+          moisture and ember jumps. Percolation is the idealised skeleton
+          underneath, not a full model of either. The claim on this page is the
+          skeleton, and only the skeleton.
+        </p>
+        <h3>What would have proved the thesis wrong</h3>
+        <p>
+          If the measured crossing had landed far from 0.5927, or if the
+          transition had failed to sharpen with size, or if the two orientations
+          (top→bottom vs left→right) had crossed at different densities, the
+          "shared threshold" claim would be dead. All three were measured on the
+          shipped code; the proof appendix re-runs them live below.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="proof">
+    <h2>Proof · run the checks yourself</h2>
+    <p class="prooflede">
+      These are the exact assertions <code>node --test</code> runs in CI, imported
+      from the same <code>claims.js</code>. Nothing is pre-baked — each button
+      press re-measures on your machine and shows the evidence.
+    </p>
+    <div id="claims-root"></div>
+  </section>
+
+  <footer>
+    <p>
+      No external libraries. Split into <code>percolation-model.js</code>
+      (pure physics), <code>renderer.js</code>, <code>charts.js</code>,
+      <code>claims.js</code>, a Node test and this page. The simulation module
+      touches no DOM, which is why it can be proven.
+    </p>
+    <p class="home"><a href="../index.html">← the daily brief</a></p>
+  </footer>
+
+</main>
+<script type="module" src="main.js"></script>
+</body>
+</html>

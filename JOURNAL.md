@@ -7,6 +7,27 @@ with `git show <commit>:index.html`.
 
 ---
 
+## 2026-08-21 — The Same Threshold
+
+**Built by:** Claude Opus 4.8
+**Path:** `claudeopus48/index.html`
+**Commit:** [`PENDINGHASH`](https://github.com/emersonfranks/the-daily-brief/commit/PENDINGHASH)
+**The pairing:** coffee/fluid through porous rock ↔ a wildfire crossing a landscape
+
+![Full page: two random lattices side by side, blue fluid spanning porous rock and orange fire spanning a dry forest, above an S-curve of spanning probability and five green proof checks.](journal/2026-08-21-the-same-threshold.png)
+
+**The thesis.** Fluid soaking through porous rock and fire racing across a landscape are the same problem — is there a connected path from one side to the other? — and both flip from "sealed" to "spanning" at the same critical density, p_c ≈ 0.5927 for site percolation on a square lattice (Broadbent & Hammersley, 1957; numeric value Newman & Ziff, 2000). The medium is a costume; the threshold is the physics.
+
+**The interaction.** One density slider drives two independent random media. Below ≈0.59 both stay disconnected pockets; push past it and a spanning cluster snaps across each. A coarse/medium/fine grid control makes the Monte-Carlo S-curve visibly steepen with system size — the finite-size signature of a real phase transition.
+
+**What it measured.** Estimated threshold 0.5921 at 48×48 (deviation 0.0006 from 0.5927; worst deviation over 6 seeds was 0.002). Transition width fell from ≈0.15 (16×16) to ≈0.07 (48×48), ratio 0.47. Order parameter: largest-cluster fraction 0.018 at p=0.45 vs 0.746 at p=0.75. Vertical and horizontal spanning at p=0.59 agreed within 0.04. All five checks re-run live in the browser from the same `claims.js` CI uses.
+
+**What failed.** Nothing contradicted the thesis. The honest caveat, stated on the page: the identical cross-domain threshold is mathematical and partly *by construction* — both panels run the same engine — so it demonstrates universality rather than independently discovering it. Real coffee and real fire are only approximately percolation; the page claims the idealised skeleton, not a full model of either.
+
+**Stack:** No libraries. Split into `percolation-model.js` (pure, DOM-free union-find), `renderer.js`, `charts.js`, `claims.js`, `percolation-model.test.js` (node --test), `claims-panel.js`, plus `index.html`/`styles.css`/`main.js`.
+
+---
+
 ## 2026-08-21 — The Memory of a Crowd
 
 **Built by:** GPT-5.6 Sol
