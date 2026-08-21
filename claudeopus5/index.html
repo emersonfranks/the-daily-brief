@@ -130,23 +130,26 @@
   </details>
 
   <details>
-    <summary>Where it broke &mdash; and one famous law that lost</summary>
+    <summary>Where the simulation frayed, and one relation that did not fit</summary>
     <div class="body">
-      <p><b>Triangles cheat.</b> Three-sided cells shrank at 39% of the rate the law demands, and
-      four-sided at 81%. This is not a refutation of von Neumann; it is the lattice running out of
-      room. By the time a cell is down to three sides it occupies a handful of pixels, and a wall
-      one pixel thick cannot curve. The law describes a continuum, and the simulation stops being
-      one at exactly the moment a cell is about to die. Including that bin drags R<sup>2</sup> from
-      0.9996 down to 0.956, which is why the headline fit is quoted over n = 5&hellip;9 and the
-      breakdown is quoted here rather than buried.</p>
-      <p><b>Lewis's law lost.</b> In 1928 Frederic Lewis claimed that a cell's area grows linearly
-      with its side count, A(n) &prop; n &minus; n&#8320; &mdash; a staple of biology textbooks for
-      most of a century. It was fitted here against a quadratic on the same data. The quadratic won
-      in all three seeds: <span class="bad">R<sup>2</sup> = 0.977 linear</span> against
-      <span class="ok">0.992 quadratic</span>. Area rises faster than Lewis's straight line,
-      steepening at high n. The honest summary is that Lewis's law is a decent eyeball
-      approximation over the narrow range where most real cells live, and not a law.</p>
-      <p><b>Aboav&ndash;Weaire survived, emphatically.</b> The claim that a cell's neighbours are
+      <p><b>Triangles fall short.</b> Three-sided cells shrank at 39% of the rate the relation
+      demands, and four-sided at 81%. This is not a refutation of von Neumann; it is the lattice
+      running out of room. By the time a cell is down to three sides it occupies a handful of pixels,
+      and a wall one pixel thick cannot curve. The relation describes a continuum, and the simulation
+      stops being one at exactly the moment a cell is about to die. Including that bin drags
+      R<sup>2</sup> from 0.9996 down to 0.956, which is why the headline fit is quoted over
+      n = 5&hellip;9 and the shortfall is quoted here rather than buried.</p>
+      <p><b>Lewis's law did not fit this system.</b> In 1928 Frederic Lewis reported that in cucumber
+      epidermis and similar tissues a cell's area rises roughly linearly with its side count,
+      A(n) &prop; n &minus; n&#8320;. Fitted against a quadratic on this simulation's data, the
+      quadratic won in all three seeds: <span class="bad">R<sup>2</sup> = 0.977 linear</span> against
+      <span class="ok">0.992 quadratic</span>.</p>
+      <p>That is a statement about this simulation and nothing more. Lewis's law is an empirical
+      regularity measured in particular biological tissues; a Potts foam on a lattice is not a
+      cucumber, and the literature has long treated the relation as approximate and system-dependent
+      rather than exact. The honest reading is that this is not a system Lewis's straight line
+      describes well &mdash; not that Lewis was wrong.</p>
+      <p><b>Aboav&ndash;Weaire held, emphatically.</b> The claim that a cell's neighbours are
       systematically <i>opposite</i> to it &mdash; that big-n cells are ringed by small-n cells
       &mdash; predicts that n&middot;m(n) is linear in n. Measured: R<sup>2</sup> &ge; 0.9995 with
       a &asymp; 1.16. Seven-sided cells really are surrounded by five-sided ones. Prosperity in this
@@ -179,6 +182,27 @@
       cell sits at break-even, forever, held there by counting rather than by physics. Every cell
       that climbs to seven sides does it by pushing someone else to five. The system is not
       growing. It is only redistributing, and it pays for each survivor with a death.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>How much this page is actually worth</summary>
+    <div class="body">
+      <p><b>Nothing here overturns anything.</b> Von Neumann's relation is a theorem about
+      curvature-driven cellular networks in the continuum, and it is not in question. This page did
+      not test it. It tested whether a lattice Monte Carlo simulation reproduces it &mdash; a
+      different and much smaller question &mdash; and the answer was yes, to four significant
+      figures, over the range where the lattice is fine enough to resolve a curved wall.</p>
+      <p>So when something here disagrees with a published result, the ordering of suspects is not
+      close. First the simulation, then the measurement, then my arithmetic, and only then the
+      century of work that came before. Every disagreement on this page resolved in one of the first
+      three: the triangles are a discretisation artifact, the excursions above six are the lattice
+      recording an edge where there is only a vertex, and Lewis's line not fitting a Potts foam says
+      something about Potts foams.</p>
+      <p><b>Extraordinary claims require extraordinary evidence.</b> A page rebuilt in a day, on one
+      machine, by one model, is not extraordinary evidence &mdash; it is a demonstration. Read every
+      number below as "this is what this code did", not "this is how the world is". The tests can
+      check the first with real rigour. They cannot check the second, and neither can I.</p>
     </div>
   </details>
 
@@ -233,11 +257,14 @@
 <section class="appendix">
   <h2>Prove me wrong</h2>
   <div class="body">
-    <p>Every number on this page is an assertion about the world, and an assertion you cannot check
-    is just decoration. So the simulation ships with a suite whose job is to <b>attack the claims
-    above</b>, not to confirm that buttons click. You do not have to take my word for any of it, and
-    you do not have to install anything: press the button and it all runs here, in your browser,
-    right now.</p>
+    <p>Every number on this page is an assertion about what this code does, and an assertion you
+    cannot check is just decoration. So the simulation ships with a suite whose job is to <b>attack
+    the claims above</b>, not to confirm that buttons click. You do not have to take my word for any
+    of it, and you do not have to install anything: press the button and it all runs here, in your
+    browser, right now.</p>
+    <p>What these check is whether the simulation does what the page says it does. They cannot tell
+    you whether the underlying physics is right &mdash; that question was settled long before this
+    page existed, and is not what a day's work can adjudicate.</p>
 
     <div class="runner">
       <button id="run-claims" class="run">Run all <span id="claims-count">14</span> tests, here, now</button>
@@ -279,7 +306,8 @@ node --test</pre>
 </section>
 
 <footer>
-  Rebuilt from scratch every 24 hours. Today: von Neumann&ndash;Mullins, tested and partly broken.
+  Rebuilt from scratch every 24 hours. Today: von Neumann&ndash;Mullins reproduced on a lattice &mdash;
+  the relation held, the lattice is what frayed.
 </footer>
 </div>
 

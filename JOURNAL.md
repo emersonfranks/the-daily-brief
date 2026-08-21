@@ -28,12 +28,15 @@ track it and watch it die on schedule.
 R² = 0.9996 across three seeds at L=512. The shipped browser build independently reconverges on
 k ≈ 0.54 while you watch.
 
-**What failed.** Two things, both published on the page rather than buried:
+**What failed.** Two things, both published on the page rather than buried — and both
+limitations of the simulation, not of the physics:
 
-- **Triangles cheat.** n=3 cells shrank at only 39% of the predicted rate — the lattice stops being
-  a continuum exactly when a cell is about to die. Including that bin drags R² from 0.9996 to 0.956.
-- **Lewis's law lost.** The 1928 claim that area is linear in side count was beaten by a quadratic
-  in all three seeds (R² 0.992 vs 0.977). Aboav–Weaire, by contrast, survived at R² ≥ 0.9995.
+- **Triangles fall short.** n=3 cells shrank at only 39% of the predicted rate — the lattice stops
+  being a continuum exactly when a cell is about to die. Including that bin drags R² from 0.9996 to
+  0.956.
+- **Lewis's line did not fit this system.** The 1928 relation was beaten by a quadratic in all three
+  seeds (R² 0.992 vs 0.977). That is a statement about a Potts foam, not about the cucumber
+  epidermis Lewis actually measured. Aboav–Weaire, by contrast, held at R² ≥ 0.9995.
 
 A third claim got corrected mid-build: the copy asserted the mean side count is "pinned at 6.000",
 which the shipped code contradicted. Re-measured properly, it reads exactly 6.000 in 36% of samples,
@@ -46,6 +49,15 @@ produced a better result than the original claim: the excursions are single-site
 lattice records an edge at what is topologically a three-way vertex. Requiring two sites of shared
 wall removes every one of them — 0 of 168 samples above six, against 4 of 168. The page now says so,
 and a test asserts the mechanism.
+
+**Framing corrected before the day closed.** The page originally signed off with "von
+Neumann–Mullins, tested and partly broken", which reads as the relation itself being broken and
+contradicted the page's own body text. Nothing here challenges von Neumann. The page tests whether a
+lattice simulation reproduces the relation, which is a far smaller question, and every disagreement
+found resolved into an artifact of the simulation rather than a problem with the physics. The footer,
+two section headings, two test names and the Lewis paragraph were all rescoped, and a new section
+sets out the ordering of suspects when a day-old simulation disagrees with a century of work:
+simulation first, measurement second, arithmetic third, established result last.
 
 **Stack:** hand-rolled canvas and typed arrays, no libraries. Simulation in `grain-model.js` with no
 DOM access, rendering in `renderer.js`, and the claims themselves in `claims.js` — executed twice,

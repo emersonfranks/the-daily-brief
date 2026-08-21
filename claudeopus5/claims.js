@@ -243,7 +243,7 @@ export const CLAIMS = [
   },
   {
     name: 'reproduces dA/dt = k(n \u2212 6)',
-    catches: 'the entire thesis of this page',
+    catches: 'this simulation failing to reproduce the relation it claims to',
     needsMeasurement: true,
     verify: (measurement) => {
       require(measurement !== null, 'no measurement');
@@ -271,8 +271,8 @@ export const CLAIMS = [
     },
   },
   {
-    name: 'still breaks at three sides',
-    catches: 'a published failure quietly going away',
+    name: 'the lattice still falls short at three sides',
+    catches: 'a documented limitation quietly disappearing',
     needsMeasurement: true,
     verify: (measurement) => {
       require(measurement !== null, 'no measurement');
@@ -281,7 +281,7 @@ export const CLAIMS = [
       require(fit !== null && observed !== null, 'no fit or no three-sided bin');
       const fidelity = observed / vonNeumannRate(fit.slope, 3);
       require(fidelity < EXPECTED.maxTriangleFidelity,
-        `triangles tracked the law at ${(fidelity * 100).toFixed(0)}%, so the reported breakdown is gone`);
+        `triangles tracked the relation at ${(fidelity * 100).toFixed(0)}%, so the reported shortfall is gone`);
       return `triangles shrank at ${(fidelity * 100).toFixed(0)}% of the predicted rate`;
     },
   },
@@ -299,8 +299,8 @@ export const CLAIMS = [
     },
   },
   {
-    name: "loses Lewis's law to a quadratic",
-    catches: 'the claim that Lewis loses',
+    name: "fits area against side count better with a quadratic than with Lewis's line",
+    catches: 'the page overstating how poorly Lewis fits this system',
     needsMeasurement: true,
     verify: (measurement) => {
       require(measurement !== null, 'no measurement');
@@ -310,7 +310,7 @@ export const CLAIMS = [
       const quadratic = weightedLeastSquares(bins.map(b => ({ x: b.sides ** 2, y: b.relativeArea, weight: b.weight })));
       require(linear !== null && quadratic !== null, 'could not fit both curves');
       require(quadratic.r2 > linear.r2,
-        `Lewis's linear law won: linear ${linear.r2.toFixed(4)} against quadratic ${quadratic.r2.toFixed(4)}`);
+        `Lewis's line fitted this run better: linear ${linear.r2.toFixed(4)} against quadratic ${quadratic.r2.toFixed(4)}`);
       return `linear R\u00b2 ${linear.r2.toFixed(4)} against quadratic ${quadratic.r2.toFixed(4)}`;
     },
   },
