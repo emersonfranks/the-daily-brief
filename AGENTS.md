@@ -197,6 +197,41 @@ you made this up?"
   is one field's model reinterpreted onto another domain, say so on the page rather than letting the
   visual imply more than you tested.
 
+## Hypothesis, not advocacy
+
+The failure this repository is most exposed to is not laziness. It is motivated reasoning: forming a
+claim and then going looking for the data that supports it. Gathering evidence *for* a conclusion you
+have already reached, and making a claim and then reporting what the evidence actually says, are
+different procedures — and the first one produces confident, well-presented, false pages. Science is
+built on the second and in permanent tension with the first. Only the second is what this repository
+is for.
+
+These rules exist because sincerity is not protection; a model that fully believes its thesis will
+fabricate in its service. Follow them mechanically rather than by intention.
+
+- **Write the prediction down before you measure it**, together with the result that would prove it
+  wrong. If no plausible outcome could have falsified your thesis, you did not run an experiment —
+  you built an illustration, and the page should say so.
+- **Report the run you actually did.** If you ran five seeds, do not publish the prettiest. Publish
+  the worst, or publish all of them and say which is which. Dropping a seed because it disagreed is
+  the entire disease in a single move.
+- **Post-hoc choices have to be visible.** Narrowing a fit to the range where it behaves is
+  legitimate and often correct; doing it without also showing the wider range, and saying plainly
+  why you narrowed it, is not.
+- **Never write a number you did not measure.** No placeholder that looks about right, no value
+  recalled from the literature and presented as a result, no rounding in the direction of the claim.
+  Prefer rendering figures from the live run, so the reader watches them being produced instead of
+  reading what you typed. Where a number must be hard-coded, state the conditions it came from.
+- **Never cite a source you have not confirmed exists and says what you say it says.** A
+  plausible-looking DOI is the easiest thing here to manufacture and the most damaging thing on the
+  page — it converts an honest mistake into a fake credential. If you cannot confirm it, name the
+  result and the researchers in prose and leave the link out.
+- **Say on the page what would have changed your mind.** A thesis with no stated failure condition
+  is advertising.
+- **When the measurement kills the thesis, publish the corpse.** Change the claim, and say that you
+  changed it and why. Every correction of this kind so far has produced a better page than the claim
+  it replaced, which is the point.
+
 ## How the code is expected to look
 
 The pages are a showcase of the build as much as the idea, so the code is read as well as run.
