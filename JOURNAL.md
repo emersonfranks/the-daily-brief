@@ -5,38 +5,8 @@ Every page here lived for exactly one day, then got torn down. This is what they
 Newest first. Each entry links to the commit that built it — the full page is always recoverable
 with `git show <commit>:index.html`.
 
----
-
-## 2026-08-21 — Thresholds That Spread
-
-> **Retracted the same day and removed from the site.** Kept here because the journal records what
-> was actually built, including the failures. Reviewing the code found the update rule reading each
-> cell's neighbours from the grid it was writing into, so a cell activated early in a sweep
-> influenced later cells in the same sweep. Measured against a correct synchronous step, the shipped
-> model spread roughly three times too fast (128 vs 46 active cells at seed 2024) and gave different
-> answers when the board was transposed — the cascade depended on array iteration order. The three
-> claims only asserted monotonic directions, which any spreading rule satisfies, so none of them
-> could catch it. Thresholds were hard-coded and unmeasured (`> 10` in the claims, `<= 18` in the
-> test for the same claim), every claim ran a single seed, no module carried `// @ts-check`, and no
-> source was named or cited. The numbers below were produced by the faulty model and are left
-> unaltered as part of the record.
-
-**Built by:** MAI-Code 1.1 Flash
-**Path:** `maicode11flash/index.html` (removed)
-**Commit:** [`ac275e1`](https://github.com/emersonfranks/the-daily-brief/commit/ac275e1) — recover with `git show ac275e1:maicode11flash/index.html`
-**The pairing:** power grids ↔ rumor networks
-
-![A dark interface showing two threshold lattices side by side, one labeled power grid and one labeled rumor network, with a title reading Thresholds That Spread.](journal/2026-08-21-thresholds-that-spread.png)
-
-**The thesis.** A tiny disruption only becomes a cascade when enough neighbors have already crossed the line. The same local threshold rule can describe a blackout in a power grid and a panic wave in a rumor network: each node flips only after enough neighboring nodes have already flipped.
-
-**The interaction.** Drag the density slider and press New spark. The power-grid panel and the rumor-network panel update from the same seeded threshold model; as the density increases, the board passes a tipping point and the active cluster expands from a small flare into a full network cascade.
-
-**What it measured.** On the shipped model, density 0.05 produced 6 active cells and density 0.18 produced 144. Lowering the threshold from 4 to 2 increased the cascade from 30 active cells to 144. These figures were measured from the same code path the browser and CI both execute.
-
-**What failed.** The early hypothesis was a neat analogy, not a proven law. The first draft claimed any random seed would reliably cascade; the measured result showed otherwise, so the page now reports the actual measured threshold behavior instead of the more flattering version.
-
-**Stack:** No libraries. Split into `cascade-model.js` (pure threshold model), `renderer.js`, `main.js`, `claims.js`, `claims-panel.js`, `cascade-model.test.js`, plus `index.html` and `styles.css`.
+Builds that were pulled after publication are not deleted from this record. They are moved to
+**[Retracted](#retracted)** at the end, with the reason attached.
 
 ---
 
@@ -236,3 +206,42 @@ commit, every page listed here can be resurrected and run locally at any time.
 
 From 2026-08-21 onward, more than one model may build on the same day, so pages live at
 `{model}/index.html` and the root `index.html` is a landing page listing that day's builds.
+
+---
+
+# Retracted
+
+A retraction means a page was published and then taken down, rather than expiring with its day.
+The entry stays here, unaltered, because a record that quietly drops its failures is worth less
+than one that keeps them. The page itself is recoverable from the commit named in the entry.
+
+## 2026-08-21 — Thresholds That Spread
+
+> **Retracted the same day and removed from the site.** Kept here because the journal records what
+> was actually built, including the failures. Reviewing the code found the update rule reading each
+> cell's neighbours from the grid it was writing into, so a cell activated early in a sweep
+> influenced later cells in the same sweep. Measured against a correct synchronous step, the shipped
+> model spread roughly three times too fast (128 vs 46 active cells at seed 2024) and gave different
+> answers when the board was transposed — the cascade depended on array iteration order. The three
+> claims only asserted monotonic directions, which any spreading rule satisfies, so none of them
+> could catch it. Thresholds were hard-coded and unmeasured (`> 10` in the claims, `<= 18` in the
+> test for the same claim), every claim ran a single seed, no module carried `// @ts-check`, and no
+> source was named or cited. The numbers below were produced by the faulty model and are left
+> unaltered as part of the record.
+
+**Built by:** MAI-Code 1.1 Flash
+**Path:** `maicode11flash/index.html` (removed)
+**Commit:** [`ac275e1`](https://github.com/emersonfranks/the-daily-brief/commit/ac275e1) — recover with `git show ac275e1:maicode11flash/index.html`
+**The pairing:** power grids ↔ rumor networks
+
+![A dark interface showing two threshold lattices side by side, one labeled power grid and one labeled rumor network, with a title reading Thresholds That Spread.](journal/2026-08-21-thresholds-that-spread.png)
+
+**The thesis.** A tiny disruption only becomes a cascade when enough neighbors have already crossed the line. The same local threshold rule can describe a blackout in a power grid and a panic wave in a rumor network: each node flips only after enough neighboring nodes have already flipped.
+
+**The interaction.** Drag the density slider and press New spark. The power-grid panel and the rumor-network panel update from the same seeded threshold model; as the density increases, the board passes a tipping point and the active cluster expands from a small flare into a full network cascade.
+
+**What it measured.** On the shipped model, density 0.05 produced 6 active cells and density 0.18 produced 144. Lowering the threshold from 4 to 2 increased the cascade from 30 active cells to 144. These figures were measured from the same code path the browser and CI both execute.
+
+**What failed.** The early hypothesis was a neat analogy, not a proven law. The first draft claimed any random seed would reliably cascade; the measured result showed otherwise, so the page now reports the actual measured threshold behavior instead of the more flattering version.
+
+**Stack:** No libraries. Split into `cascade-model.js` (pure threshold model), `renderer.js`, `main.js`, `claims.js`, `claims-panel.js`, `cascade-model.test.js`, plus `index.html` and `styles.css`.
