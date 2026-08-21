@@ -3,7 +3,15 @@
 This repository holds one thing: a single-page interactive experience, rebuilt from scratch every 24 hours.
 
 **What survives the teardown:** this file, `README.md`, `JOURNAL.md`, the `journal/` screenshots, `.github/`, `.gitignore`, `.nojekyll`, and git history.
-**What gets blown away and rebuilt daily:** the root `index.html`, every `{model}/` build directory, and any assets they need.
+**What gets blown away and rebuilt daily:** every `{model}/` build directory, the cards on the root `index.html`, and any assets they need.
+
+**How you know a new day has started.** The landing page carries a date heading. If it does not say
+today's date, yesterday's site is still standing and you are the first model building today, so you
+clear it out. If it already says today's date, another model has built today — take nothing down and
+add yourself alongside them. That heading is the one thing you may read on the landing page before
+your own page is finished; the cards under it stay off limits until then. The exact procedure is in
+step 5, and the rule that matters most is this: **the teardown removes yesterday, never your
+neighbours.** If you cannot tell which you are looking at, delete nothing and ask.
 
 **Where your page goes.** More than one model may build a page on the same day, so no model owns the
 root. Build yours at `{model}/index.html`, where `{model}` is a lowercase, punctuation-free slug of
@@ -28,10 +36,12 @@ deploy.** The `Publish` workflow in `.github/workflows/` takes it from there and
 within a minute or two; there is no manual step and nothing for you to configure. Before it
 publishes, that workflow runs `.github/scripts/check-structure.mjs`, which checks the landing page
 heading, the shape of every card, that each build is listed, and that every file your page loads was
-actually committed — then runs `node --test`. If your card is malformed or you forgot to commit a
-module, the deploy fails loudly instead of publishing a broken page. You can run the same check
-yourself with `node .github/scripts/check-structure.mjs .`. Assume anything you write will be read
-by someone who is not the person who asked for it.
+actually committed; `.github/scripts/check-teardown.mjs`, which refuses any push that deletes a
+build directory unless the date heading moved in the same push; and then `node --test`. If your card
+is malformed, you forgot to commit a module, or you are about to delete a page that was published
+today, the deploy fails loudly instead of doing it. You can run the same checks yourself with
+`node .github/scripts/check-structure.mjs .`. Assume anything you write will be read by someone who
+is not the person who asked for it.
 
 **Work blind. Do not look at what has already been built.** Until your own page is finished, do not
 open any other `{model}/` directory, do not read `JOURNAL.md`, do not read the existing cards on the
@@ -113,7 +123,12 @@ Rules for Usage:
    - a browser module that imports the same `claims.js` and renders each result next to a button. Name it for what it does, such as `claims-panel.js` — anything but `test-*.js`, which Node would try to run as a test.
 
    Tests live in your own `{model}/` directory and are torn down with it, so you prove your own claims rather than inheriting anyone else's. `node --test` must pass before you push; CI runs it again and will not publish a build whose claims fail.
-5. **Render & Deploy:** Output the complete, production-ready web code to `{model}/index.html`, then append your card to the root `index.html`. Do not replace that file and do not touch other cards — append yours to the end of the existing list:
+5. **Render & Deploy:** Output the complete, production-ready web code to `{model}/index.html`. Then run `git pull --rebase` before you decide anything, so you are reading what is actually published rather than a checkout that went stale while you were building. Now open the root `index.html` and read its date heading, which decides whether today is a fresh day:
+
+   - **The heading does not say today's date.** The day has rolled over and you are the first build. Delete every `{model}/` build directory except the one you just created, delete every card on the landing page, and set the heading to today's date. Nothing is lost — git history holds every page and the journal holds their screenshots.
+   - **The heading already says today's date.** One or more models have already built today. Delete nothing, change no existing card, and leave the heading alone.
+
+   Either way, finish by appending your card to the end of the card list. Do not replace the file and do not touch other cards:
 
    ```html
    <a class="build" href="{model}/index.html">
@@ -124,7 +139,7 @@ Rules for Usage:
    </a>
    ```
 
-   If you are the first build of the day, update the date heading directly above the cards to today's date, keeping the format `<h2>21 August 2026 &middot; today's pairings</h2>`. If cards for today are already there, leave the heading alone.
+   The date heading keeps the format `<h2>21 August 2026 &middot; today's pairings</h2>`.
 6. **Record It:** Capture a full-page screenshot of your finished page to `journal/YYYY-MM-DD-your-page-title.png`, then append an entry to the top of the entry list in `JOURNAL.md`, newest first:
 
    ```markdown
@@ -168,6 +183,8 @@ These are settled decisions from previous days. They are not part of the origina
 - **Commit every file your page loads.** The CI link check verifies the landing page and each build's own references, but the surest habit is to read `git status` before pushing and account for every untracked file. A page whose stylesheet or module never got committed deploys as a blank frame.
 - **Push straight to `main`.** No branches, no pull requests. One commit per day per model, containing your `{model}/` directory, your card on the root `index.html`, your `journal/` screenshot and your `JOURNAL.md` entry, with a message naming the thesis. If another model pushed while you were building and your push is rejected, `git pull --rebase` and re-apply your card and journal entry underneath theirs — never drop or reorder what they added.
 - **`.github/` is infrastructure, not part of the daily build.** It survives every teardown. Do not edit the publish workflow to get a page out; if the link check fails, the link is wrong.
+- **Deleting is the one irreversible-looking act here, so gate it on the date and nothing else.** A build directory is only ever removed because its day is over, never because it looks stale, duplicated, broken or wrong. If another model's page is on the site under today's date, it stays, whatever you think of it.
+- **Decide the teardown against the published state, never a stale checkout.** `git pull --rebase` immediately before you read the date heading. If your push is rejected because someone published while you were working, pull and then read the heading again: if today's date is now there, another model got in first and your teardown was wrong. Restore what you removed with `git checkout origin/main -- <their-directory>`, put their card back on the landing page, and push only your own work. A rebase will cheerfully replay a deletion onto work that did not exist when you decided to delete, which is why CI refuses any push that removes a build directory without the date heading changing in the same push.
 
 ## Making the science legible
 
