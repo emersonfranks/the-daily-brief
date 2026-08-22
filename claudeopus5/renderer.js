@@ -1,156 +1,362 @@
 // @ts-check
 
-/**
- * Painting only. The renderer reads a GrainModel and never advances it, which is why the
- * same lattice can be drawn as foam and as metal in the same frame.
- */
+import { edgeFlows, rigTensions, routeCosts, ROUTE_BOTTOM, ROUTE_SHORTCUT, ROUTE_TOP } from './braess-model.js';
 
-/** @typedef {import('./grain-model.js').GrainModel} GrainModel */
-/** @typedef {{ divide: number, fateMode: boolean, tracked: number }} ViewOptions */
+const INK = '#e8e4dc';
+const DIM = '#8a8375';
+const HOT = '#e0533d';
+const COOL = '#4aa8a0';
+const FREE = '#c9a227';
+
+/** Normalised node positions in the road panel. */
+const NODES = {
+  start: [0.09, 0.5],
+  a: [0.42, 0.2],
+  b: [0.42, 0.8],
+  end: [0.91, 0.5],
+};
 
 /**
- * Writes one HSL colour into an RGBA buffer.
- * @param {number} hue degrees
- * @param {number} saturation 0..1
- * @param {number} lightness 0..1
- * @param {Uint8ClampedArray} out
- * @param {number} offset
+ * How many drivers one animated dot stands for. Fixed so the dot count reads as
+ * a share of demand rather than an absolute headcount.
  */
-function writeHsl(hue, saturation, lightness, out, offset) {
-  const h = hue / 360;
-  const s = Math.min(Math.max(saturation, 0), 1);
-  const l = Math.min(Math.max(lightness, 0), 1);
-  const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-  const p = 2 * l - q;
-  const channel = (t) => {
-    const shifted = (t + 1) % 1;
-    if (shifted < 1 / 6) return p + (q - p) * 6 * shifted;
-    if (shifted < 1 / 2) return q;
-    if (shifted < 2 / 3) return p + (q - p) * (2 / 3 - shifted) * 6;
-    return p;
-  };
-  out[offset] = channel(h + 1 / 3) * 255;
-  out[offset + 1] = channel(h) * 255;
-  out[offset + 2] = channel(h - 1 / 3) * 255;
-  out[offset + 3] = 255;
+export const DOTS_PER_PANEL = 120;
+
+/**
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {[number, number]} normalised
+ * @param {number} w
+ * @param {number} h
+ * @returns {[number, number]}
+ */
+function place(ctx, normalised, w, h) {
+  return [normalised[0] * w, normalised[1] * h];
 }
 
 /**
+ * Prepare a canvas for crisp drawing on high-density screens.
  * @param {HTMLCanvasElement} canvas
- * @param {GrainModel} model
+ * @returns {{ ctx: CanvasRenderingContext2D, width: number, height: number }}
  */
-export function createRenderer(canvas, model) {
-  const context = canvas.getContext('2d');
-  if (!context) throw new Error('2d canvas context unavailable');
+export function prepare(canvas) {
+  const ratio = window.devicePixelRatio || 1;
+  const width = canvas.clientWidth;
+  const height = canvas.clientHeight;
+  canvas.width = Math.round(width * ratio);
+  canvas.height = Math.round(height * ratio);
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('2d canvas context unavailable');
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  ctx.clearRect(0, 0, width, height);
+  return { ctx, width, height };
+}
 
-  const size = model.size;
-  const offscreen = document.createElement('canvas');
-  offscreen.width = size;
-  offscreen.height = size;
-  const offscreenContext = offscreen.getContext('2d');
-  if (!offscreenContext) throw new Error('offscreen 2d context unavailable');
+/**
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {[number, number]} from
+ * @param {[number, number]} to
+ * @param {string} colour
+ * @param {number} weight
+ * @param {boolean} [dashed]
+ */
+function segment(ctx, from, to, colour, weight, dashed = false) {
+  ctx.save();
+  ctx.strokeStyle = colour;
+  ctx.lineWidth = weight;
+  ctx.lineCap = 'round';
+  if (dashed) ctx.setLineDash([5, 7]);
+  ctx.beginPath();
+  ctx.moveTo(from[0], from[1]);
+  ctx.lineTo(to[0], to[1]);
+  ctx.stroke();
+  ctx.restore();
+}
 
-  const image = offscreenContext.createImageData(size, size);
-  const pixels = image.data;
-  const wall = new Uint8Array(model.siteCount);
-  const tint = new Float32Array(model.seedCount);
-  const shade = new Float32Array(model.seedCount);
-  for (let cell = 0; cell < model.seedCount; cell++) {
-    tint[cell] = (Math.sin(cell * 12.9898) * 43758.5453) % 1;
-    shade[cell] = (Math.sin(cell * 78.233) * 24634.6345) % 1;
-    if (tint[cell] < 0) tint[cell] += 1;
-    if (shade[cell] < 0) shade[cell] += 1;
+/**
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {string} text
+ * @param {number} x
+ * @param {number} y
+ * @param {string} colour
+ * @param {CanvasTextAlign} [align]
+ * @param {string} [font]
+ */
+function label(ctx, text, x, y, colour, align = 'center', font = '12px ui-monospace, monospace') {
+  ctx.save();
+  ctx.fillStyle = colour;
+  ctx.font = font;
+  ctx.textAlign = align;
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, x, y);
+  ctx.restore();
+}
+
+/** The three route polylines, as normalised node keys. */
+const ROUTE_PATHS = [
+  ['start', 'a', 'end'],
+  ['start', 'b', 'end'],
+  ['start', 'a', 'b', 'end'],
+];
+
+/**
+ * @param {[number, number][]} points
+ * @param {number} t Fraction along the whole polyline, 0..1.
+ * @returns {[number, number]}
+ */
+function alongPath(points, t) {
+  const lengths = [];
+  let total = 0;
+  for (let i = 1; i < points.length; i++) {
+    const dx = points[i][0] - points[i - 1][0];
+    const dy = points[i][1] - points[i - 1][1];
+    const len = Math.hypot(dx, dy);
+    lengths.push(len);
+    total += len;
   }
-
-  function markWalls() {
-    const { state } = model;
-    for (let y = 0; y < size; y++) {
-      const row = y * size;
-      const below = ((y + 1) % size) * size;
-      const above = ((y + size - 1) % size) * size;
-      for (let x = 0; x < size; x++) {
-        const owner = state[row + x];
-        wall[row + x] = (
-          state[row + ((x + 1) % size)] !== owner ||
-          state[row + ((x + size - 1) % size)] !== owner ||
-          state[below + x] !== owner ||
-          state[above + x] !== owner
-        ) ? 1 : 0;
-      }
+  let target = t * total;
+  for (let i = 0; i < lengths.length; i++) {
+    if (target <= lengths[i] || i === lengths.length - 1) {
+      const f = lengths[i] === 0 ? 0 : Math.min(1, target / lengths[i]);
+      return [
+        points[i][0] + (points[i + 1][0] - points[i][0]) * f,
+        points[i][1] + (points[i + 1][1] - points[i][1]) * f,
+      ];
     }
+    target -= lengths[i];
+  }
+  return points[points.length - 1];
+}
+
+/**
+ * Draw the road network: edge loading, route costs, and dots whose speed falls
+ * as their route congests.
+ *
+ * @param {HTMLCanvasElement} canvas
+ * @param {import('./braess-model.js').RoadState} state
+ * @param {number} phase Animation clock in seconds.
+ */
+export function drawRoads(canvas, state, phase) {
+  const { ctx, width, height } = prepare(canvas);
+  const pos = /** @type {Record<string, [number, number]>} */ ({});
+  for (const [key, value] of Object.entries(NODES)) {
+    pos[key] = place(ctx, /** @type {[number, number]} */ (value), width, height);
   }
 
-  /** @param {ViewOptions} options */
-  function draw({ divide, fateMode, tracked }) {
-    markWalls();
-    const { state, sides } = model;
-    const cut = Math.floor(divide * size);
+  const flows = edgeFlows(state.counts);
+  const costs = routeCosts(state.counts, state.params);
+  const total = state.counts[0] + state.counts[1] + state.counts[2];
+  const busiest = Math.max(flows.startToA, flows.bToEnd, 1);
 
-    for (let y = 0; y < size; y++) {
-      const row = y * size;
-      const below = ((y + 1) % size) * size;
-      const above = ((y + size - 1) % size) * size;
-      for (let x = 0; x < size; x++) {
-        const site = row + x;
-        const cell = state[site];
-        const offset = site * 4;
-        const isWall = wall[site] === 1;
-        const nearWall = !isWall && (
-          wall[row + ((x + 1) % size)] |
-          wall[row + ((x + size - 1) % size)] |
-          wall[below + x] |
-          wall[above + x]
-        ) === 1;
-        const foamSide = x < cut;
-        const selected = cell === tracked;
+  /** @param {number} flow @returns {string} */
+  const congestionColour = (flow) => {
+    const heat = Math.min(1, flow / (state.params.capacity * state.params.fixedCost));
+    const r = Math.round(74 + (224 - 74) * heat);
+    const g = Math.round(168 + (83 - 168) * heat);
+    const b = Math.round(160 + (61 - 160) * heat);
+    return `rgb(${r},${g},${b})`;
+  };
+  /** @param {number} flow @returns {number} */
+  const congestionWeight = (flow) => 2 + 9 * (flow / busiest);
 
-        if (fateMode) {
-          const delta = sides[cell] - 6;
-          const magnitude = Math.min(1, Math.abs(delta) / 3);
-          const hue = delta < 0 ? 208 : 24;
-          const saturation = delta === 0 ? 0 : 0.2 + 0.65 * magnitude;
-          let lightness = delta === 0 ? 0.3 : 0.2 + 0.3 * magnitude;
-          if (foamSide) lightness *= 1.12;
-          if (isWall) writeHsl(hue, saturation * 0.3, foamSide ? 0.92 : 0.06, pixels, offset);
-          else if (selected) writeHsl(hue, saturation, Math.min(0.8, lightness + 0.25), pixels, offset);
-          else writeHsl(hue, saturation, nearWall ? lightness * 1.3 : lightness, pixels, offset);
-        } else if (foamSide) {
-          if (isWall) writeHsl(44, 0.3, 0.9, pixels, offset);
-          else if (nearWall) writeHsl(40, 0.55, 0.26 + shade[cell] * 0.07, pixels, offset);
-          else writeHsl(38 + tint[cell] * 14, 0.58, selected ? 0.34 : 0.055 + shade[cell] * 0.05, pixels, offset);
-        } else {
-          const lightness = 0.22 + shade[cell] * 0.4;
-          if (isWall) writeHsl(213, 0.16, 0.045, pixels, offset);
-          else if (nearWall) writeHsl(213, 0.1, lightness * 0.72, pixels, offset);
-          else writeHsl(207 + tint[cell] * 12, 0.09, selected ? Math.min(0.88, lightness + 0.26) : lightness, pixels, offset);
-        }
-      }
+  segment(ctx, pos.start, pos.a, congestionColour(flows.startToA), congestionWeight(flows.startToA));
+  segment(ctx, pos.b, pos.end, congestionColour(flows.bToEnd), congestionWeight(flows.bToEnd));
+  segment(ctx, pos.a, pos.end, DIM, 3);
+  segment(ctx, pos.start, pos.b, DIM, 3);
+
+  if (state.shortcutOpen) {
+    segment(ctx, pos.a, pos.b, FREE, 4);
+  } else {
+    segment(ctx, pos.a, pos.b, '#4a4640', 2, true);
+  }
+
+  label(ctx, `${(flows.startToA / state.params.capacity).toFixed(0)} min`, (pos.start[0] + pos.a[0]) / 2 - 6, (pos.start[1] + pos.a[1]) / 2 - 14, congestionColour(flows.startToA));
+  label(ctx, 'jams', (pos.start[0] + pos.a[0]) / 2 - 6, (pos.start[1] + pos.a[1]) / 2 - 1, DIM, 'center', '10px ui-monospace, monospace');
+  label(ctx, `${(flows.bToEnd / state.params.capacity).toFixed(0)} min`, (pos.b[0] + pos.end[0]) / 2 + 6, (pos.b[1] + pos.end[1]) / 2 + 14, congestionColour(flows.bToEnd));
+  label(ctx, 'jams', (pos.b[0] + pos.end[0]) / 2 + 6, (pos.b[1] + pos.end[1]) / 2 + 27, DIM, 'center', '10px ui-monospace, monospace');
+  label(ctx, `${state.params.fixedCost} min fixed`, (pos.a[0] + pos.end[0]) / 2 + 10, (pos.a[1] + pos.end[1]) / 2 - 16, DIM, 'center', '10px ui-monospace, monospace');
+  label(ctx, `${state.params.fixedCost} min fixed`, (pos.start[0] + pos.b[0]) / 2 - 10, (pos.start[1] + pos.b[1]) / 2 + 18, DIM, 'center', '10px ui-monospace, monospace');
+  label(
+    ctx,
+    state.shortcutOpen ? 'the free shortcut' : 'shortcut closed',
+    pos.a[0] + 58,
+    (pos.a[1] + pos.b[1]) / 2,
+    state.shortcutOpen ? FREE : '#5f5a52',
+    'center',
+    '11px ui-monospace, monospace',
+  );
+
+  const routeColours = [COOL, COOL, FREE];
+  for (let route = 0; route < 3; route++) {
+    if (state.counts[route] === 0 || total === 0) continue;
+    const dots = Math.max(1, Math.round((state.counts[route] / total) * DOTS_PER_PANEL));
+    const points = ROUTE_PATHS[route].map((key) => pos[key]);
+    const speed = 0.16 / Math.max(0.2, costs[route] / 60);
+    ctx.save();
+    ctx.fillStyle = routeColours[route];
+    for (let i = 0; i < dots; i++) {
+      const t = ((i / dots + phase * speed) % 1 + 1) % 1;
+      const [x, y] = alongPath(/** @type {[number, number][]} */ (points), t);
+      ctx.beginPath();
+      ctx.arc(x, y, 2.4, 0, Math.PI * 2);
+      ctx.fill();
     }
-
-    offscreenContext.putImageData(image, 0, 0);
-    context.imageSmoothingEnabled = true;
-    context.drawImage(offscreen, 0, 0, canvas.width, canvas.height);
+    ctx.restore();
   }
 
-  function resize() {
-    const bounds = canvas.getBoundingClientRect();
-    const ratio = Math.min(2, window.devicePixelRatio || 1);
-    canvas.width = Math.max(1, Math.round(bounds.width * ratio));
-    canvas.height = Math.max(1, Math.round(bounds.height * ratio));
+  for (const [key, name] of /** @type {[string, string][]} */ ([['start', 'HOME'], ['a', 'A'], ['b', 'B'], ['end', 'WORK']])) {
+    const [x, y] = pos[key];
+    ctx.save();
+    ctx.fillStyle = '#15130f';
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(x, y, name.length > 1 ? 22 : 15, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+    label(ctx, name, x, y, INK, 'center', '11px ui-monospace, monospace');
   }
 
-  /**
-   * @param {number} clientX
-   * @param {number} clientY
-   * @returns {number} the cell under the pointer, or -1
-   */
-  function cellAt(clientX, clientY) {
-    const bounds = canvas.getBoundingClientRect();
-    const x = Math.floor((clientX - bounds.left) / bounds.width * size);
-    const y = Math.floor((clientY - bounds.top) / bounds.height * size);
-    if (x < 0 || y < 0 || x >= size || y >= size) return -1;
-    return model.state[y * size + x];
+  const rows = [
+    [`via A  ${state.counts[ROUTE_TOP].toString().padStart(5)} drivers`, costs[0], COOL],
+    [`via B  ${state.counts[ROUTE_BOTTOM].toString().padStart(5)} drivers`, costs[1], COOL],
+  ];
+  if (state.shortcutOpen) {
+    rows.push([`shortcut ${state.counts[ROUTE_SHORTCUT].toString().padStart(3)} drivers`, costs[2], FREE]);
+  }
+  rows.forEach((row, i) => {
+    const y = height - 46 + i * 15;
+    label(ctx, String(row[0]), 12, y, /** @type {string} */ (row[2]), 'left', '11px ui-monospace, monospace');
+    label(ctx, `${/** @type {number} */ (row[1]).toFixed(1)} min`, width - 12, y, /** @type {string} */ (row[2]), 'right', '11px ui-monospace, monospace');
+  });
+}
+
+/** Depth in cm mapped onto the rig canvas. */
+const RIG_MAX_DEPTH = 132;
+
+/**
+ * @param {number} depth
+ * @param {number} height
+ * @returns {number}
+ */
+function depthToY(depth, height) {
+  const top = 26;
+  return top + (depth / RIG_MAX_DEPTH) * (height - top - 42);
+}
+
+/**
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} x
+ * @param {number} y0
+ * @param {number} y1
+ * @param {string} colour
+ */
+function coil(ctx, x, y0, y1, colour) {
+  const turns = 9;
+  const span = y1 - y0;
+  const amplitude = Math.max(5, Math.min(15, 150 / Math.max(span, 12)) * 1.6);
+  ctx.save();
+  ctx.strokeStyle = colour;
+  ctx.lineWidth = 2.2;
+  ctx.beginPath();
+  ctx.moveTo(x, y0);
+  const lead = Math.min(10, span * 0.12);
+  ctx.lineTo(x, y0 + lead);
+  const body = span - lead * 2;
+  for (let i = 0; i <= turns * 2; i++) {
+    const t = i / (turns * 2);
+    ctx.lineTo(x + (i % 2 === 0 ? -amplitude : amplitude), y0 + lead + body * t);
+  }
+  ctx.lineTo(x, y1 - lead);
+  ctx.lineTo(x, y1);
+  ctx.stroke();
+  ctx.restore();
+}
+
+/**
+ * Draw the spring-and-string rig at its settled geometry, with a ghost line
+ * marking where the weight sits in the other configuration.
+ *
+ * @param {HTMLCanvasElement} canvas
+ * @param {import('./braess-model.js').RigState} state
+ * @param {number} ghostDepth Weight depth in the opposite configuration.
+ */
+export function drawRig(canvas, state, ghostDepth) {
+  const { ctx, width, height } = prepare(canvas);
+  const p = state.params;
+  const mid = width * 0.5;
+  const side = Math.min(96, width * 0.3);
+  const ceilingY = depthToY(0, height);
+  const tensions = rigTensions(state);
+
+  ctx.save();
+  ctx.strokeStyle = '#4a4640';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(mid - side - 26, ceilingY);
+  ctx.lineTo(mid + side + 26, ceilingY);
+  ctx.stroke();
+  for (let x = mid - side - 26; x < mid + side + 26; x += 9) {
+    ctx.beginPath();
+    ctx.moveTo(x, ceilingY);
+    ctx.lineTo(x - 7, ceilingY - 7);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  const yP = depthToY(state.lowerSpringTop, height);
+  const yQ = depthToY(state.upperSpringBottom, height);
+  const yW = depthToY(state.weight, height);
+  const yGhost = depthToY(ghostDepth, height);
+
+  segment(ctx, [mid - side, yGhost], [mid + side, yGhost], '#5f5a52', 1, true);
+  label(
+    ctx,
+    state.linkIntact ? 'where it goes if you cut' : 'where it hung before',
+    mid + side + 4,
+    yGhost,
+    '#7d776d',
+    'left',
+    '10px ui-monospace, monospace',
+  );
+
+  const tautColour = (tension) => (tension > 0.01 ? HOT : '#4a4640');
+  segment(ctx, [mid - side, ceilingY], [mid - side, yQ], tautColour(tensions.safetyTop), tensions.safetyTop > 0.01 ? 2 : 1.2, tensions.safetyTop <= 0.01);
+  segment(ctx, [mid - side, yQ], [mid, yQ], tautColour(tensions.safetyTop), tensions.safetyTop > 0.01 ? 2 : 1.2, tensions.safetyTop <= 0.01);
+  segment(ctx, [mid + side, yP], [mid + side, yW], tautColour(tensions.safetyBottom), tensions.safetyBottom > 0.01 ? 2 : 1.2, tensions.safetyBottom <= 0.01);
+  segment(ctx, [mid, yP], [mid + side, yP], tautColour(tensions.safetyBottom), tensions.safetyBottom > 0.01 ? 2 : 1.2, tensions.safetyBottom <= 0.01);
+
+  coil(ctx, mid, ceilingY, yP, COOL);
+  coil(ctx, mid, yQ, yW, COOL);
+
+  if (state.linkIntact) {
+    segment(ctx, [mid, yP], [mid, yQ], HOT, 3);
+    label(ctx, 'link', mid + 16, (yP + yQ) / 2, HOT, 'left', '10px ui-monospace, monospace');
+  } else {
+    ctx.save();
+    ctx.strokeStyle = '#5f5a52';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(mid - 7, yP + 4);
+    ctx.lineTo(mid + 7, yP + 12);
+    ctx.moveTo(mid - 7, yQ - 12);
+    ctx.lineTo(mid + 7, yQ - 4);
+    ctx.stroke();
+    ctx.restore();
+    label(ctx, 'CUT', mid + 16, (yP + yQ) / 2, '#7d776d', 'left', '10px ui-monospace, monospace');
   }
 
-  return { draw, resize, cellAt };
+  ctx.save();
+  ctx.fillStyle = '#15130f';
+  ctx.strokeStyle = FREE;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.rect(mid - 26, yW, 52, 26);
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+  label(ctx, `${p.load} N`, mid, yW + 13, FREE, 'center', '11px ui-monospace, monospace');
+
+  label(ctx, `depth ${state.weight.toFixed(1)} cm`, mid, height - 14, INK, 'center', '12px ui-monospace, monospace');
+  label(ctx, `each spring pulls ${tensions.upperSpring.toFixed(1)} N / ${tensions.lowerSpring.toFixed(1)} N`, mid, height - 30, DIM, 'center', '10px ui-monospace, monospace');
 }

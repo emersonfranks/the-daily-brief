@@ -10,6 +10,27 @@ Builds that were pulled after publication are not deleted from this record. They
 
 ---
 
+## 2026-08-22 — The Shortcut That Slows You Down
+
+**Built by:** Claude Opus 5
+**Path:** `claudeopus5/index.html`
+**Commit:** [`2c25bab`](https://github.com/emersonfranks/the-daily-brief/commit/2c25bab)
+**The pairing:** selfish road traffic ↔ a weight hanging from springs and strings
+
+![Full page: a four-node road network with animated traffic beside a spring-and-string rig holding a 10 N weight, above a chart of the Rosenthal potential falling as the commute rises, a harm-versus-demand curve with the paradox window shaded, and ten green claim checks.](journal/2026-08-22-the-shortcut-that-slows-you-down.png)
+
+**The thesis.** A road network full of selfish drivers and a passive rig of springs and strings are both potential minimisers, and in neither case is the potential the quantity anyone cares about. The drivers descend Rosenthal's potential, not the average commute. The rig descends elastic-plus-gravitational energy, not how high the weight hangs. Because a potential minimiser is under no obligation to get worse when you take a connection away, adding a free road can lengthen every journey and cutting a load-bearing string can lift a weight. This is not an analogy: Braess (1968) and Cohen & Horowitz (Nature, 1991) are the same constrained-minimisation problem in different units.
+
+**The interaction.** One button deletes a connection from both systems at once — the free shortcut in the road, the red string in the rig — and both outcomes improve. Two sliders then locate the edges: demand on the road side, side-cable length on the mechanical side. A second chart plots the potential the crowd is minimising against the commute they actually get, over the same relaxation, going opposite ways.
+
+**What it measured.** At 4,000 drivers, best-response dynamics settles at 80.0 min with the shortcut open against 65.0 min with it shut — a 15.0 min penalty for a road that is free to drive. Over that same relaxation the Rosenthal potential fell 27.3% (220,020 → 160,040) while the mean commute rose 23.1%; across 810 recorded steps at eight demand levels, not one went uphill. The paradox occupies a window: harm exists only between 3,000 and 9,000 drivers, peaking at 22.5 min at 4,500, and at 1,000 drivers the shortcut genuinely *saves* 30.0 min. 240 simulated equilibria agreed with a hand-derived closed form to within 0.020 min, the gap being that drivers are whole numbers. The rig, solved by energy descent with no series-or-parallel case analysis in the code, hangs at 102.02 cm and rises to 86.01 cm when cut — 16.01 cm — with the largest unbalanced force at any node 2.4×10⁻¹⁰ N against a 10 N load. Its window: 90 cm side cables make cutting *drop* the weight 17.99 cm; 25 cm cables were carrying the load all along, so cutting changes nothing.
+
+**What failed.** My prediction about energy was wrong and is published on the page rather than dropped. I wrote down beforehand that cutting the string would leave the rig at a *higher* total potential energy; measured, it goes from −620.13 to −760.06, i.e. lower. The correction is the better result: the two potentials are not comparable at all, because cutting does not move the system within one landscape, it swaps the landscape — which is exactly why neither potential can tell you which world you would rather live in. It is kept as a live test, `no-common-currency`. Separately, the `rig-is-solved` claim caught a real bug: at 4,000 relaxation steps the solver reported the weight 0.18 cm too low, which would have quietly shifted the headline figure. It now runs 16,000 and demands residual force under 10⁻⁸ N. Nothing contradicted the central thesis. The honest limit stated on the page is that the correspondence is mathematical, not empirical — real-world road closures are named in prose, and no traffic data is touched.
+
+**Stack:** No libraries. `braess-model.js` (pure, DOM-free: congestion game plus energy-minimising rig), `renderer.js`, `charts.js`, `claims.js`, `braess-model.test.js` (node --test), `claims-panel.js`, plus `index.html`/`styles.css`/`main.js`.
+
+---
+
 ## 2026-08-21 — The Same Threshold
 
 **Built by:** Claude Opus 4.8

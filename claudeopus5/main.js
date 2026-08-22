@@ -1,172 +1,161 @@
 // @ts-check
 
-import { GrainModel, RateAccumulator } from './grain-model.js';
-import { createRenderer } from './renderer.js';
-import { drawRateChart, drawSideHistogram } from './charts.js';
+import {
+  DEFAULT_RIG,
+  analyticHarm,
+  braessWindow,
+  createRigState,
+  createRoadState,
+  meanTravelTime,
+  relaxRig,
+  relaxRoads,
+} from './braess-model.js';
+import { drawDescent, drawHarmCurve } from './charts.js';
+import { DOTS_PER_PANEL, drawRig, drawRoads } from './renderer.js';
+import { mountClaimsPanel } from './claims-panel.js';
 
-const CENSUS_INTERVAL = 8;
-const WARMUP_SWEEPS = 100;
-const RESEED_BELOW = 45;
-const PUBLISHED_K = 0.539;
+const MAX_DRIVERS = 12000;
 
-/**
- * @param {string} id
- * @returns {HTMLElement}
- */
-function mustGet(id) {
-  const element = document.getElementById(id);
-  if (!element) throw new Error(`missing element #${id}`);
-  return element;
+/** @param {string} id @returns {HTMLElement} */
+function need(id) {
+  const el = document.getElementById(id);
+  if (!el) throw new Error(`missing element #${id}`);
+  return el;
 }
 
-/**
- * @param {string} id
- * @returns {HTMLCanvasElement}
- */
-function mustGetCanvas(id) {
-  const element = mustGet(id);
-  if (!(element instanceof HTMLCanvasElement)) throw new Error(`#${id} is not a canvas`);
-  return element;
+const roadCanvas = /** @type {HTMLCanvasElement} */ (need('road-canvas'));
+const rigCanvas = /** @type {HTMLCanvasElement} */ (need('rig-canvas'));
+const descentCanvas = /** @type {HTMLCanvasElement} */ (need('descent-canvas'));
+const harmCanvas = /** @type {HTMLCanvasElement} */ (need('harm-canvas'));
+const linkToggle = /** @type {HTMLButtonElement} */ (need('link-toggle'));
+const driverSlider = /** @type {HTMLInputElement} */ (need('drivers'));
+const safetySlider = /** @type {HTMLInputElement} */ (need('safety'));
+
+const state = {
+  linkPresent: true,
+  drivers: 4000,
+  safetyLength: DEFAULT_RIG.safetyLength,
+};
+
+/** Rig geometry in both configurations, recomputed only when a parameter moves. */
+let rig = { shown: createRigState(true), ghostDepth: 0 };
+
+function resolveRig() {
+  const params = { ...DEFAULT_RIG, safetyLength: state.safetyLength };
+  const shown = createRigState(state.linkPresent, params);
+  const other = createRigState(!state.linkPresent, params);
+  relaxRig(shown);
+  relaxRig(other);
+  rig = { shown, ghostDepth: other.weight };
 }
 
-const shell = mustGet('shell');
-const world = mustGetCanvas('world');
-const dividerHandle = mustGet('divider');
-const hud = mustGet('hud');
-const rateChart = mustGetCanvas('c-rate');
-const histogramChart = mustGetCanvas('c-hist');
-
-const model = new GrainModel({ size: 300, seeds: 1000, seed: (Date.now() & 0x7fffffff) || 1 });
-const rates = new RateAccumulator();
-const renderer = createRenderer(world, model);
-
-const view = { divide: 0.5, fateMode: false, tracked: -1 };
-let trackedDiedAt = -1;
-let running = true;
-let pausedForTests = false;
-let sweepsPerFrame = 2;
-/** @type {import('./grain-model.js').Fit | null} */
-let currentFit = null;
-
-function restart() {
-  model.reset();
-  rates.bins.clear();
-  currentFit = null;
-  view.tracked = -1;
-  trackedDiedAt = -1;
+/** @returns {import('./braess-model.js').RoadState} */
+function settledRoads() {
+  const roads = createRoadState(state.drivers, state.linkPresent);
+  relaxRoads(roads);
+  return roads;
 }
 
-function updatePanel() {
-  mustGet('s-t').textContent = String(model.time);
-  mustGet('s-live').textContent = String(model.live);
-  mustGet('s-n').textContent = model.live ? model.meanSides.toFixed(3) : '\u2014';
-  mustGet('s-dead').textContent = String(model.deaths);
-  mustGet('s-k').textContent = currentFit ? currentFit.slope.toFixed(3) : '\u2014';
-  mustGet('s-r2').textContent = currentFit ? currentFit.r2.toFixed(4) : '\u2014';
-  drawRateChart(rateChart, rates, currentFit);
-  drawSideHistogram(histogramChart, model);
-}
+let roads = settledRoads();
 
-function updateHud() {
-  const tracked = view.tracked;
-  if (tracked < 0) {
-    hud.innerHTML = '<div class="verdict hold">Click a cell to sentence it.</div>';
-    return;
+function refresh() {
+  roads = settledRoads();
+  resolveRig();
+
+  const commute = meanTravelTime(roads);
+  const harm = analyticHarm(state.drivers);
+
+  need('readout-commute').textContent = `${commute.toFixed(1)} min`;
+  need('readout-depth').textContent = `${rig.shown.weight.toFixed(1)} cm`;
+  need('readout-drivers').textContent = state.drivers.toLocaleString('en-GB');
+  need('readout-safety').textContent = `${state.safetyLength.toFixed(0)} cm`;
+  need('dot-scale').textContent = Math.round(state.drivers / DOTS_PER_PANEL).toLocaleString('en-GB');
+
+  const verdictRoad = need('verdict-road');
+  const verdictRig = need('verdict-rig');
+  if (harm > 0.05) {
+    verdictRoad.textContent = state.linkPresent
+      ? `Shutting the shortcut would cut ${harm.toFixed(1)} min off every commute.`
+      : `Reopening the shortcut would add ${harm.toFixed(1)} min back onto every commute.`;
+    verdictRoad.className = 'verdict-line bad';
+  } else if (harm < -0.05) {
+    verdictRoad.textContent = `At this demand the shortcut genuinely helps, by ${(-harm).toFixed(1)} min. No paradox here.`;
+    verdictRoad.className = 'verdict-line good';
+  } else {
+    verdictRoad.textContent = 'At this demand the shortcut makes no difference either way.';
+    verdictRoad.className = 'verdict-line';
   }
-  if (model.area[tracked] === 0) {
-    hud.innerHTML = `<div class="verdict shrink">Cell ${tracked} &mdash; DIED at sweep ${trackedDiedAt}.</div>` +
-      'It ran out of neighbours. Click another.';
-    return;
+
+  const rise = state.linkPresent ? rig.shown.weight - rig.ghostDepth : rig.ghostDepth - rig.shown.weight;
+  if (rise > 0.05) {
+    verdictRig.textContent = state.linkPresent
+      ? `Cutting the link would lift the weight ${rise.toFixed(1)} cm.`
+      : `Retying the link would drop the weight ${rise.toFixed(1)} cm again.`;
+    verdictRig.className = 'verdict-line bad';
+  } else if (rise < -0.05) {
+    verdictRig.textContent = `With side cables this long, cutting drops the weight ${(-rise).toFixed(1)} cm. No paradox here.`;
+    verdictRig.className = 'verdict-line good';
+  } else {
+    verdictRig.textContent = 'The side cables are short enough to carry the load already: cutting changes nothing.';
+    verdictRig.className = 'verdict-line';
   }
-  const sides = model.sides[tracked];
-  const delta = sides - 6;
-  const tone = delta > 0 ? 'grow' : delta < 0 ? 'shrink' : 'hold';
-  const verdict = delta > 0 ? 'GROWING' : delta < 0 ? 'DYING' : 'HOLDING';
-  const k = currentFit ? currentFit.slope : PUBLISHED_K;
-  hud.innerHTML = `<div class="verdict ${tone}">Cell ${tracked} &middot; ${sides} sides &middot; ${verdict}</div>` +
-    `area ${model.area[tracked]} sites &nbsp;&middot;&nbsp; law says dA/dt = ${(k * delta).toFixed(2)} sites/sweep`;
+
+  linkToggle.textContent = state.linkPresent ? 'Remove both links' : 'Put both links back';
+  linkToggle.setAttribute('aria-pressed', String(!state.linkPresent));
+  need('link-state').textContent = state.linkPresent
+    ? 'Shortcut open, string intact'
+    : 'Shortcut closed, string cut';
+
+  drawDescent(descentCanvas, state.drivers);
+  drawHarmCurve(harmCanvas, state.drivers, MAX_DRIVERS);
 }
 
-function step() {
-  for (let i = 0; i < sweepsPerFrame; i++) {
-    model.sweep();
-    if (model.time % CENSUS_INTERVAL === 0) {
-      model.census();
-      if (model.time > WARMUP_SWEEPS) {
-        rates.record(model);
-        currentFit = rates.fit({ min: 5, max: 9 });
-      }
-      if (view.tracked >= 0 && model.area[view.tracked] === 0 && trackedDiedAt < 0) {
-        trackedDiedAt = model.time;
-      }
-    }
-  }
-  if (model.live < RESEED_BELOW) restart();
+let frame = 0;
+let clock = 0;
+let last = performance.now();
+
+/** @param {number} now */
+function tick(now) {
+  const dt = Math.min(0.05, (now - last) / 1000);
+  last = now;
+  clock += dt;
+  drawRoads(roadCanvas, roads, clock);
+  drawRig(rigCanvas, rig.shown, rig.ghostDepth);
+  frame = window.requestAnimationFrame(tick);
 }
 
-function frame() {
-  if (running && !pausedForTests) step();
-  renderer.draw(view);
-  updatePanel();
-  updateHud();
-  requestAnimationFrame(frame);
-}
-
-function placeDivider() {
-  dividerHandle.style.left = `${view.divide * 100}%`;
-}
-
-let dragging = false;
-dividerHandle.addEventListener('pointerdown', (event) => {
-  dragging = true;
-  dividerHandle.setPointerCapture(event.pointerId);
-  event.preventDefault();
-});
-dividerHandle.addEventListener('pointermove', (event) => {
-  if (!dragging) return;
-  const bounds = shell.getBoundingClientRect();
-  view.divide = Math.min(0.96, Math.max(0.04, (event.clientX - bounds.left) / bounds.width));
-  placeDivider();
-});
-dividerHandle.addEventListener('pointerup', (event) => {
-  dragging = false;
-  dividerHandle.releasePointerCapture(event.pointerId);
+linkToggle.addEventListener('click', () => {
+  state.linkPresent = !state.linkPresent;
+  refresh();
 });
 
-world.addEventListener('click', (event) => {
-  const cell = renderer.cellAt(event.clientX, event.clientY);
-  if (cell < 0) return;
-  view.tracked = cell;
-  trackedDiedAt = -1;
+driverSlider.addEventListener('input', () => {
+  state.drivers = Number(driverSlider.value);
+  refresh();
 });
 
-const playButton = mustGet('b-play');
-playButton.addEventListener('click', () => {
-  running = !running;
-  playButton.textContent = running ? 'Pause' : 'Run';
-  playButton.setAttribute('aria-pressed', String(running));
+safetySlider.addEventListener('input', () => {
+  state.safetyLength = Number(safetySlider.value);
+  refresh();
 });
 
-const fateButton = mustGet('b-fate');
-fateButton.addEventListener('click', () => {
-  view.fateMode = !view.fateMode;
-  fateButton.setAttribute('aria-pressed', String(view.fateMode));
+window.addEventListener('resize', () => {
+  drawDescent(descentCanvas, state.drivers);
+  drawHarmCurve(harmCanvas, state.drivers, MAX_DRIVERS);
 });
 
-mustGet('b-reset').addEventListener('click', restart);
+window.addEventListener('pagehide', () => window.cancelAnimationFrame(frame));
 
-mustGet('r-speed').addEventListener('input', (event) => {
-  const target = event.target;
-  if (target instanceof HTMLInputElement) sweepsPerFrame = Number(target.value);
-});
+const window_ = braessWindow();
+need('window-lower').textContent = window_.lower.toLocaleString('en-GB');
+need('window-upper').textContent = window_.upper.toLocaleString('en-GB');
+need('window-peak').textContent = `${window_.peakHarm.toFixed(1)} min at ${window_.peakDrivers.toLocaleString('en-GB')} drivers`;
 
-window.addEventListener('resize', renderer.resize);
+mountClaimsPanel(
+  need('claims-list'),
+  /** @type {HTMLButtonElement} */ (need('run-claims')),
+  need('claims-verdict'),
+);
 
-// The in-page test runner needs the main thread; yielding it keeps the simulation from stuttering.
-document.addEventListener('brief:pause', () => { pausedForTests = true; });
-document.addEventListener('brief:resume', () => { pausedForTests = false; });
-
-mustGet('boot').remove();
-renderer.resize();
-placeDivider();
-frame();
+refresh();
+frame = window.requestAnimationFrame(tick);

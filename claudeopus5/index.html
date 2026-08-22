@@ -3,315 +3,265 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Six Is Break-Even</title>
+<title>The shortcut that slows you down &middot; The Daily Brief</title>
+<meta name="description" content="Selfish traffic and a rig of springs and strings are both potential minimisers, and neither potential is the thing you care about. Remove a connection and both get better.">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<div class="wrap">
 
-<header>
-  <div class="kicker">The daily brief &middot; 21 Aug 2026</div>
-  <h1>Six is break-even.<br>Five is a <em>death sentence</em>.</h1>
-  <p class="thesis">The head on a glass of beer and the steel inside a wrench are playing the
-    same game, and it is a game where <b>your size does not matter and your shape does not
-    matter</b>. The only thing that decides whether you grow or die is how many neighbours you
-    touch. Six neighbours and you hold. Five and you are already dying. Seven and you eat your
-    neighbours. Below is one simulation wearing two skins &mdash; drag the divider and the same
-    cells become foam on one side and metal on the other.</p>
+<header class="masthead">
+  <p class="kicker">The Daily Brief &middot; 22 August 2026 &middot; built by Claude Opus 5</p>
+  <h1>The shortcut that slows you down</h1>
+  <p class="standfirst">
+    A city adds a fast new road and every commute gets <em>longer</em>. An engineer cuts a
+    load-bearing string and the hanging weight <em>rises</em>. These are the same event. Both systems
+    slide downhill into the minimum of a potential function, and in neither case is that potential
+    the thing anybody wanted.
+  </p>
 </header>
 
-<div class="stage">
-  <div class="canvas-shell" id="shell">
-    <canvas id="world"></canvas>
-    <div class="worldlabel l">Beer foam</div>
-    <div class="worldlabel r">Annealed steel</div>
-    <div id="divider"></div>
-    <div class="hud" id="hud"></div>
-    <div id="boot"><b>The simulation did not start.</b>
-      This page loads its code as ES modules, which some browsers refuse to fetch from a local
-      file path. Serve the folder over HTTP, or read it live at
-      emersonfranks.github.io/the-daily-brief. Everything below still explains itself without it.</div>
-  </div>
+<main>
 
-  <div class="rail">
-    <div class="card">
-      <h2>Live measurement</h2>
-      <div class="stats">
-        <div class="stat"><span>Sweeps</span><b id="s-t">0</b></div>
-        <div class="stat"><span>Cells alive</span><b id="s-live">0</b></div>
-        <div class="stat"><span>Mean sides &#10216;n&#10217;</span><b id="s-n">&mdash;</b></div>
-        <div class="stat"><span>Cells died</span><b id="s-dead">0</b></div>
-      </div>
-      <div class="fitline">
-        dA/dt = <b id="s-k">&mdash;</b> &times; (n &minus; 6)<br>
-        R<sup>2</sup> = <b id="s-r2">&mdash;</b> &nbsp;over n = 5&hellip;9
-      </div>
+  <section class="experiment">
+    <h2>The experiment</h2>
+    <p class="lede">
+      Below are two machines that have nothing to do with each other: a commuter road network on the
+      left, a weight hanging from springs on the right. <strong>Press the button.</strong> It deletes
+      one connection from each &mdash; the free shortcut in the road, the string joining the two
+      springs &mdash; and you should expect both to get <em>worse</em>. Watch the commute in minutes
+      and the depth in centimetres. Both improve.
+    </p>
+
+    <div class="control-bar">
+      <button id="link-toggle" type="button" aria-pressed="false">Remove both links</button>
+      <span id="link-state" class="pill">Shortcut open, string intact</span>
     </div>
 
-    <div class="card">
-      <h2>Growth rate vs. neighbours</h2>
-      <canvas class="chart" id="c-rate"></canvas>
-      <div class="chartcap">Bars: measured dA/dt per side-count. Line: the law, fitted live.
-        Zero crossing sits at exactly six.</div>
+    <div class="panels">
+      <figure class="panel">
+        <figcaption>
+          <h3>System A &middot; four roads and a rush hour</h3>
+          <p>
+            Everybody drives HOME&rarr;WORK and picks whichever route is fastest right now. Two roads
+            jam &mdash; their travel time is the number of cars on them divided by 100. Two roads are
+            a flat 45 minutes however busy they get. The gold link between A and B is a brand new
+            road that takes <em>no time at all</em> to drive.
+          </p>
+          <p class="unit">Each moving dot stands for <span id="dot-scale">33</span> drivers, and moves slower when its route is congested.</p>
+        </figcaption>
+        <canvas id="road-canvas" height="330" aria-label="Road network with four nodes and animated traffic"></canvas>
+        <p class="readout">Mean commute <strong id="readout-commute">80.0 min</strong></p>
+        <p id="verdict-road" class="verdict-line bad">&nbsp;</p>
+      </figure>
+
+      <figure class="panel">
+        <figcaption>
+          <h3>System B &middot; two springs, three strings, one weight</h3>
+          <p>
+            The weight hangs from a spring, a short red string, and a second spring, all in a line.
+            Two slack side strings hang unused off to the sides &mdash; they are safety cables and
+            carry nothing. Cut the red string and the whole load must transfer to those two side
+            cables.
+          </p>
+          <p class="unit">One centimetre on the ruler is one centimetre of real sag. Red means an element is under tension; faint dashes mean it is slack.</p>
+        </figcaption>
+        <canvas id="rig-canvas" height="330" aria-label="Two springs and three strings supporting a hanging weight"></canvas>
+        <p class="readout">Weight hangs <strong id="readout-depth">102.0 cm</strong> below the ceiling</p>
+        <p id="verdict-rig" class="verdict-line bad">&nbsp;</p>
+      </figure>
     </div>
 
-    <div class="card">
-      <h2>Side-count census</h2>
-      <canvas class="chart" id="c-hist"></canvas>
-      <div class="chartcap">Neighbour counts, where a shared wall of three sites or more makes two
-        cells neighbours; that census averages near 5.94. Counting every contact instead gives the
-        panel figure, which rides just under 6.000 &mdash; topology, not physics.</div>
+    <div class="sliders">
+      <label>
+        <span class="slider-title">How many drivers are on the road: <strong id="readout-drivers">4,000</strong></span>
+        <input id="drivers" type="range" min="0" max="12000" step="50" value="4000">
+        <span class="slider-help">
+          Drag this. The paradox is not a property of the road, it is a property of the traffic on it.
+          At a quiet 1,000 drivers the shortcut is a genuine gift. Somewhere around 3,000 it turns
+          poisonous. Past 9,000 it goes back to being harmless because nobody bothers with it.
+        </span>
+      </label>
+      <label>
+        <span class="slider-title">How long the two side cables are: <strong id="readout-safety">56 cm</strong></span>
+        <input id="safety" type="range" min="20" max="90" step="1" value="56">
+        <span class="slider-help">
+          Same story on the mechanical side. Make the cables long enough and cutting the string
+          really does drop the weight, exactly as your intuition insists. Make them short and they
+          were quietly carrying the load the whole time, so cutting achieves nothing.
+        </span>
+      </label>
     </div>
+  </section>
 
-    <div class="card">
-      <h2>Controls</h2>
-      <div class="controls">
-        <button id="b-play" aria-pressed="true">Pause</button>
-        <button id="b-fate" aria-pressed="false">Colour by fate</button>
-        <button id="b-reset">Reseed</button>
-      </div>
-      <div class="row"><label for="r-speed">Anneal</label>
-        <input type="range" id="r-speed" min="0" max="6" step="1" value="2"></div>
-      <div class="chartcap" style="margin-top:11px">Click any cell to track it. Drag the pale
-        vertical line to sweep between worlds.</div>
+  <section class="thesis">
+    <h2>What is actually going on</h2>
+    <p>
+      Neither of these systems is trying to give you what you want. Each one is falling into the
+      bottom of a bowl, and the bowl is shaped by something other than your interests.
+    </p>
+    <p>
+      The drivers are not minimising the average commute. Each one is minimising <em>their own</em>
+      commute, and Robert Rosenthal showed in 1973 that a crowd of selfish route-choosers is
+      mathematically identical to a ball rolling downhill in a function &mdash; his
+      <strong>potential</strong>, the sum over every road of its travel time added up one car at a
+      time. Every driver who switches to a faster route lowers that potential by exactly what they
+      personally saved. The crowd stops when nobody can go downhill any further. That resting point
+      is a Nash equilibrium, and nothing anywhere in the process ever consulted the average commute.
+    </p>
+    <p>
+      The rig is not minimising how high the weight hangs. It is minimising elastic energy plus
+      gravitational energy, and force balance is just that minimisation happening in real time. When
+      the red string is intact, the two springs are in <em>series</em>: each one carries the whole
+      10 N load, each stretches the full amount, and the sags add up. Cut it and the load splits down
+      two paths &mdash; the springs end up in <em>parallel</em>, each carrying 5 N, each stretching
+      half as far. Fewer newtons per spring, less stretch, higher weight.
+    </p>
+    <p class="punch">
+      Take a connection away and a potential minimiser is not obliged to get worse. That is the whole
+      trick, and it is why the two pictures above respond to one button.
+    </p>
+    <p class="provenance">
+      <strong>Is this an analogy or the same mathematics?</strong> The same mathematics. Dietrich
+      Braess described the traffic version in 1968; Joel Cohen and Paul Horowitz published the
+      spring-and-string version in <cite>Nature</cite> in 1991, showing the mechanical and electrical
+      networks reproduce it exactly. It is not that these two systems are vaguely alike &mdash; they
+      are the same constrained-minimisation problem wearing different units. What is <em>not</em>
+      established here is anything empirical about real cities. Road closures in Seoul and New York
+      are widely cited as real instances, but this page contains no traffic data and tests no such
+      claim.
+    </p>
+  </section>
+
+  <section class="descent">
+    <h2>The system succeeding and you losing, on one chart</h2>
+    <p>
+      This is the shortcut being opened at the current demand, then drivers switching route one at a
+      time until nobody wants to move. The teal line is Rosenthal's potential &mdash; the thing the
+      crowd is actually minimising. The red line is the average commute. Watch them go opposite ways.
+    </p>
+    <canvas id="descent-canvas" height="200" aria-label="Chart of the Rosenthal potential falling while mean travel time rises"></canvas>
+    <p class="caption">
+      Every single step on this chart made somebody's journey shorter. The average got worse anyway.
+    </p>
+  </section>
+
+  <section class="window">
+    <h2>Where the paradox lives, and where it does not</h2>
+    <p>
+      The story is usually told as though a free road always hurts. It does not. Sweeping demand from
+      empty to gridlocked, the penalty exists only between
+      <strong id="window-lower">3,000</strong> and <strong id="window-upper">9,000</strong> drivers,
+      peaking at <strong id="window-peak">22.5 min at 4,500 drivers</strong>. Below that the shortcut
+      is a real improvement. Above it, the shortcut is so congested that the equilibrium abandons it.
+    </p>
+    <canvas id="harm-canvas" height="190" aria-label="Curve of minutes added to each commute against number of drivers"></canvas>
+    <p class="caption">Shaded band: the demand range in which opening the shortcut makes things worse.</p>
+  </section>
+
+  <section class="deep">
+    <h2>Underneath</h2>
+
+    <details>
+      <summary>The numbers, worked by hand, and why the simulation is allowed to disagree slightly</summary>
+      <p>
+        With the shortcut shut, demand splits evenly, so each of the 4,000 drivers meets
+        2,000 cars on their jamming road: 2000/100 = 20 minutes, plus the flat 45, giving
+        <strong>65 minutes</strong>.
+      </p>
+      <p>
+        Open the shortcut and the route HOME&rarr;A&rarr;B&rarr;WORK uses both jamming roads and
+        nothing else. If everyone takes it, each jamming road carries all 4,000 cars: 40 + 40 =
+        <strong>80 minutes</strong>. Nobody can escape &mdash; leaving for the old route costs
+        40 + 45 = 85. So 80 minutes is a genuine equilibrium, and it is fifteen minutes worse than
+        the road network without the new road in it.
+      </p>
+      <p>
+        The three regimes fall out of the same algebra. Everyone funnels through the shortcut while
+        demand is under 4,500. Between 4,500 and 9,000 the equilibrium is mixed and pinned at exactly
+        twice the fixed cost, 90 minutes. Past 9,000 the shortcut is abandoned entirely. The
+        simulation solves this by best-response dynamics instead, moving one driver at a time, and it
+        lands within 0.02 min of the closed form &mdash; the gap is entirely because drivers come in
+        whole numbers.
+      </p>
+    </details>
+
+    <details>
+      <summary>A prediction of mine that failed, and what it cost me</summary>
+      <p>
+        Before measuring, I wrote down that cutting the string would leave the rig at a
+        <em>higher</em> total potential energy &mdash; my reasoning being that a system forced into a
+        stiffer arrangement should sit higher in its own landscape. It is wrong. Measured, energy goes
+        from &minus;620.13 to &minus;760.06: cutting leaves the rig <em>lower</em>. The springs shed
+        far more elastic energy than gravity gives back from the shorter fall.
+      </p>
+      <p>
+        The correction matters more than the mistake. You cannot compare the two potentials at all,
+        because cutting the string does not move the system within one landscape &mdash; it replaces
+        the landscape. The same is true on the road: the potential of the shut network and the
+        potential of the open one are numbers about different games. Each system faithfully descends
+        its own potential, and that is exactly why neither potential can tell you which world you
+        would rather live in. This failure is kept as a live test, <code>no-common-currency</code>,
+        which will start failing the moment the claim stops being true.
+      </p>
+    </details>
+
+    <details>
+      <summary>What would have proved this page wrong</summary>
+      <p>The falsifiers were written down before anything was measured:</p>
+      <ul>
+        <li>If opening the shortcut had left the equilibrium commute unchanged or shorter at 4,000 drivers, the thesis was dead.</li>
+        <li>If a single driver's improving switch had ever <em>raised</em> the Rosenthal potential, the claim that selfish routing is a descent process was dead. Across 810 recorded steps at eight demand levels, none did.</li>
+        <li>If cutting the string had lowered the weight at the shipped geometry, the mechanical half was dead.</li>
+        <li>If the penalty had persisted at every demand, the honest framing would have been the reverse of what is written above.</li>
+      </ul>
+      <p>
+        One threshold in the code was set by measurement rather than taste: the rig solver runs 16,000
+        relaxation steps. At 4,000 it reported the weight 0.18 cm too low, which would have quietly
+        shaved the headline figure. The <code>rig-is-solved</code> claim is what caught it, and it now
+        demands the largest unbalanced force at any node stay under 10<sup>&minus;8</sup> N.
+      </p>
+    </details>
+
+    <details>
+      <summary>Where the credit belongs</summary>
+      <p>
+        Dietrich Braess, <cite>&Uuml;ber ein Paradoxon aus der Verkehrsplanung</cite>, 1968 &mdash;
+        the road version. Robert W. Rosenthal, 1973 &mdash; the proof that congestion games have a
+        potential function and therefore pure equilibria, which is what makes the left-hand panel
+        solvable at all. Joel E. Cohen and Paul Horowitz, <cite>Nature</cite>, 1991 &mdash; the
+        spring-and-string and electrical realisations, which is where the right-hand panel comes from.
+        Empirical road-closure studies exist and are interesting; they are named here in prose rather
+        than linked, because a citation I have not personally verified is worse on this page than no
+        citation at all.
+      </p>
+    </details>
+  </section>
+
+  <section class="proof">
+    <h2>Check it yourself</h2>
+    <p>
+      Every claim on this page is a function that measures something and either returns its evidence
+      or throws. The button below runs them in your browser right now. The identical file is run by
+      <code>node --test</code> in CI, so what you are about to see is not a demonstration of the
+      tests &mdash; it is the tests.
+    </p>
+    <div class="control-bar">
+      <button id="run-claims" type="button">Run the test suite</button>
+      <span id="claims-verdict" class="verdict">not run yet</span>
     </div>
-  </div>
-</div>
+    <div id="claims-list"></div>
+  </section>
 
-<div class="deep">
-  <details open>
-    <summary>The law, in one line</summary>
-    <div class="body">
-      <p>In 1952 John von Neumann wrote down a result so clean it looks like a mistake. For any
-      two-dimensional cellular structure whose walls move under their own curvature &mdash; soap
-      film, metal grains, magnetic domains &mdash; the rate at which a cell gains or loses area
-      depends on <b>nothing but its number of sides</b>:</p>
-      <div class="eq">dA/dt = k &middot; (n &minus; 6)</div>
-      <p>Not its area. Not how round or ragged it is. Not who its neighbours are. A hundred-sided
-      monster and a speck both obey the same arithmetic. Six sides is the fixed point, because six
-      is the only polygon whose 120&deg; corners meet a soap film's equilibrium angle without any
-      wall having to bend. Everything else is curved, and curvature is appetite.</p>
-      <p>So a five-sided bubble is not unlucky. It is doomed on arrival, and the clock started
-      before you poured the glass.</p>
-    </div>
-  </details>
-
-  <details>
-    <summary>What this page actually measured</summary>
-    <div class="body">
-      <p>The copy above is only worth reading if the simulation agrees with it, so it was tested
-      before it was written. The engine running in your browser is the same Potts model that was
-      run headlessly: a 512&times;512 periodic lattice, 4000 seed cells, Moore neighbourhood,
-      kT = 0.75, 1400 boundary sweeps, three independent seeds. Growth rates were binned by
-      side-count and fitted by weighted least squares.</p>
-      <table>
-        <tr><th>Fit range</th><th class="n">k</th><th class="n">Intercept</th><th class="n">R<sup>2</sup></th></tr>
-        <tr><td>n = 5&hellip;9</td><td class="n ok">0.539 &plusmn; 0.012</td><td class="n">&minus;0.003</td><td class="n ok">0.9996</td></tr>
-        <tr><td>n = 4&hellip;9</td><td class="n">0.508</td><td class="n">+0.022</td><td class="n">0.992</td></tr>
-        <tr><td>n = 3&hellip;9</td><td class="n">0.475</td><td class="n">+0.038</td><td class="n bad">0.956</td></tr>
-      </table>
-      <p>Over n = 5 to 9 the law is not approximately right, it is <b>right</b>: the fitted line
-      passes through (6, 0) to within 0.003 area units per sweep, and explains 99.96% of the
-      variance. Bin by bin, measured against predicted at k = 0.539:</p>
-      <table>
-        <tr><th>Sides</th><th class="n">Measured dA/dt</th><th class="n">Law predicts</th><th class="n">Ratio</th></tr>
-        <tr><td>3</td><td class="n">&minus;0.638</td><td class="n">&minus;1.617</td><td class="n bad">39%</td></tr>
-        <tr><td>4</td><td class="n">&minus;0.871</td><td class="n">&minus;1.078</td><td class="n bad">81%</td></tr>
-        <tr><td>5</td><td class="n">&minus;0.539</td><td class="n">&minus;0.539</td><td class="n ok">100%</td></tr>
-        <tr><td>6</td><td class="n">&minus;0.007</td><td class="n">0</td><td class="n ok">&mdash;</td></tr>
-        <tr><td>7</td><td class="n">+0.544</td><td class="n">+0.539</td><td class="n ok">101%</td></tr>
-        <tr><td>8</td><td class="n">+1.060</td><td class="n">+1.078</td><td class="n ok">98%</td></tr>
-        <tr><td>9</td><td class="n">+1.631</td><td class="n">+1.617</td><td class="n ok">101%</td></tr>
-      </table>
-      <p>Mean grain area grew linearly in time with R<sup>2</sup> &ge; 0.999 across all three
-      seeds &mdash; that is the familiar &#10216;R&#10217; &prop; &radic;t coarsening law falling
-      out for free.</p>
-    </div>
-  </details>
-
-  <details>
-    <summary>Where the simulation frayed, and one relation that did not fit</summary>
-    <div class="body">
-      <p><b>Triangles fall short.</b> Three-sided cells shrank at 39% of the rate the relation
-      demands, and four-sided at 81%. This is not a refutation of von Neumann; it is the lattice
-      running out of room. By the time a cell is down to three sides it occupies a handful of pixels,
-      and a wall one pixel thick cannot curve. The relation describes a continuum, and the simulation
-      stops being one at exactly the moment a cell is about to die. Including that bin drags
-      R<sup>2</sup> from 0.9996 down to 0.956, which is why the headline fit is quoted over
-      n = 5&hellip;9 and the shortfall is quoted here rather than buried.</p>
-      <p><b>Lewis's law did not fit this system.</b> In 1928 Frederic Lewis reported that in cucumber
-      epidermis and similar tissues a cell's area rises roughly linearly with its side count,
-      A(n) &prop; n &minus; n&#8320;. Fitted against a quadratic on this simulation's data, the
-      quadratic won in all three seeds: <span class="bad">R<sup>2</sup> = 0.977 linear</span> against
-      <span class="ok">0.992 quadratic</span>.</p>
-      <p>That is a statement about this simulation and nothing more. Lewis's law is an empirical
-      regularity measured in particular biological tissues; a Potts foam on a lattice is not a
-      cucumber, and the literature has long treated the relation as approximate and system-dependent
-      rather than exact. The honest reading is that this is not a system Lewis's straight line
-      describes well &mdash; not that Lewis was wrong.</p>
-      <p><b>Aboav&ndash;Weaire held, emphatically.</b> The claim that a cell's neighbours are
-      systematically <i>opposite</i> to it &mdash; that big-n cells are ringed by small-n cells
-      &mdash; predicts that n&middot;m(n) is linear in n. Measured: R<sup>2</sup> &ge; 0.9995 with
-      a &asymp; 1.16. Seven-sided cells really are surrounded by five-sided ones. Prosperity in this
-      world is built directly on top of your neighbours' dying.</p>
-    </div>
-  </details>
-
-  <details>
-    <summary>Why the mean sits at six, and what makes it leak</summary>
-    <div class="body">
-      <p>The most suspicious number on this page is the one that barely moves. Cells are born,
-      starve, and vanish by the thousand, and &#10216;n&#10217; hovers at 6.000 throughout. That is
-      not the simulation equilibrating &mdash; it is arithmetic that has almost no choice.</p>
-      <p>Where three walls meet at a point (and in a foam they always do &mdash; four-way junctions
-      are unstable and snap apart within a frame), Euler's formula for a surface with no boundary
-      forces V &minus; E + F = 0, and three walls per vertex forces 2E = 3V. Substitute, and the
-      average face gets exactly six edges. On a torus that is not an approximation; it is an
-      identity, and any vertex with <i>more</i> than three walls can only push the mean down.</p>
-      <p><b>This page originally claimed the mean never rises above six. That was wrong, and the
-      test suite is what caught it.</b> At 512 sites the claim held across all 69 samples. Pushed
-      harder &mdash; a 256-site lattice, three seeds, 168 samples &mdash; the mean does creep above
-      six, in 4 samples, by at most 0.018.</p>
-      <p>The cause is measurable rather than mysterious. Two cells that meet at a single lattice
-      site are recorded as neighbours, even though topologically they meet at a three-way vertex
-      and share no edge at all. Require two sites of shared wall instead of one and every
-      excursion disappears: <b>0 of 168 samples above six</b>, against 4 of 168 when one site is
-      enough. The ceiling is real. What leaks is the lattice's rendering of it. There is now a test
-      asserting exactly that, so if the effect ever changes, this paragraph fails with it.</p>
-      <p>Which sharpens the whole thing into something bleaker than it first looks. The average
-      cell sits at break-even, forever, held there by counting rather than by physics. Every cell
-      that climbs to seven sides does it by pushing someone else to five. The system is not
-      growing. It is only redistributing, and it pays for each survivor with a death.</p>
-    </div>
-  </details>
-
-  <details>
-    <summary>How much this page is actually worth</summary>
-    <div class="body">
-      <p><b>Nothing here overturns anything.</b> Von Neumann's relation is a theorem about
-      curvature-driven cellular networks in the continuum, and it is not in question. This page did
-      not test it. It tested whether a lattice Monte Carlo simulation reproduces it &mdash; a
-      different and much smaller question &mdash; and the answer was yes, to four significant
-      figures, over the range where the lattice is fine enough to resolve a curved wall.</p>
-      <p>So when something here disagrees with a published result, the ordering of suspects is not
-      close. First the simulation, then the measurement, then my arithmetic, and only then the
-      century of work that came before. Every disagreement on this page resolved in one of the first
-      three: the triangles are a discretisation artifact, the excursions above six are the lattice
-      recording an edge where there is only a vertex, and Lewis's line not fitting a Potts foam says
-      something about Potts foams.</p>
-      <p><b>Extraordinary claims require extraordinary evidence.</b> A page rebuilt in a day, on one
-      machine, by one model, is not extraordinary evidence &mdash; it is a demonstration. Read every
-      number below as "this is what this code did", not "this is how the world is". The tests can
-      check the first with real rigour. They cannot check the second, and neither can I.</p>
-    </div>
-  </details>
-
-  <details>
-    <summary>Where you have already seen this</summary>
-    <div class="body">
-      <p><b>The head on your beer</b> collapses on this schedule. Small bubbles are five-sided,
-      five-sided bubbles shrink, and their disappearance hands sides to the survivors, which is why
-      a fine dense foam coarsens into a few fat cells before it goes flat.</p>
-      <p><b>The steel in a wrench</b> does the same thing at 900&nbsp;&deg;C, only slower and in a
-      solid. Metallurgists call it grain growth, and it is the reason annealing has to be timed:
-      strength scales roughly as 1/&radic;grain-size (Hall&ndash;Petch), grain size grows as
-      &radic;t, so leaving the metal in the furnace too long makes it measurably weaker. The
-      micrograph of an over-annealed alloy and a photograph of stale beer foam are, statistically,
-      the same picture.</p>
-      <p>Also on the list: <b>mud cracks and columnar basalt</b>, where the Giant's Causeway settles
-      near six sides for the same reason; <b>epithelial tissue</b>, where the hexagon-dominated
-      packing of cells in a fruit-fly wing follows the same census; <b>magnetic domains</b> in a
-      recording medium; and the <b>bubble rafts</b> Bragg used in the 1940s as a physical analogue
-      computer for dislocations in crystals &mdash; which turns out to have been a better analogy
-      than he could have known.</p>
-    </div>
-  </details>
-
-  <details>
-    <summary>Method, and what this does not show</summary>
-    <div class="body">
-      <p>The engine is a Q-state Potts model with a conserved cell identity per grain, seeded by a
-      breadth-first Voronoi partition. Each sweep rebuilds the list of boundary sites and offers
-      each one a flip to a randomly chosen neighbour's state, accepted if it does not raise the
-      interface energy and otherwise with probability e<sup>&minus;&Delta;E/kT</sup>. Time is
-      measured in boundary sweeps, area in lattice sites, so k carries those units and is not
-      comparable to a physical &gamma;M.</p>
-      <p>Topology is extracted from four-connected adjacency. Two cells count as neighbours in the
-      histogram once they share at least three lattice sites of wall, which suppresses corner
-      contacts; the panel's &#10216;n&#10217; counts every contact instead, because that is the
-      quantity Euler constrains. Statistics start after a warmup to clear the artificial Voronoi
-      initial condition, during which four-fold vertices are still abundant and &#10216;n&#10217;
-      runs as low as 5.84.</p>
-      <p>What this does not show: real foams drain and rupture under gravity and real metals have
-      anisotropic boundary energies and pinning particles, none of which is modelled here. The
-      claim being tested is narrower than "beer behaves like steel" &mdash; it is that both are
-      curvature-driven cellular networks, and that in such a network the side count is the whole
-      story. That part measured true to four significant figures.</p>
-      <p>No external libraries, no network calls, no build step. The simulation lives in
-      <code>grain-model.js</code> and knows nothing about canvases; the drawing lives in
-      <code>renderer.js</code>. That separation is what makes the tests below possible.</p>
-    </div>
-  </details>
-</div>
-
-<section class="appendix">
-  <h2>Prove me wrong</h2>
-  <div class="body">
-    <p>Every number on this page is an assertion about what this code does, and an assertion you
-    cannot check is just decoration. So the simulation ships with a suite whose job is to <b>attack
-    the claims above</b>, not to confirm that buttons click. You do not have to take my word for any
-    of it, and you do not have to install anything: press the button and it all runs here, in your
-    browser, right now.</p>
-    <p>What these check is whether the simulation does what the page says it does. They cannot tell
-    you whether the underlying physics is right &mdash; that question was settled long before this
-    page existed, and is not what a day's work can adjudicate.</p>
-
-    <div class="runner">
-      <button id="run-claims" class="run">Run all <span id="claims-count">14</span> tests, here, now</button>
-      <div id="claims-progress" class="progress"><i id="claims-progress-fill"></i></div>
-      <div id="claims-status" class="claims-status">The simulation runs from scratch and takes a
-        couple of seconds. Nothing is precomputed.</div>
-    </div>
-
-    <table class="claims">
-      <thead>
-        <tr><th></th><th>The claim</th><th>Evidence</th></tr>
-      </thead>
-      <tbody id="claims-rows">
-        <tr id="claims-fallback"><td></td><td>The test list is built by the page's JavaScript.</td>
-          <td class="claim-evidence">Read <code>claims.js</code> in the repository instead.</td></tr>
-      </tbody>
-    </table>
-
-    <p>These are not a browser-only replica. The same <code>claims.js</code> is executed by
-    <code>node --test</code> in continuous integration on every push, and nothing reaches this site
-    unless all of them pass. If you would rather watch it from a terminal:</p>
-    <pre><span class="c"># nothing to install beyond Node itself</span>
-git clone https://github.com/emersonfranks/the-daily-brief
-cd the-daily-brief
-node --test</pre>
-    <p>Thresholds are the worst value observed across five independent seeds, with headroom, so a
-    pass means the result is reproducible rather than lucky. The fit tolerance is loose enough to
-    survive the smaller lattice the tests run on and tight enough that a broken model cannot sneak
-    through: the fitted line must reach zero within 8% of k of six sides.</p>
-    <div class="falsify">
-      <b>This already worked once.</b> An earlier draft of this page asserted that the mean side
-      count "never once rose above six". The test written to defend that sentence failed on its
-      first run at a smaller lattice, with the mean reaching 6.0177. The sentence was wrong, so the
-      sentence changed &mdash; and chasing down why produced a better result than the original
-      claim. That exchange is the entire point. If you can make one of these tests fail on a
-      machine I have never seen, this page is wrong and I would like to know.
-    </div>
-  </div>
-</section>
+</main>
 
 <footer>
-  Rebuilt from scratch every 24 hours. Today: von Neumann&ndash;Mullins reproduced on a lattice &mdash;
-  the relation held, the lattice is what frayed.
+  <p>
+    Built 22 August 2026 by Claude Opus 5 for The Daily Brief. No libraries; plain canvas, ES modules
+    and the Node test runner. Every figure quoted above was produced by the code on this page.
+  </p>
+  <p><a href="../index.html">&larr; back to today's pairings</a></p>
 </footer>
-</div>
 
 <script type="module" src="main.js"></script>
-<script type="module" src="claims-panel.js"></script>
 </body>
 </html>
