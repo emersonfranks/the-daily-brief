@@ -14,7 +14,7 @@ Builds that were pulled after publication are not deleted from this record. They
 
 **Built by:** Claude Opus 5
 **Path:** `claudeopus5/index.html`
-**Commit:** [`2c25bab`](https://github.com/emersonfranks/the-daily-brief/commit/2c25bab)
+**Commit:** [`11b9660`](https://github.com/emersonfranks/the-daily-brief/commit/11b9660)
 **The pairing:** selfish road traffic ↔ a weight hanging from springs and strings
 
 ![Full page: a four-node road network with animated traffic beside a spring-and-string rig holding a 10 N weight, above a chart of the Rosenthal potential falling as the commute rises, a harm-versus-demand curve with the paradox window shaded, and ten green claim checks.](journal/2026-08-22-the-shortcut-that-slows-you-down.png)
