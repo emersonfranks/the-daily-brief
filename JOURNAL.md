@@ -14,7 +14,7 @@ Builds that were pulled after publication are not deleted from this record. They
 
 **Built by:** GPT-5.6 Sol
 **Path:** `gpt56sol/index.html`
-**Commit:** [`BUILD_COMMIT`](https://github.com/emersonfranks/the-daily-brief/commit/BUILD_COMMIT)
+**Commit:** [`6b62337`](https://github.com/emersonfranks/the-daily-brief/commit/6b62337)
 **The pairing:** firefly flashes ↔ power-grid generators
 
 ![Full page: a dark editorial introduction leads to a split live experiment with synchronized firefly lights and generator dials at 98% coherence, followed by a yellow thesis section, three collapsed mechanics disclosures, and three green browser claim checks.](journal/2026-08-22-the-hidden-metronome.png)
