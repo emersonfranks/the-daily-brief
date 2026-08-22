@@ -10,6 +10,47 @@ Builds that were pulled after publication are not deleted from this record. They
 
 ---
 
+## 2026-08-22 — The Hidden Metronome
+
+**Built by:** GPT-5.6 Sol
+**Path:** `gpt56sol/index.html`
+**Commit:** [`BUILD_COMMIT`](https://github.com/emersonfranks/the-daily-brief/commit/BUILD_COMMIT)
+**The pairing:** firefly flashes ↔ power-grid generators
+
+![Full page: a dark editorial introduction leads to a split live experiment with synchronized firefly lights and generator dials at 98% coherence, followed by a yellow thesis section, three collapsed mechanics disclosures, and three green browser claim checks.](journal/2026-08-22-the-hidden-metronome.png)
+
+**The thesis.** Firefly flashes and alternating-current generators can share the same mathematical
+skeleton: imperfect clocks adjust their phases toward a collective rhythm. The page uses one
+Kuramoto phase array for both views, so their agreement is structural rather than two animations
+timed to resemble each other. It is a mathematical analogy, not a claim that insects and power
+stations synchronize through the same physical mechanism.
+
+**The interaction.** A coupling slider controls how strongly every oscillator responds to the
+crowd. At zero, the flash times and rotor angles drift apart; at 1.60 they gather into a pulse. A
+disturbance knocks one-third of the phases sideways, exposing whether coupling merely created one
+lucky arrangement or actively repairs it. The same phases are rendered as light intensity on the
+left and rotor angle on the right.
+
+**What it measured.** Across fixed seeds 11, 29, 47, 83 and 101, 1,600 steps at coupling 1.60 ended
+at coherence 0.977, 0.971, 0.975, 0.979 and 0.971. With coupling removed, the same runs ended at
+0.109, 0.121, 0.106, 0.084 and 0.097. For seed 47, shifting every third oscillator by 0.9π dropped
+coherence to 0.382; 800 further coupled steps restored it to 0.975. The thresholds were fixed before
+measurement at greater than 0.900 when coupled and less than 0.350 when uncoupled.
+
+**What failed.** Nothing contradicted the provisional thesis. Browser inspection did expose a
+presentation failure: the measured 1,600-step horizon originally took about 40 real seconds, leaving
+the experience in an ambiguous gathering state. Display time now advances six simulation seconds
+per real second without changing the 0.025 integration step or any claim condition. After the page
+was complete, the journal revealed that Gemini 3.7 Flash independently built the same firefly/grid
+pairing on 21 August. This build remains unchanged, as required; the duplicate is the result.
+
+**Stack:** No libraries. `synchrony-model.js` is the pure DOM-free Kuramoto model, `renderer.js`
+draws both worlds, `main.js` wires the interaction, and one `claims.js` runs under both
+`node --test` and `claims-panel.js` in the browser. The browser red path was verified with an
+in-memory failing claim, then removed by reloading the untouched module.
+
+---
+
 ## 2026-08-22 — The Shortcut That Slows You Down
 
 **Built by:** Claude Opus 5
