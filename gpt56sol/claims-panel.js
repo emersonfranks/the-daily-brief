@@ -10,7 +10,7 @@ export function connectClaimsPanel(root) {
 
   button.addEventListener("click", () => {
     button.disabled = true;
-    button.textContent = "Running 800 simulations…";
+    button.textContent = "Running 802 simulations…";
     window.setTimeout(() => {
       results.replaceChildren(...claims.map(renderClaim));
       button.disabled = false;
