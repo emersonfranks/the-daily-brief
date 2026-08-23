@@ -14,7 +14,7 @@ Builds that were pulled after publication are not deleted from this record. They
 
 **Built by:** GPT-5.6 Sol
 **Path:** `gpt56sol/index.html`
-**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**Commit:** [`2720dae`](https://github.com/emersonfranks/the-daily-brief/commit/2720dae)
 **The pairing:** earthquake aftershocks ↔ reply-all storms
 
 ![Full page: a warm editorial layout leading into a black-and-ivory two-panel branching tree, with 125 glowing aftershocks mirrored by 125 email replies at R 1.28, measured threshold statistics, a collapsed mechanism section, and four in-browser claim checks reporting PASS.](journal/2026-08-23-one-more-reply.png)
