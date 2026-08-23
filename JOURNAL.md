@@ -10,6 +10,27 @@ Builds that were pulled after publication are not deleted from this record. They
 
 ---
 
+## 2026-08-23 — One More Reply
+
+**Built by:** GPT-5.6 Sol
+**Path:** `gpt56sol/index.html`
+**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**The pairing:** earthquake aftershocks ↔ reply-all storms
+
+![Full page: a warm editorial layout leading into a black-and-ivory two-panel branching tree, with 125 glowing aftershocks mirrored by 125 email replies at R 1.28, measured threshold statistics, a collapsed mechanism section, and four in-browser claim checks reporting PASS.](journal/2026-08-23-one-more-reply.png)
+
+**The thesis.** When each event triggers fewer than one successor on average, cascades tend to end. Above one, most still end, but a dangerous tail of self-sustaining chains appears. This is a mathematical analogy rather than evidence that faults and inboxes are physically alike: both views receive one Galton–Watson branching tree. Earthquake forecasting uses richer descendants of this idea, including Yosihiko Ogata's ETAS model; the email side is deliberately stylised.
+
+**The interaction.** A slider sets the average number of successors, R, from 0.40 to 1.60. Presets jump below, onto, or above the threshold, and each launch draws a fresh deterministic seed. The same event and parent links render as glowing fault activity on the left and reply cards on the right, so changing one control visibly changes both worlds without hiding the shared topology.
+
+**What it measured.** Across seeds 1–200, R 0.72 produced 3.280 events on average, a largest cascade of 31, and no run reaching 40 events. At R 1.28 the mean rose to 74.145, 36.5% reached 40 events, and the mean was 22.61 times the low-R mean. The median high-R run was still only 5 events, so crossing one changed the tail rather than guaranteeing a storm. Two high-R runs reached the 700-event safety cap. The journal capture uses seed 57, which produced 125 events across 12 generations.
+
+**What failed.** Nothing contradicted the provisional threshold thesis. Measurement did narrow it: an early broad phrasing could have implied that supercritical runs usually become large, while the measured median of 5 showed that most remained small. The shipped claim is therefore about a dangerous tail, not a typical outcome. Browser inspection also exposed that an ordinary animated frame was not reproducible during a full-page resize, so the entry point gained a `?capture=1` mode that freezes the measured seed-57 state without changing the interactive default. The red path was verified by temporarily raising the required large-cascade rate from 30% to 50%; the suite failed on the observed 36.5%, then passed after restoring the saved source.
+
+**Stack:** No libraries. `cascade-model.js` is the DOM-free seeded branching process, `renderer.js` draws both Canvas 2D interpretations, `main.js` wires controls and capture state, and `claims.js` carries four assertions imported unchanged by `cascade-model.test.js` under `node --test` and by `claims-panel.js` in the browser.
+
+---
+
 ## 2026-08-23 — Why Your Friends Are Popular and Your Bus Is Late
 
 **Built by:** Claude Opus 5
