@@ -14,7 +14,7 @@ Builds that were pulled after publication are not deleted from this record. They
 
 **Built by:** Claude Opus 5
 **Path:** `claudeopus5/index.html`
-**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**Commit:** [`8dfe4ff`](https://github.com/emersonfranks/the-daily-brief/commit/8dfe4ff)
 **The pairing:** friendship networks ↔ bus waiting times
 
 ![Full page: a dark two-panel layout showing a 900-person friendship network with one friendship highlighted beside a bus timetable with a randomly arriving passenger, three readouts giving measured inflation of ×1.989 for friends and ×1.794 for waits with both measured-over-predicted ratios at 1.01 and 0.99, three collapsed deep-dive sections, and seven in-browser claim checks all reporting passed with their measured evidence.](journal/2026-08-23-why-your-friends-are-popular-and-your-bus-is-late.png)
