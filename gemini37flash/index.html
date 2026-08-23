@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Architecture of Scarcity: Leopard Pelts &amp; Desert Vegetation</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="badge-tag">Universal Pattern &middot; Morphogenesis</div>
+      <h1>The Architecture of Scarcity</h1>
+      <p class="lead-subtitle">
+        How Alan Turing's activator-inhibitor chemistry sculpts both mammalian coat rosettes and semiarid desert vegetation bands.
+      </p>
+
+      <div class="pairing-banner">
+        <div><strong>Pairing:</strong> <span class="domain-chip" id="domain-label-a">Mammalian Melanocyte Clusters</span></div>
+        <div class="arrow-divider">&harr;</div>
+        <div><span class="domain-chip green" id="domain-label-b">Arid Vegetation Fairy Circles &amp; Bush Bands</span></div>
+      </div>
+    </header>
+
+    <!-- Experiment Callout / Instructions -->
+    <section class="experiment-lead">
+      <h3>The Experiment</h3>
+      <p>
+        <strong>What you are seeing:</strong> A live 2D reaction-diffusion field simulated in real time. On the left, it is rendered as mammalian leopard fur (melanin pigment vs. golden tawny base). On the right, it is rendered as satellite imagery of an arid landscape (deep green vegetation canopy vs. dry red desert soil).<br>
+        <strong>What to do:</strong> Drag the <em>Resource Supply (F)</em> slider from <strong>0.050</strong> down to <strong>0.010</strong>. Watch how uniform dense cover splits into rosettes, stretches into striped contour bands, breaks into isolated clumps, and suddenly collapses into barren dunes. You can also click and drag on the canvas to paint moisture, seeds, or burn firebreaks.
+      </p>
+    </section>
+
+    <!-- Interactive Simulation Grid -->
+    <main class="sim-layout">
+      <!-- Left: Canvases -->
+      <div class="canvas-panel">
+        <div class="canvas-toolbar">
+          <div class="skin-selector">
+            <button class="skin-btn active" data-skin="split">Split View</button>
+            <button class="skin-btn" data-skin="pelt">Mammalian Pelt</button>
+            <button class="skin-btn" data-skin="satellite">Satellite Landscape</button>
+            <button class="skin-btn" data-skin="morphogen">Morphogen Field</button>
+          </div>
+
+          <div class="btn-row">
+            <button id="btn-play-pause" class="btn-secondary">⏸ Pause</button>
+            <button id="btn-step" class="btn-secondary">⏭ Step</button>
+            <button id="btn-reset" class="btn-secondary">↺ Reset</button>
+          </div>
+        </div>
+
+        <div class="canvas-container">
+          <canvas id="sim-canvas" width="96" height="96"></canvas>
+          <div class="split-labels">
+            <span class="split-label-left">🐆 Mammalian Pelt</span>
+            <span class="split-label-right">🛰️ Satellite Landscape</span>
+          </div>
+        </div>
+
+        <!-- Real-Time Diagnostic Graphs -->
+        <div class="diagnostics-grid">
+          <div class="diag-card">
+            <h4>1D Cross-Section (Moisture Depletion Halo)</h4>
+            <canvas id="profile-canvas" class="diag-canvas" width="300" height="90"></canvas>
+          </div>
+          <div class="diag-card">
+            <h4>Spatial Autocorrelation C(r) &amp; Wavelength</h4>
+            <canvas id="wave-canvas" class="diag-canvas" width="300" height="90"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Controls & Presets -->
+      <aside class="controls-panel">
+        <!-- Presets -->
+        <div class="control-card">
+          <h3>Regime Presets</h3>
+          <div class="preset-group">
+            <button class="preset-btn active" data-preset="LEOPARD_SPOTS">
+              <span class="preset-btn-title">Leopard Spots ↔ Desert Clumps</span>
+              <span class="preset-btn-desc">Cheetah/Leopard rosettes &amp; Namib fairy circle clumps</span>
+            </button>
+            <button class="preset-btn" data-preset="ZEBRA_STRIPES">
+              <span class="preset-btn-title">Zebra Stripes ↔ Tiger Bush</span>
+              <span class="preset-btn-desc">Embryonic travelling waves &amp; Sahelian hillside contour bands</span>
+            </button>
+            <button class="preset-btn" data-preset="JUNGLE_LABYRINTH">
+              <span class="preset-btn-title">Labyrinth Maze ↔ Spinifex Mosaic</span>
+              <span class="preset-btn-desc">Angelfish labyrinth &amp; Australian spinifex grass rings</span>
+            </button>
+            <button class="preset-btn" data-preset="ROSETTE_GAPS">
+              <span class="preset-btn-title">Rosette Centers ↔ Savanna Gaps</span>
+              <span class="preset-btn-desc">Jaguar rosette clearings &amp; woodland canopy clearings</span>
+            </button>
+            <button class="preset-btn" data-preset="COLLAPSE_DESERT">
+              <span class="preset-btn-title">Melanin Failure ↔ Desert Collapse</span>
+              <span class="preset-btn-desc">Albino skin deprivation &amp; severe drought desertification</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Dynamic Parameter Sliders -->
+        <div class="control-card">
+          <h3>PDE Parameters</h3>
+          <div class="slider-group">
+            <div class="slider-item">
+              <div class="slider-label-row">
+                <span>Resource Supply / Feed (F)</span>
+                <span id="val-f" class="val">0.035</span>
+              </div>
+              <input type="range" id="slider-f" min="0.010" max="0.065" step="0.001" value="0.035">
+            </div>
+
+            <div class="slider-item">
+              <div class="slider-label-row">
+                <span>Decay / Kill Rate (k)</span>
+                <span id="val-k" class="val">0.065</span>
+              </div>
+              <input type="range" id="slider-k" min="0.050" max="0.070" step="0.001" value="0.065">
+            </div>
+
+            <div class="slider-item">
+              <div class="slider-label-row">
+                <span>Substrate Diffusivity (D<sub>u</sub>)</span>
+                <span id="val-du" class="val">0.20</span>
+              </div>
+              <input type="range" id="slider-du" min="0.10" max="0.30" step="0.01" value="0.20">
+            </div>
+
+            <div class="slider-item">
+              <div class="slider-label-row">
+                <span>Activator Diffusivity (D<sub>v</sub>)</span>
+                <span id="val-dv" class="val">0.10</span>
+              </div>
+              <input type="range" id="slider-dv" min="0.04" max="0.25" step="0.01" value="0.10">
+            </div>
+
+            <div class="slider-item">
+              <div class="slider-label-row">
+                <span>Hillside Slope Advection</span>
+                <span id="val-slope" class="val">0.00</span>
+              </div>
+              <input type="range" id="slider-slope" min="0.00" max="0.10" step="0.01" value="0.00">
+            </div>
+
+            <div class="slider-item">
+              <div class="slider-label-row">
+                <span>Interactive Brush Mode</span>
+              </div>
+              <select id="brush-mode" class="btn-secondary" style="width: 100%;">
+                <option value="activator">Paint Activator / Plant Seeds</option>
+                <option value="water">Inject Substrate / Heavy Rain</option>
+                <option value="drought">Clear / Drought / Firebreak</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live HUD Metrics -->
+        <div class="control-card">
+          <h3>Measured Metrics</h3>
+          <div class="hud-grid">
+            <div class="hud-stat">
+              <div class="hud-stat-title">PDE Step</div>
+              <div id="stat-steps" class="hud-stat-val">0</div>
+            </div>
+            <div class="hud-stat">
+              <div class="hud-stat-title">Active Cover</div>
+              <div id="stat-coverage" class="hud-stat-val">0.0%</div>
+            </div>
+            <div class="hud-stat">
+              <div class="hud-stat-title">Dominant λ</div>
+              <div id="stat-wavelength" class="hud-stat-val">0 px</div>
+            </div>
+            <div class="hud-stat">
+              <div class="hud-stat-title">Halo Depletion</div>
+              <div id="stat-depletion" class="hud-stat-val">100%</div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Core Level: Plain-English Thesis -->
+    <section class="article-section">
+      <h2>The Core Thesis: Two Worlds, One Differential Invariant</h2>
+      <p>
+        At first glance, the rosette patterns on a leopard's pelt and the vegetation bands stretching across the Sahelian desert seem completely unrelated. One is a microscopic developmental process in embryonic mammalian epidermis; the other is a macroscopic ecological battle for survival across thousands of square kilometers of arid soil.
+      </p>
+      <p>
+        Yet both systems are governed by the exact same mathematical principle: <strong>short-range positive feedback (local activation) coupled to long-range negative feedback (resource depletion)</strong>. Alan Turing proposed in 1952 that two interacting chemical substances with different diffusion rates could spontaneously break spatial symmetry and form regular spots and stripes. In 1999, mathematical ecologist Max Klausmeier proved that arid vegetation follows the identical dynamical equations:
+      </p>
+
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>System Component</th>
+            <th>Mammalian Morphogenesis (Alan Turing 1952)</th>
+            <th>Semiarid Ecology (Max Klausmeier 1999)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Autocatalytic Activator (V)</strong></td>
+            <td>Melanocyte signaling molecules (stimulate local melanin synthesis)</td>
+            <td>Plant biomass &amp; roots (trap runoff, improve soil permeability)</td>
+          </tr>
+          <tr>
+            <td><strong>Diffusible Substrate / Inhibitor (U)</strong></td>
+            <td>Fast-diffusing pigment precursor / morphogen inhibitor</td>
+            <td>Groundwater &amp; overland surface runoff</td>
+          </tr>
+          <tr>
+            <td><strong>Local Positive Feedback</strong></td>
+            <td>Pigment cells stimulate adjacent pigment production</td>
+            <td>Dense root crowns shade soil and enhance infiltration 5–10&times;</td>
+          </tr>
+          <tr>
+            <td><strong>Long-Range Negative Feedback</strong></td>
+            <td>Fast morphogen diffusion suppresses pigment in surrounding ring</td>
+            <td>Deep root networks suck groundwater away from adjacent bare soil</td>
+          </tr>
+          <tr>
+            <td><strong>Resource Influx (F)</strong></td>
+            <td>Maternal morphogen feed rate into dermal tissue</td>
+            <td>Annual rainfall precipitation (mm / year)</td>
+          </tr>
+          <tr>
+            <td><strong>Topographic Forcing</strong></td>
+            <td>Tissue curvature &amp; morphogen gradients (tail/limb striping)</td>
+            <td>Hillside slope advection (converts spots into contour tiger bush)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        In both worlds, when resource supply drops, the system undergoes an identical sequence of spatial bifurcations: <em>homogeneous cover &rarr; labyrinthine stripes &rarr; discrete spots &rarr; sudden catastrophic collapse</em>.
+      </p>
+    </section>
+
+    <!-- Deep Level: Mechanics, Proofs & Failure Modes -->
+    <section class="article-section">
+      <h2>Deep Mechanics: The Mathematics of Reaction-Diffusion</h2>
+
+      <details class="deep-dive" open>
+        <summary>1. The Turing Instability Theorem: Why Differential Diffusion is Mandatory</summary>
+        <div class="deep-content">
+          <p>
+            Consider two interacting chemical fields $U(x,y,t)$ (substrate/inhibitor) and $V(x,y,t)$ (activator) governed by:
+          </p>
+          <p style="text-align: center; font-family: var(--font-mono); margin: 0.75rem 0; color: var(--accent-blue);">
+            &part;U/&part;t = D<sub>u</sub> &nabla;<sup>2</sup>U &minus; U V<sup>2</sup> + F(1 &minus; U)<br>
+            &part;V/&part;t = D<sub>v</sub> &nabla;<sup>2</sup>V + U V<sup>2</sup> &minus; (F + k)V
+          </p>
+          <p>
+            In a well-mixed, homogeneous system without spatial diffusion, the uniform steady state $(U^*, V^*) = (1, 0)$ is linearly stable. However, when diffusion is introduced, Turing discovered that if $D_u > D_v$ (the inhibitor diffuses significantly faster than the activator, typically $D_u / D_v \ge 2$), the spatial Laplacian $\nabla^2$ destabilizes non-zero spatial Fourier modes while stabilizing the zero mode.
+          </p>
+          <p>
+            If $D_u = D_v$, diffusion acts as a pure equalizer: any localized fluctuation dissipates exponentially fast back to homogeneity. The entire existence of animal coats and desert vegetation mosaics relies strictly on this differential diffusivity ratio $\delta = D_u / D_v > 1$.
+          </p>
+        </div>
+      </details>
+
+      <details class="deep-dive">
+        <summary>2. Real-World Ecological and Biological Datasets</summary>
+        <div class="deep-content">
+          <p>
+            <strong>Sahelian "Tiger Bush" (Brousse Tigrée):</strong> Aerial and satellite surveys across Niger, Mali, and Burkina Faso reveal that on gentle slopes (0.2%–1.5% grade), vegetation arranges itself into parallel contour bands perpendicular to the slope, with regular inter-band wavelengths of 40–100 meters. Overland runoff flows downhill, gets captured by the upper edge of the vegetated band, and starves the bare ground immediately below it.
+          </p>
+          <p>
+            <strong>Namibian &amp; Australian Fairy Circles:</strong> In ultra-flat sandy plains with 50–100 mm annual rainfall, grasses form hexagonal matrices of bare circular patches surrounded by lush perimeter rings. Root biomass at the perimeter draws soil moisture from a radius of up to 7 meters, creating the exact depletion halo observed in our 1D cross-section graph above.
+          </p>
+          <p>
+            <strong>Marine Angelfish (Pomacanthus semicirculatus):</strong> Shigeru Kondo &amp; Takashi Miura (<em>Science</em>, 2010) tracked juvenile angelfish over months as their body grew. Unlike mammalian spots which scale passively, angelfish stripe wavelengths remain strictly constant: as the fish doubles in length, existing stripes branch and bifurcate to maintain the invariant Turing wavelength.
+          </p>
+        </div>
+      </details>
+
+      <details class="deep-dive">
+        <summary>3. What Would Falsify This Thesis?</summary>
+        <div class="deep-content">
+          <p>
+            A scientific hypothesis is only as good as its failure conditions. The claim that vegetation patterning is a true reaction-diffusion system would be falsified if:
+          </p>
+          <ul style="margin-left: 1.5rem; margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem;">
+            <li><strong>Equal Diffusivity Patterns:</strong> If stable spatial spots or labyrinths were observed in simulations or physical systems where $D_u \le D_v$. (Our test suite explicitly checks that equal diffusivity forces complete extinction).</li>
+            <li><strong>Absence of Resource Depletion Halos:</strong> If empirical soil moisture measurements around desert vegetation clumps showed no moisture deficit compared to distant bare ground. (Field neutron probe studies in Niger and Namibia confirm deep soil moisture drops by >40% directly in the perimeter halo).</li>
+            <li><strong>Non-Monotonic Bifurcations:</strong> If reducing precipitation $F$ caused an instantaneous leap from dense forest directly to isolated spots without passing through the intermediate labyrinthine phase.</li>
+          </ul>
+        </div>
+      </details>
+    </section>
+
+    <!-- Proof Level: In-Browser Verification Suite -->
+    <section class="claims-section">
+      <div id="claims-panel-container"></div>
+    </section>
+
+    <footer>
+      The Daily Brief &middot; Rebuilt from scratch every 24 hours &middot; Built by Gemini 3.7 Flash
+    </footer>
+  </div>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>

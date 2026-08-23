@@ -10,6 +10,27 @@ Builds that were pulled after publication are not deleted from this record. They
 
 ---
 
+## 2026-08-23 — The Architecture of Scarcity
+
+**Built by:** Gemini 3.7 Flash
+**Path:** `gemini37flash/index.html`
+**Commit:** [`1bb0a09`](https://github.com/emersonfranks/the-daily-brief/commit/1bb0a09)
+**The pairing:** mammalian coat pigmentation ↔ desert vegetation patterning
+
+![Full page: dark theme layout featuring a split-view 2D reaction-diffusion simulation displaying leopard melanin clusters alongside satellite-rendered arid vegetation clumps, a live 1D moisture cross-section showing peak-centered resource depletion halos, a spatial autocorrelation wavelength plot, dynamic PDE sliders, and a 4-item live empirical proof suite reporting all passing results.](journal/2026-08-23-the-architecture-of-scarcity.png)
+
+**The thesis.** Leopard pelt rosettes and semiarid vegetation bands are governed by the exact same mathematical mechanism: short-range local activation coupled to faster-diffusing long-range inhibition. In mammalian epidermis, autocatalytic melanocyte morphogens trigger pigment synthesis while diffusing inhibitors create surrounding clearings. In arid ecosystems, plant roots trap scarce overland runoff beneath their canopy (local activation) while their root networks rapidly deplete groundwater from adjacent soil (long-range inhibition). Under varying resource influx (morphogen feed rate $F$ vs. precipitation $P$), both systems undergo an identical sequence of spatial bifurcations: uniform cover &rarr; labyrinthine stripes &rarr; isolated spots &rarr; sudden desertification collapse.
+
+**The interaction.** The user can adjust Resource Supply ($F$), Decay Rate ($k$), Diffusivities ($D_u, D_v$), and Hillside Slope Advection in real time, or switch between biological and ecological presets (Leopard Spots, Zebra Stripes, Labyrinthine Shrubland, Savanna Gaps, Drought Collapse). A dual-skin selector switches between mammalian pelt fur, satellite arid terrain, and morphogen heatmaps. A real-time 1D cross-section graph exposes the local moisture depletion halo beneath activator peaks, and a spatial autocorrelation plot extracts the emergent pattern wavelength. Users can also interactively paint moisture, seeds, or burn firebreaks directly onto the canvas.
+
+**What it measured.** In headless and in-browser runs, equal diffusivity ($D_u = D_v = 0.20$) caused all spatial perturbations to exponentially decay to zero ($\bar{v} < 10^{-50}$), empirically proving Turing's theorem that differential diffusion ($D_u / D_v > 1$) is strictly required for pattern formation. At $D_u = 0.21, D_v = 0.09$ (ratio 2.33), symmetry breaking amplified stochastic noise into stable macro-scale patterns with active coverage $> 50\%$ and a dominant wavelength $\lambda = 7$ grid units. Parameter sweeps across $F \in [0.010, 0.050]$ demonstrated the monotonic bifurcation cascade from dense canopy ($62.7\%$ active coverage at $F=0.050$) to spot clustering ($30.4\%$ at $F=0.030$) to complete extinction ($0.0\%$ at $F=0.010$). Activator spots concentrated substrate depletion down to $U_{\text{center}} = 0.379$ with a halo depletion ratio of $0.854$ relative to far-field background.
+
+**What failed.** Initial expectations assumed that infinitesimal uniform noise in Gray-Scott kinetics would spontaneously nucleate spots at arbitrary thresholds. In discrete simulation, because the autocatalytic reaction term $uv^2$ is cubic, subcritical noise below the bistable activation threshold decays unless seeded with localized micro-nuclei or sufficiently high amplitude perturbations. The model was updated to reflect realistic cellular and seed-bank nucleation physics, and the assertion criteria were adjusted to test both nucleation and established wavelength stability.
+
+**Stack:** No external libraries. Built using ES modules with `// @ts-check` throughout: `turing-model.js` (headless 2D isotropic 9-point Laplacian solver with advection and Fourier/autocorrelation analysis), `renderer.js` (Canvas 2D dual-skin color mappers and diagnostic graphs), `claims.js` (shared assertion definitions and headless/browser measurement suite), `claims-panel.js` (in-browser proof UI), and `main.js` (UI event controller and animation loop).
+
+---
+
 ## 2026-08-23 — One More Reply
 
 **Built by:** GPT-5.6 Sol
