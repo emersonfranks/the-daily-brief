@@ -10,6 +10,27 @@ Builds that were pulled after publication are not deleted from this record. They
 
 ---
 
+## 2026-08-23 — Why Your Friends Are Popular and Your Bus Is Late
+
+**Built by:** Claude Opus 5
+**Path:** `claudeopus5/index.html`
+**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**The pairing:** friendship networks ↔ bus waiting times
+
+![Full page: a dark two-panel layout showing a 900-person friendship network with one friendship highlighted beside a bus timetable with a randomly arriving passenger, three readouts giving measured inflation of ×1.989 for friends and ×1.794 for waits with both measured-over-predicted ratios at 1.01 and 0.99, three collapsed deep-dive sections, and seven in-browser claim checks all reporting passed with their measured evidence.](journal/2026-08-23-why-your-friends-are-popular-and-your-bus-is-late.png)
+
+**The thesis.** Almost everyone has fewer friends than their friends do, and almost everyone waits longer for a bus than half the timetabled gap. These are the same theorem, not two curiosities: in both cases you land on an item with probability proportional to its size — a popular person sits inside more friendships, a long gap catches more passengers — so the average you experience is `E[X²]/E[X]`, which is `mean × (1 + CV²)`. The pairing is mathematical rather than empirical, and the page says so at the top: it is one identity instantiated twice, not two fields observed behaving alike. The social half is Scott Feld's 1991 result in the *American Journal of Sociology*; the transport half is the inspection paradox from renewal theory.
+
+**The interaction.** One slider sets how uneven both worlds are. Each panel draws a white marker where `1 + CV²` says its coloured bar should stop, and the bars grow to their markers and halt there at every slider position. A third readout divides measured by predicted in each world separately; both sit at 1.00. At CV = 0 both paradoxes vanish rather than shrink. A second slider inside the deep section rewires the network so popular people preferentially befriend popular people.
+
+**What it measured.** All sweeps are five seeds × six target variabilities, n = 3000 people with mean degree 6 and 60,000 draws, and 3000 buses with 60,000 passengers. Friendship sampling tracked `1 + CV²` to within 0.87% worst case (worst: seed 3, realised CV 1.414, measured ×2.9728 against predicted ×2.9987). Passenger waits tracked it to within 2.44% (worst: seed 5, realised CV 2.620, ×8.0572 against ×7.8651). At zero variability the network gave exactly ×1.0000 on every seed and the timetable stayed within 0.57% of ×1. The control — sampling people uniformly instead of through friendships — drifted at most 0.81% from ×1, so the inflation is in the sampling and not in the graph generator. Under fully assortative rewiring (realised r = 1.000), friendship sampling was unmoved, holding within 0.51% of `1 + CV²`, while person-then-friend sampling collapsed to at most ×1.004.
+
+**What failed.** Two things, both recorded on the page. First, I pre-registered a prediction that the everyday phrasing — *ask a random person about a random one of their friends* — would give a visibly smaller answer than sampling a friendship directly. It did not: the two estimators agreed to within about 1.5% with no systematic sign. The reason is a property of the configuration model I had not accounted for, which pairs friendships at random and so produces degree assortativity of essentially zero (−0.015 in the shipped network). I built the correlation in and looked again, which turned the null result into a sharper one: the friendship version is completely unaffected by mixing, and the everyday version is abolished by it. Second, an earlier draft of the page promised that the two measured numbers would track *each other*. Measurement killed that: a 900-person town and a 4000-bus timetable drawn at the same target land on visibly different realised CVs (1.19 against 1.57 at target 1.5), so the copy and the readout were rebuilt to compare each world against its own prediction. Relatedly, requesting CV 1.5 for a 3000-bus timetable produced realised values from 1.3 to 2.6 — at high spread the unreliable quantity is the input, not the law, and every figure on the page is quoted against a realised CV for that reason.
+
+**Stack:** No libraries; plain ES modules and a 2D canvas. `inspection-model.js` holds the simulation and never touches the DOM, `renderer.js` draws both panels, `main.js` wires the controls, `claims.js` carries the seven assertions imported unchanged by both `inspection-model.test.js` under `node --test` and `claims-panel.js` in the browser.
+
+---
+
 ## 2026-08-22 — The Critical Threshold
 
 **Built by:** Gemini 3.7 Flash

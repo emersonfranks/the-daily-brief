@@ -1,58 +1,92 @@
 // @ts-check
 
-import { claims, runClaim } from './claims.js';
+/**
+ * Runs the same claims module `node --test` runs, in the reader's browser, and shows the evidence
+ * each one measured. There is no browser-only copy of any assertion.
+ */
+
+import { claims } from './claims.js';
 
 /**
- * Render the same claims that `node --test` runs, one row each, with the evidence
- * measured at the moment the reader pressed the button.
- *
- * @param {HTMLElement} host
- * @param {HTMLButtonElement} button
- * @param {HTMLElement} summary
+ * @param {HTMLElement} root
  */
-export function mountClaimsPanel(host, button, summary) {
-  const render = () => {
-    host.replaceChildren();
-    summary.textContent = 'running...';
-    button.disabled = true;
+export function mountClaimsPanel(root) {
+  const runAll = document.createElement('button');
+  runAll.textContent = `Run all ${claims.length} claims`;
 
-    // setTimeout rather than requestAnimationFrame: rAF is throttled in background
-    // tabs, which left the panel stuck on "running..." forever.
-    window.setTimeout(() => {
-      let passed = 0;
-      const started = performance.now();
-      for (const claim of claims) {
-        const result = runClaim(claim);
-        if (result.passed) passed++;
+  const summary = document.createElement('p');
+  summary.className = 'summary-line';
+  summary.textContent = 'Nothing has been run yet.';
 
-        const row = document.createElement('article');
-        row.className = `claim ${result.passed ? 'pass' : 'fail'}`;
+  const list = document.createElement('div');
 
-        const head = document.createElement('h4');
-        const mark = document.createElement('span');
-        mark.className = 'mark';
-        mark.textContent = result.passed ? 'PASS' : 'FAIL';
-        head.append(mark, document.createTextNode(result.name));
+  /** @type {{ run: () => boolean }[]} */
+  const runners = [];
 
-        const catches = document.createElement('p');
-        catches.className = 'catches';
-        catches.textContent = `Catches: ${result.catches}`;
+  for (const claim of claims) {
+    const card = document.createElement('div');
+    card.className = 'claim';
 
-        const evidence = document.createElement('p');
-        evidence.className = 'evidence';
-        evidence.textContent = result.evidence;
+    const name = document.createElement('div');
+    name.className = 'name';
+    name.textContent = claim.name;
 
-        row.append(head, catches, evidence);
-        host.append(row);
+    const catches = document.createElement('div');
+    catches.className = 'catches';
+    catches.textContent = claim.catches;
+
+    const button = document.createElement('button');
+    button.textContent = 'Run this claim';
+
+    const verdict = document.createElement('span');
+    verdict.className = 'verdict';
+
+    const evidence = document.createElement('div');
+    evidence.className = 'evidence';
+
+    const controls = document.createElement('div');
+    controls.style.display = 'flex';
+    controls.style.alignItems = 'center';
+    controls.style.gap = '12px';
+    controls.style.margin = '0 0 8px';
+    controls.append(button, verdict);
+
+    card.append(name, catches, controls, evidence);
+    list.append(card);
+
+    function run() {
+      card.classList.remove('pass', 'fail');
+      try {
+        const measured = claim.verify();
+        card.classList.add('pass');
+        verdict.textContent = 'passed';
+        evidence.textContent = measured;
+        return true;
+      } catch (error) {
+        card.classList.add('fail');
+        verdict.textContent = 'failed';
+        evidence.textContent = error instanceof Error ? error.message : String(error);
+        return false;
       }
+    }
 
-      const elapsed = performance.now() - started;
-      summary.textContent = `${passed} of ${claims.length} claims passed, measured in ${elapsed.toFixed(0)} ms in this browser.`;
-      summary.className = passed === claims.length ? 'verdict ok' : 'verdict bad';
-      button.disabled = false;
-      button.textContent = 'Run them again';
-    }, 16);
-  };
+    button.addEventListener('click', run);
+    runners.push({ run });
+  }
 
-  button.addEventListener('click', render);
+  runAll.addEventListener('click', () => {
+    summary.textContent = 'Running\u2026';
+    const started = performance.now();
+    let passed = 0;
+    for (const runner of runners) {
+      if (runner.run()) passed += 1;
+    }
+    const elapsed = Math.round(performance.now() - started);
+    summary.textContent =
+      passed === runners.length
+        ? `${passed} of ${runners.length} claims passed, in ${elapsed} ms, on this machine just now.`
+        : `${passed} of ${runners.length} claims passed. ${runners.length - passed} failed \u2014 the page is making a claim it cannot support.`;
+  });
+
+  root.append(runAll, summary, list);
 }

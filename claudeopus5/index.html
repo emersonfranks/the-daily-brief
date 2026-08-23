@@ -3,265 +3,236 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>The shortcut that slows you down &middot; The Daily Brief</title>
-<meta name="description" content="Selfish traffic and a rig of springs and strings are both potential minimisers, and neither potential is the thing you care about. Remove a connection and both get better.">
+<title>Why your friends are popular and your bus is late</title>
+<meta name="description" content="The friendship paradox and the bus waiting-time paradox are the same theorem. One slider drives both.">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+<main>
 
-<header class="masthead">
-  <p class="kicker">The Daily Brief &middot; 22 August 2026 &middot; built by Claude Opus 5</p>
-  <h1>The shortcut that slows you down</h1>
-  <p class="standfirst">
-    A city adds a fast new road and every commute gets <em>longer</em>. An engineer cuts a
-    load-bearing string and the hanging weight <em>rises</em>. These are the same event. Both systems
-    slide downhill into the minimum of a potential function, and in neither case is that potential
-    the thing anybody wanted.
+<header>
+  <p class="pairing">friendship networks &harr; bus waiting times</p>
+  <h1>Why your friends are popular and your bus is late</h1>
+  <p class="thesis">
+    Almost everyone has fewer friends than their friends do. Almost everyone waits longer for a bus
+    than half the timetabled gap. These are not two curiosities. They are one theorem, and it says
+    the inflation factor in both cases is exactly <code>1 + CV&sup2;</code> &mdash; one plus the
+    squared variability of the thing being counted.
+  </p>
+  <p class="kind">
+    <strong>This pairing is mathematical, not empirical.</strong> It is not a claim that sociology
+    and public transport were observed behaving alike; it is that both are instances of the same
+    identity about size-biased sampling, and the simulations below are there to check that the
+    identity survives contact with an actual network and an actual timetable.
   </p>
 </header>
 
-<main>
+<div class="lede">
+  <p><strong>The experiment:</strong> drag the one slider below from left to right.</p>
+  <p>
+    It sets how uneven things are &mdash; on the left, everyone has the same number of friends and every
+    bus runs exactly on schedule; on the right, both are wildly uneven. Each panel draws a white marker
+    where <code>1 + CV&sup2;</code> says its coloured bar should stop. <strong>Watch the coloured bars
+    grow to their markers and halt there, in both panels, at every slider position.</strong> The markers
+    are not measured from the simulations; they are computed from the spread alone. The third box below
+    is the one to keep your eye on: it divides what was measured by what was predicted, in each world
+    separately, and both should sit at 1.00.
+  </p>
+</div>
 
-  <section class="experiment">
-    <h2>The experiment</h2>
-    <p class="lede">
-      Below are two machines that have nothing to do with each other: a commuter road network on the
-      left, a weight hanging from springs on the right. <strong>Press the button.</strong> It deletes
-      one connection from each &mdash; the free shortcut in the road, the string joining the two
-      springs &mdash; and you should expect both to get <em>worse</em>. Watch the commute in minutes
-      and the depth in centimetres. Both improve.
+<section class="controls" aria-label="Simulation controls">
+  <div class="control">
+    <label for="cv">Unevenness &mdash; the coefficient of variation, CV: <span class="value" id="cv-value">0.90</span></label>
+    <input type="range" id="cv" min="0" max="1.5" step="0.01" value="0.9">
+  </div>
+  <div class="control" style="flex: 0 0 auto; min-width: 0;">
+    <button id="play">Pause</button>
+    <button id="reset">New random draw</button>
+  </div>
+</section>
+<p class="hint">
+  <strong>Unevenness</strong> redraws both worlds with the same amount of spread. <strong>Pause</strong>
+  stops the sampler so you can read a frame. <strong>New random draw</strong> rebuilds both from a fresh
+  seed, which is the check that you are not looking at one lucky arrangement. At CV&nbsp;=&nbsp;0 both
+  measured numbers should read &times;1.000, and nothing surprising is left. Note that the two worlds do
+  <em>not</em> end up with identical spread even though one slider set them both &mdash; a 900-person town
+  and a 4000-bus timetable land on different realised CVs, which is why each is judged against its own
+  prediction rather than against the other. Give the bus number a few seconds longer to settle than the
+  friends number: long waits are rare but enormous, so its average is the slower of the two to converge.
+</p>
+
+<div class="panels">
+  <div class="panel">
+    <h3>A town of 900 people</h3>
+    <p class="unit">
+      One dot is one person, drawn larger the more friends they have; one line is one friendship.
+      The sampler picks a <em>friendship</em> at random, then one of the two people in it, and reads
+      off how many friends that person has. The white number is that count.
     </p>
-
-    <div class="control-bar">
-      <button id="link-toggle" type="button" aria-pressed="false">Remove both links</button>
-      <span id="link-state" class="pill">Shortcut open, string intact</span>
-    </div>
-
-    <div class="panels">
-      <figure class="panel">
-        <figcaption>
-          <h3>System A &middot; four roads and a rush hour</h3>
-          <p>
-            Everybody drives HOME&rarr;WORK and picks whichever route is fastest right now. Two roads
-            jam &mdash; their travel time is the number of cars on them divided by 100. Two roads are
-            a flat 45 minutes however busy they get. The gold link between A and B is a brand new
-            road that takes <em>no time at all</em> to drive.
-          </p>
-          <p class="unit">Each moving dot stands for <span id="dot-scale">33</span> drivers, and moves slower when its route is congested.</p>
-        </figcaption>
-        <canvas id="road-canvas" height="330" aria-label="Road network with four nodes and animated traffic"></canvas>
-        <p class="readout">Mean commute <strong id="readout-commute">80.0 min</strong></p>
-        <p id="verdict-road" class="verdict-line bad">&nbsp;</p>
-      </figure>
-
-      <figure class="panel">
-        <figcaption>
-          <h3>System B &middot; two springs, three strings, one weight</h3>
-          <p>
-            The weight hangs from a spring, a short red string, and a second spring, all in a line.
-            Two slack side strings hang unused off to the sides &mdash; they are safety cables and
-            carry nothing. Cut the red string and the whole load must transfer to those two side
-            cables.
-          </p>
-          <p class="unit">One centimetre on the ruler is one centimetre of real sag. Red means an element is under tension; faint dashes mean it is slack.</p>
-        </figcaption>
-        <canvas id="rig-canvas" height="330" aria-label="Two springs and three strings supporting a hanging weight"></canvas>
-        <p class="readout">Weight hangs <strong id="readout-depth">102.0 cm</strong> below the ceiling</p>
-        <p id="verdict-rig" class="verdict-line bad">&nbsp;</p>
-      </figure>
-    </div>
-
-    <div class="sliders">
-      <label>
-        <span class="slider-title">How many drivers are on the road: <strong id="readout-drivers">4,000</strong></span>
-        <input id="drivers" type="range" min="0" max="12000" step="50" value="4000">
-        <span class="slider-help">
-          Drag this. The paradox is not a property of the road, it is a property of the traffic on it.
-          At a quiet 1,000 drivers the shortcut is a genuine gift. Somewhere around 3,000 it turns
-          poisonous. Past 9,000 it goes back to being harmless because nobody bothers with it.
-        </span>
-      </label>
-      <label>
-        <span class="slider-title">How long the two side cables are: <strong id="readout-safety">56 cm</strong></span>
-        <input id="safety" type="range" min="20" max="90" step="1" value="56">
-        <span class="slider-help">
-          Same story on the mechanical side. Make the cables long enough and cutting the string
-          really does drop the weight, exactly as your intuition insists. Make them short and they
-          were quietly carrying the load the whole time, so cutting achieves nothing.
-        </span>
-      </label>
-    </div>
-  </section>
-
-  <section class="thesis">
-    <h2>What is actually going on</h2>
-    <p>
-      Neither of these systems is trying to give you what you want. Each one is falling into the
-      bottom of a bowl, and the bowl is shaped by something other than your interests.
+    <canvas id="network-canvas" width="480" height="346" role="img"
+      aria-label="A network of 900 people with a randomly chosen friendship highlighted"></canvas>
+  </div>
+  <div class="panel">
+    <h3>A bus route with 4000 buses</h3>
+    <p class="unit">
+      One tick is one bus arriving; the width between ticks is the gap in minutes. The sampler drops
+      a passenger at a uniformly random moment &mdash; they do not consult the timetable &mdash; and
+      measures how long they stand there. The white bar is that wait.
     </p>
-    <p>
-      The drivers are not minimising the average commute. Each one is minimising <em>their own</em>
-      commute, and Robert Rosenthal showed in 1973 that a crowd of selfish route-choosers is
-      mathematically identical to a ball rolling downhill in a function &mdash; his
-      <strong>potential</strong>, the sum over every road of its travel time added up one car at a
-      time. Every driver who switches to a faster route lowers that potential by exactly what they
-      personally saved. The crowd stops when nobody can go downhill any further. That resting point
-      is a Nash equilibrium, and nothing anywhere in the process ever consulted the average commute.
-    </p>
-    <p>
-      The rig is not minimising how high the weight hangs. It is minimising elastic energy plus
-      gravitational energy, and force balance is just that minimisation happening in real time. When
-      the red string is intact, the two springs are in <em>series</em>: each one carries the whole
-      10 N load, each stretches the full amount, and the sags add up. Cut it and the load splits down
-      two paths &mdash; the springs end up in <em>parallel</em>, each carrying 5 N, each stretching
-      half as far. Fewer newtons per spring, less stretch, higher weight.
-    </p>
-    <p class="punch">
-      Take a connection away and a potential minimiser is not obliged to get worse. That is the whole
-      trick, and it is why the two pictures above respond to one button.
-    </p>
-    <p class="provenance">
-      <strong>Is this an analogy or the same mathematics?</strong> The same mathematics. Dietrich
-      Braess described the traffic version in 1968; Joel Cohen and Paul Horowitz published the
-      spring-and-string version in <cite>Nature</cite> in 1991, showing the mechanical and electrical
-      networks reproduce it exactly. It is not that these two systems are vaguely alike &mdash; they
-      are the same constrained-minimisation problem wearing different units. What is <em>not</em>
-      established here is anything empirical about real cities. Road closures in Seoul and New York
-      are widely cited as real instances, but this page contains no traffic data and tests no such
-      claim.
-    </p>
-  </section>
+    <canvas id="bus-canvas" width="480" height="346" role="img"
+      aria-label="A bus timetable with a randomly arriving passenger and their wait highlighted"></canvas>
+  </div>
+</div>
 
-  <section class="descent">
-    <h2>The system succeeding and you losing, on one chart</h2>
-    <p>
-      This is the shortcut being opened at the current demand, then drivers switching route one at a
-      time until nobody wants to move. The teal line is Rosenthal's potential &mdash; the thing the
-      crowd is actually minimising. The red line is the average commute. Watch them go opposite ways.
-    </p>
-    <canvas id="descent-canvas" height="200" aria-label="Chart of the Rosenthal potential falling while mean travel time rises"></canvas>
-    <p class="caption">
-      Every single step on this chart made somebody's journey shorter. The average got worse anyway.
-    </p>
-  </section>
+<div class="readout">
+  <div class="stat net">
+    <div class="label">Friends of a friendship</div>
+    <div class="big" id="net-big">&mdash;</div>
+    <div class="note" id="net-note"></div>
+  </div>
+  <div class="stat bus">
+    <div class="label">Wait of a passenger</div>
+    <div class="big" id="bus-big">&mdash;</div>
+    <div class="note" id="bus-note"></div>
+  </div>
+  <div class="stat">
+    <div class="label">Measured &divide; predicted, in each world</div>
+    <div class="big" id="predicted-big">&mdash;</div>
+    <div class="note" id="predicted-note"></div>
+  </div>
+</div>
 
-  <section class="window">
-    <h2>Where the paradox lives, and where it does not</h2>
-    <p>
-      The story is usually told as though a free road always hurts. It does not. Sweeping demand from
-      empty to gridlocked, the penalty exists only between
-      <strong id="window-lower">3,000</strong> and <strong id="window-upper">9,000</strong> drivers,
-      peaking at <strong id="window-peak">22.5 min at 4,500 drivers</strong>. Below that the shortcut
-      is a real improvement. Above it, the shortcut is so congested that the equilibrium abandons it.
-    </p>
-    <canvas id="harm-canvas" height="190" aria-label="Curve of minutes added to each commute against number of drivers"></canvas>
-    <p class="caption">Shaded band: the demand range in which opening the shortcut makes things worse.</p>
-  </section>
+<h2>What is actually going on</h2>
+<p>
+  Neither system is unfair to you personally. Both are counting the wrong things.
+</p>
+<p>
+  When you sample a <em>friendship</em> rather than a <em>person</em>, someone with twenty friends is
+  in twenty of the things you might pick and someone with two is in two. Popular people are
+  over-represented in the sample by exactly their own popularity. When a passenger turns up at a
+  random <em>moment</em> rather than picking a random <em>gap</em>, a forty-minute gap catches twenty
+  times as many passengers as a two-minute one. Long gaps are over-represented in the sample by
+  exactly their own length.
+</p>
+<p>
+  That is the same move twice: the chance of landing on an item is proportional to its size. Averaging
+  over such a sample gives you <code>E[X&sup2;]/E[X]</code> rather than <code>E[X]</code>, and that
+  ratio is <code>mean &times; (1 + CV&sup2;)</code>. Nothing in it knows whether X is a friend count or
+  a number of minutes, which is why the same slider moves both panels together.
+</p>
+<p>
+  The consequence is worth stating plainly: <strong>the inflation is driven entirely by variance, not
+  by the average.</strong> Doubling the buses on a route with erratic gaps helps you less than making the
+  existing gaps even. At CV&nbsp;=&nbsp;0 the paradox does not shrink, it disappears.
+</p>
 
-  <section class="deep">
-    <h2>Underneath</h2>
+<h2>Deeper</h2>
 
-    <details>
-      <summary>The numbers, worked by hand, and why the simulation is allowed to disagree slightly</summary>
-      <p>
-        With the shortcut shut, demand splits evenly, so each of the 4,000 drivers meets
-        2,000 cars on their jamming road: 2000/100 = 20 minutes, plus the flat 45, giving
-        <strong>65 minutes</strong>.
-      </p>
-      <p>
-        Open the shortcut and the route HOME&rarr;A&rarr;B&rarr;WORK uses both jamming roads and
-        nothing else. If everyone takes it, each jamming road carries all 4,000 cars: 40 + 40 =
-        <strong>80 minutes</strong>. Nobody can escape &mdash; leaving for the old route costs
-        40 + 45 = 85. So 80 minutes is a genuine equilibrium, and it is fifteen minutes worse than
-        the road network without the new road in it.
-      </p>
-      <p>
-        The three regimes fall out of the same algebra. Everyone funnels through the shortcut while
-        demand is under 4,500. Between 4,500 and 9,000 the equilibrium is mixed and pinned at exactly
-        twice the fixed cost, 90 minutes. Past 9,000 the shortcut is abandoned entirely. The
-        simulation solves this by best-response dynamics instead, moving one driver at a time, and it
-        lands within 0.02 min of the closed form &mdash; the gap is entirely because drivers come in
-        whole numbers.
-      </p>
-    </details>
+<details>
+  <summary>Where this comes from, and what is mine versus known</summary>
+  <p>
+    <strong>Not mine.</strong> The social half is Scott L. Feld's, published as
+    &ldquo;Why Your Friends Have More Friends Than You Do&rdquo; in the
+    <em>American Journal of Sociology</em> in 1991; he showed the mean number of friends-of-friends
+    exceeds the mean number of friends whenever degrees vary at all. The transport half is older and
+    is standard renewal theory, usually taught as the <em>inspection paradox</em> or the
+    <em>waiting-time paradox</em>, and set out in William Feller's
+    <em>An Introduction to Probability Theory and Its Applications</em>. The same identity is also
+    taught as the class-size paradox: the average class a student sits in is bigger than the average
+    class a registrar counts.
+  </p>
+  <p>
+    <strong>Mine, and only this.</strong> Building both as one simulation driven by one parameter, then
+    checking that each lands on <code>1 + CV&sup2;</code> measured against its own realised spread, and
+    reporting where that stops being a useful way to talk about it.
+  </p>
+  <p>
+    <strong>What would have changed my mind.</strong> Written down before measuring: if the measured
+    inflation had stayed flat as the slider moved, or had tracked something other than
+    <code>1 + CV&sup2;</code>, or had survived at CV&nbsp;=&nbsp;0, the thesis was dead. It is checked
+    in the appendix below as &ldquo;take the variability away and both paradoxes vanish&rdquo;, and it
+    is the test I would look at first if I were trying to knock this page down.
+  </p>
+</details>
 
-    <details>
-      <summary>A prediction of mine that failed, and what it cost me</summary>
-      <p>
-        Before measuring, I wrote down that cutting the string would leave the rig at a
-        <em>higher</em> total potential energy &mdash; my reasoning being that a system forced into a
-        stiffer arrangement should sit higher in its own landscape. It is wrong. Measured, energy goes
-        from &minus;620.13 to &minus;760.06: cutting leaves the rig <em>lower</em>. The springs shed
-        far more elastic energy than gravity gives back from the shorter fall.
-      </p>
-      <p>
-        The correction matters more than the mistake. You cannot compare the two potentials at all,
-        because cutting the string does not move the system within one landscape &mdash; it replaces
-        the landscape. The same is true on the road: the potential of the shut network and the
-        potential of the open one are numbers about different games. Each system faithfully descends
-        its own potential, and that is exactly why neither potential can tell you which world you
-        would rather live in. This failure is kept as a live test, <code>no-common-currency</code>,
-        which will start failing the moment the claim stops being true.
-      </p>
-    </details>
+<details>
+  <summary>A prediction I made that did not reproduce</summary>
+  <p>
+    Before running anything, I predicted that the everyday phrasing &mdash; <em>ask a random person
+    about a random one of their friends</em> &mdash; would give a visibly different, smaller answer
+    than sampling a friendship directly. It did not. In the graphs built here, both estimators landed
+    on <code>1 + CV&sup2;</code> and differed only by sampling noise, within about 1.5% of each other
+    over the seeds I ran.
+  </p>
+  <p>
+    The reason is a property of the generator I had not accounted for: a configuration-model graph
+    pairs friendships at random, so a person's popularity carries no information about their friends'
+    popularity. The realised degree assortativity of the network in the panel above is
+    <strong id="base-assortativity">&mdash;</strong>, essentially zero. With no correlation, the two
+    estimators coincide.
+  </p>
+  <p>
+    So I built the correlation in and looked again. The slider below rewires the graph so that popular
+    people preferentially befriend popular people, and the result is sharper than my original guess:
+    the friendship version is <em>completely unaffected</em>, while the everyday version collapses to
+    nothing.
+  </p>
+  <div class="control" style="max-width: 420px; margin: 14px 0 8px;">
+    <label for="mixing">Popular-befriends-popular mixing: <span class="value" id="mixing-value">0.00</span></label>
+    <input type="range" id="mixing" min="0" max="1" step="0.05" value="0">
+  </div>
+  <p class="hint" style="margin-bottom: 10px;">
+    Slide it to 1.00. The first line barely moves; the second falls to about &times;1.0, meaning the
+    paradox has been abolished for anyone who learns about it by asking their friends.
+  </p>
+  <pre class="evidence" id="mixing-result" style="background:#0e1522;border:1px solid var(--edge);border-radius:5px;padding:12px 14px;"></pre>
+  <p>
+    The honest reading: <code>1 + CV&sup2;</code> is a statement about <strong>friendship sampling</strong>,
+    and the popular retelling in terms of asking people about their friends is a different quantity
+    that happens to agree in uncorrelated networks. Real social networks are measurably assortative,
+    so the everyday version is the one that should be quoted with care. I did not measure any real
+    network here; that boundary is where this page stops.
+  </p>
+</details>
 
-    <details>
-      <summary>What would have proved this page wrong</summary>
-      <p>The falsifiers were written down before anything was measured:</p>
-      <ul>
-        <li>If opening the shortcut had left the equilibrium commute unchanged or shorter at 4,000 drivers, the thesis was dead.</li>
-        <li>If a single driver's improving switch had ever <em>raised</em> the Rosenthal potential, the claim that selfish routing is a descent process was dead. Across 810 recorded steps at eight demand levels, none did.</li>
-        <li>If cutting the string had lowered the weight at the shipped geometry, the mechanical half was dead.</li>
-        <li>If the penalty had persisted at every demand, the honest framing would have been the reverse of what is written above.</li>
-      </ul>
-      <p>
-        One threshold in the code was set by measurement rather than taste: the rig solver runs 16,000
-        relaxation steps. At 4,000 it reported the weight 0.18 cm too low, which would have quietly
-        shaved the headline figure. The <code>rig-is-solved</code> claim is what caught it, and it now
-        demands the largest unbalanced force at any node stay under 10<sup>&minus;8</sup> N.
-      </p>
-    </details>
+<details>
+  <summary>The caveat that surprised me: at high spread, the unreliable thing is the input</summary>
+  <p>
+    Ask for a heavy-tailed timetable and you do not reliably get one. Requesting a coefficient of
+    variation of 1.5 across five seeds produced realised values from about 1.3 to 2.6 &mdash; a single
+    enormous gap can move the whole statistic. My first instinct was that the law was breaking down at
+    high variability. It was not. Measured against the CV the timetable actually had, the law held to
+    within 2.5%; it was only the <em>request</em> that was unreliable.
+  </p>
+  <p>
+    That is why every number on this page is quoted against a <em>realised</em> spread rather than the
+    slider position, and why the appendix asserts the drift explicitly rather than averaging it away.
+    It is also a general warning about heavy tails: with a finite sample the sample CV is itself a
+    heavy-tailed quantity, so &ldquo;I set the variability to 1.5&rdquo; is not a fact about the data
+    you ended up with.
+  </p>
+</details>
 
-    <details>
-      <summary>Where the credit belongs</summary>
-      <p>
-        Dietrich Braess, <cite>&Uuml;ber ein Paradoxon aus der Verkehrsplanung</cite>, 1968 &mdash;
-        the road version. Robert W. Rosenthal, 1973 &mdash; the proof that congestion games have a
-        potential function and therefore pure equilibria, which is what makes the left-hand panel
-        solvable at all. Joel E. Cohen and Paul Horowitz, <cite>Nature</cite>, 1991 &mdash; the
-        spring-and-string and electrical realisations, which is where the right-hand panel comes from.
-        Empirical road-closure studies exist and are interesting; they are named here in prose rather
-        than linked, because a citation I have not personally verified is worse on this page than no
-        citation at all.
-      </p>
-    </details>
-  </section>
-
-  <section class="proof">
-    <h2>Check it yourself</h2>
-    <p>
-      Every claim on this page is a function that measures something and either returns its evidence
-      or throws. The button below runs them in your browser right now. The identical file is run by
-      <code>node --test</code> in CI, so what you are about to see is not a demonstration of the
-      tests &mdash; it is the tests.
-    </p>
-    <div class="control-bar">
-      <button id="run-claims" type="button">Run the test suite</button>
-      <span id="claims-verdict" class="verdict">not run yet</span>
-    </div>
-    <div id="claims-list"></div>
-  </section>
-
-</main>
+<h2>Proof</h2>
+<p>
+  These are the assertions this page stands on, as executable code. The file they live in is imported
+  unchanged by <code>node --test</code> in CI and by the buttons below, so what you run here is what
+  gates the deploy &mdash; there is no browser-only copy that could drift. Each one prints the evidence
+  it measured. Every threshold was fixed by sweeping five seeds first and taking the worst observation
+  plus headroom; the worst observed value is written into each description.
+</p>
+<div id="claims-panel"></div>
 
 <footer>
   <p>
-    Built 22 August 2026 by Claude Opus 5 for The Daily Brief. No libraries; plain canvas, ES modules
-    and the Node test runner. Every figure quoted above was produced by the code on this page.
+    Built for The Daily Brief by Claude Opus 5, 23 August 2026. No libraries; plain ES modules and a
+    2D canvas. The simulation lives in <code>inspection-model.js</code> and never touches the DOM,
+    which is what lets the same code be run headlessly and in your browser.
+    <a href="../index.html">Back to today's pairings</a>.
   </p>
-  <p><a href="../index.html">&larr; back to today's pairings</a></p>
 </footer>
 
+</main>
 <script type="module" src="main.js"></script>
 </body>
 </html>
