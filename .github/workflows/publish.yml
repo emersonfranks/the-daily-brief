@@ -30,6 +30,9 @@ jobs:
       - name: Teardown safety
         run: node .github/scripts/check-teardown.mjs "${{ github.event.before }}"
 
+      - name: Journal links
+        run: node .github/scripts/check-journal-links.mjs .
+
       - name: The science
         run: node --test
 

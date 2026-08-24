@@ -104,7 +104,7 @@ shared by Node and the browser, `claims-panel.js`, `renderer.js`, `main.js`, `st
 
 **Built by:** Gemini 3.7 Flash
 **Path:** `gemini37flash/index.html`
-**Commit:** [`dcfbd93`](https://github.com/emersonfranks/the-daily-brief/commit/dcfbd93)
+**Commit:** [`7aed049`](https://github.com/emersonfranks/the-daily-brief/commit/7aed049)
 **The pairing:** geophysical sandpiles & tectonic earthquakes ↔ cortical neural networks & synaptic spikes
 
 ![Full page: dark theme interactive interface with a split-view 2D lattice showing sandpile topography alongside cortical action potential bursts, real-time log-log power-law avalanche distribution plot, lattice height histogram, dynamic controls, and a 5-item empirical test suite reporting all passed.](journal/2026-08-24-the-edge-of-collapse.png)
@@ -125,7 +125,7 @@ shared by Node and the browser, `claims-panel.js`, `renderer.js`, `main.js`, `st
 
 **Built by:** Gemini 3.7 Flash
 **Path:** `gemini37flash/index.html`
-**Commit:** [`1bb0a09`](https://github.com/emersonfranks/the-daily-brief/commit/1bb0a09)
+**Commit:** [`10ab3c7`](https://github.com/emersonfranks/the-daily-brief/commit/10ab3c7)
 **The pairing:** mammalian coat pigmentation ↔ desert vegetation patterning
 
 ![Full page: dark theme layout featuring a split-view 2D reaction-diffusion simulation displaying leopard melanin clusters alongside satellite-rendered arid vegetation clumps, a live 1D moisture cross-section showing peak-centered resource depletion halos, a spatial autocorrelation wavelength plot, dynamic PDE sliders, and a 4-item live empirical proof suite reporting all passing results.](journal/2026-08-23-the-architecture-of-scarcity.png)
@@ -188,7 +188,7 @@ shared by Node and the browser, `claims-panel.js`, `renderer.js`, `main.js`, `st
 
 **Built by:** Gemini 3.7 Flash
 **Path:** `gemini37flash/index.html`
-**Commit:** [`ac76d5a`](https://github.com/emersonfranks/the-daily-brief/commit/ac76d5a)
+**Commit:** [`6afd71b`](https://github.com/emersonfranks/the-daily-brief/commit/6afd71b)
 **The pairing:** wildfire propagation ↔ composite conductivity
 
 ![Full page: a dark interactive canvas showing wildfire percolation and electrical flow on a square lattice, real-time statistics of giant component mass and macroscopic conductance, an empirical Monte Carlo S-curve showing phase transition sharpening with lattice size, and five verified in-browser claim checks.](journal/2026-08-22-the-critical-threshold.png)
@@ -292,7 +292,7 @@ in-memory failing claim, then removed by reloading the untouched module.
 
 **Built by:** GPT-5.6 Sol
 **Path:** `gpt56sol/index.html`
-**Commit:** [`57b05e5`](https://github.com/emersonfranks/the-daily-brief/commit/57b05e5) — recover with `git show 57b05e5:gpt56sol/index.html`
+**Commit:** [`6022233`](https://github.com/emersonfranks/the-daily-brief/commit/6022233) — recover with `git show 6022233:gpt56sol/index.html`
 **The pairing:** ferromagnetic domains ↔ depositors in a bank run
 
 ![The Memory of a Crowd — full page. A guided hysteresis experiment returns one threshold lattice to neutral pressure with every magnetic domain down and every bank customer withdrawn, reports the outbound and return states, then shows the hysteresis trace and three passing browser claims](journal/2026-08-21-the-memory-of-a-crowd.png)
@@ -337,7 +337,7 @@ failing verifier in memory, observing FAIL, reloading the untouched module, and 
 
 **Built by:** Gemini 3.7 Flash
 **Path:** `gemini37flash/index.html`
-**Commit:** [`e2ee81d`](https://github.com/emersonfranks/the-daily-brief/commit/e2ee81d) — recover with `git show e2ee81d:index.html`
+**Commit:** [`8feed9c`](https://github.com/emersonfranks/the-daily-brief/commit/8feed9c) — recover with `git show 8feed9c:index.html`
 **The pairing:** bioluminescent firefly swarms ↔ continental AC power grids
 
 ![Pulse & Power — full page. 52-oscillator Kuramoto network simulating collective synchronization across firefly visual coupling and generator electrical torque, with live order parameter r tracking, frequency dispersion collapse metrics, regime presets, and in-browser verification suite](journal/2026-08-21-pulse-and-power.png)

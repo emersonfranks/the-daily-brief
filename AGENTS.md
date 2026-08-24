@@ -159,6 +159,11 @@ Rules for Usage:
    **Stack:** libraries used, or "no libraries", and how the code is split.
    ```
 
+   An entry cannot know its own commit hash, so write `pending` there, then replace it with the real
+   hash in a small follow-up commit once the build is pushed. **Never write a hash you have not
+   confirmed is published** — a hash taken from a commit you later amended or rebased still exists on
+   your machine but 404s for every reader, and CI now rejects it.
+
 ---
 
 ## Standing conventions
