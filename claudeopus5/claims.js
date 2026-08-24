@@ -1,217 +1,424 @@
 // @ts-check
 
 /**
- * Every assertion this page makes, as data. `node --test` and the browser panel both import this
- * file, so the reader runs exactly what CI runs.
+ * Every claim this page makes, as data. No DOM and no test runner, so the same
+ * file is imported by `node --test`, by CI, and by the panel at the bottom of
+ * the page. One source of truth, executed twice.
  *
- * Thresholds are set from measurement, not from taste: each sweep below was run over five seeds
- * (1-5) and six target variabilities before a limit was written down, and the limit is the worst
- * value observed plus headroom. The worst observations are recorded next to each threshold.
+ * Each `verify()` either returns the evidence it measured or throws. Thresholds
+ * are set from the worst value observed across several seeds and several
+ * frequency spreads at exactly these settings, then given headroom; the
+ * observed worst case is recorded beside each one.
  */
 
-import { runNetwork, runBuses, predictedInflation } from './inspection-model.js';
+import {
+  createSwarm,
+  settle,
+  step,
+  continuationSweep,
+  criticalCoupling,
+  predictedOrder,
+  lorentzianFrequencies,
+  makeRandom,
+} from './kuramoto.js';
 
-const SEEDS = [1, 2, 3, 4, 5];
-const TARGET_CVS = [0, 0.3, 0.6, 0.9, 1.2, 1.5];
-const NETWORK = { n: 3000, draws: 60000 };
-const BUSES = { buses: 3000, riders: 60000 };
+/**
+ * Population and integration settings shared by every claim. N was raised from
+ * 240 after the first pass: at 240 the finite-size fluctuations were larger than
+ * three of the thresholds, so the claims could only have passed by being widened
+ * until they proved nothing.
+ *
+ * The settling profiles differ by measurement on purpose. Fitting the amplitude
+ * curve needs a long burn-in because relaxation slows sharply near the critical
+ * point - which is claim 5 of this same file, showing up as a cost.
+ */
+export const CLAIM_CONFIG = Object.freeze({
+  n: 400,
+  dt: 0.02,
+  seeds: Object.freeze([1, 7, 2024]),
+  spreads: Object.freeze([0.35, 0.5, 0.8]),
+  /** Curve fitting, where the measured value has to be trusted to three decimals. */
+  precise: Object.freeze({ burnIn: 3000, window: 1500 }),
+  /** Telling the ordered state apart from the incoherent one, which is a coarse call. */
+  coarse: Object.freeze({ burnIn: 1200, window: 500 }),
+  /** Continuation sweeps, which inherit an already-settled state at each step. */
+  branch: Object.freeze({ burnIn: 1500, window: 700 }),
+});
+
+/**
+ * @param {number} value
+ * @param {number} digits
+ * @returns {number}
+ */
+function round(value, digits) {
+  const f = 10 ** digits;
+  return Math.round(value * f) / f;
+}
+
+/**
+ * Settled runs are deterministic in their inputs, so two claims asking for the
+ * same state get the same answer. Caching lets the amplitude and locked-fraction
+ * claims share one settle instead of paying for it twice.
+ *
+ * @type {Map<string, number>}
+ */
+const settledCache = new Map();
+
+/**
+ * @param {object} options
+ * @param {number} options.gamma
+ * @param {number} options.seed
+ * @param {number} options.K
+ * @param {{ burnIn: number, window: number }} options.profile
+ * @returns {number}
+ */
+function settledOrder({ gamma, seed, K, profile }) {
+  const key = `${CLAIM_CONFIG.n}|${gamma}|${seed}|${K}|${profile.burnIn}|${profile.window}|${CLAIM_CONFIG.dt}`;
+  const cached = settledCache.get(key);
+  if (cached !== undefined) return cached;
+  const swarm = createSwarm({ n: CLAIM_CONFIG.n, gamma, seed });
+  const r = settle(swarm, { K, dt: CLAIM_CONFIG.dt, ...profile });
+  settledCache.set(key, r);
+  return r;
+}
+
+/**
+ * Locate the coupling at which coherence first lifts clear of the incoherent
+ * background, expressed as a multiple of the predicted critical coupling.
+ * The scan advances in steps of 4% of K_c, so 1.00 is the finest resolution
+ * available and a perfect result reads as 1.00-1.04, never below 1.00.
+ *
+ * @param {number} gamma
+ * @param {number} seed
+ * @returns {{ onsetRatio: number, floor: number }}
+ */
+export function measureOnset(gamma, seed) {
+  const kc = criticalCoupling(gamma);
+  const profile = CLAIM_CONFIG.coarse;
+  let floorTotal = 0;
+  const floorPoints = [0.4, 0.6, 0.8];
+  for (const m of floorPoints) floorTotal += settledOrder({ gamma, seed, K: m * kc, profile });
+  const floor = floorTotal / floorPoints.length;
+
+  for (let m = 0.88; m <= 1.4001; m += 0.04) {
+    if (settledOrder({ gamma, seed, K: m * kc, profile }) > 3 * floor) {
+      return { onsetRatio: m, floor };
+    }
+  }
+  throw new Error(`no onset found up to 1.40 x K_c for gamma=${gamma}, seed=${seed}`);
+}
+
+/**
+ * @param {number} gamma
+ * @param {number} seed
+ * @param {number} multiple Coupling as a multiple of K_c.
+ * @returns {{ K: number, measured: number, predicted: number, deviation: number }}
+ */
+export function measureAmplitude(gamma, seed, multiple) {
+  const K = multiple * criticalCoupling(gamma);
+  const measured = settledOrder({ gamma, seed, K, profile: CLAIM_CONFIG.precise });
+  const predicted = predictedOrder(K, gamma);
+  return { K, measured, predicted, deviation: Math.abs(measured - predicted) };
+}
+
+/**
+ * @param {number} gamma
+ * @param {number} seed
+ * @param {number} multiple
+ * @returns {{ K: number, measured: number, predicted: number, deviation: number }}
+ */
+export function measureLockedFraction(gamma, seed, multiple) {
+  const K = multiple * criticalCoupling(gamma);
+  const r = settledOrder({ gamma, seed, K, profile: CLAIM_CONFIG.precise });
+  const omega = lorentzianFrequencies(CLAIM_CONFIG.n, gamma);
+  let locked = 0;
+  for (let i = 0; i < omega.length; i++) if (Math.abs(omega[i]) <= K * r) locked++;
+  const measured = locked / omega.length;
+  const predicted = (2 / Math.PI) * Math.atan((K * r) / gamma);
+  return { K, measured, predicted, deviation: Math.abs(measured - predicted) };
+}
+
+/**
+ * Steps taken for coherence to fall back below `target` after the coupling is
+ * cut from an ordered state to `multiple` x K_c.
+ *
+ * @param {number} gamma
+ * @param {number} seed
+ * @param {number} multiple
+ * @param {number} [target]
+ * @returns {number}
+ */
+export function measureRelaxationSteps(gamma, seed, multiple, target = 0.1) {
+  const kc = criticalCoupling(gamma);
+  const swarm = createSwarm({ n: CLAIM_CONFIG.n, gamma, seed });
+  settle(swarm, { K: 1.1 * kc, dt: CLAIM_CONFIG.dt, burnIn: 2000, window: 100 });
+  const limit = 200000;
+  for (let taken = 1; taken <= limit; taken++) {
+    if (step(swarm, multiple * kc, CLAIM_CONFIG.dt).r < target) return taken;
+  }
+  throw new Error(`coherence never fell below ${target} within ${limit} steps`);
+}
+
+/**
+ * Steps taken for coherence to climb back above `target` after every phase is
+ * scattered at random - the "knock" button, measured. This is the direction the
+ * page asks the reader to test, so it is checked as well as the decay direction.
+ *
+ * @param {number} gamma
+ * @param {number} seed
+ * @param {number} multiple
+ * @param {number} [target]
+ * @returns {number}
+ */
+export function measureRecoverySteps(gamma, seed, multiple, target = 0.35) {
+  const swarm = createSwarm({ n: CLAIM_CONFIG.n, gamma, seed });
+  const scatter = makeRandom(seed * 7 + 1);
+  for (let i = 0; i < swarm.n; i++) swarm.theta[i] = scatter() * 2 * Math.PI;
+  const K = multiple * criticalCoupling(gamma);
+  const limit = 120000;
+  for (let taken = 1; taken <= limit; taken++) {
+    if (step(swarm, K, CLAIM_CONFIG.dt).r > target) return taken;
+  }
+  throw new Error(`coherence never climbed back above ${target} within ${limit} steps`);
+}
+
+/**
+ * @param {number} gamma
+ * @param {number} seed
+ * @returns {{ maxGap: number, atK: number, gapAwayFromThreshold: number }}
+ */
+export function measureHysteresis(gamma, seed) {
+  const kc = criticalCoupling(gamma);
+  const multiples = [1.1, 1.5, 2.2];
+  const couplings = multiples.map((m) => m * kc);
+  const swarm = createSwarm({ n: CLAIM_CONFIG.n, gamma, seed });
+  const pass = CLAIM_CONFIG.branch;
+  const up = continuationSweep({ couplings, swarm, ...pass });
+  const down = continuationSweep({ couplings: [...couplings].reverse(), swarm, ...pass });
+  const downByK = new Map(down.map((d) => [d.K, d.r]));
+  let maxGap = 0;
+  let atK = couplings[0];
+  let gapAwayFromThreshold = 0;
+  up.forEach((row, index) => {
+    const gap = Math.abs(row.r - /** @type {number} */ (downByK.get(row.K)));
+    if (gap > maxGap) {
+      maxGap = gap;
+      atK = row.K;
+    }
+    if (multiples[index] >= 1.5) gapAwayFromThreshold = Math.max(gapAwayFromThreshold, gap);
+  });
+  return { maxGap, atK, gapAwayFromThreshold };
+}
+
+/**
+ * @typedef {object} Evidence
+ * @property {string} label
+ * @property {string} value
+ * @property {boolean} [ok]
+ */
 
 /**
  * @typedef {object} Claim
- * @property {string} name
+ * @property {string} id
+ * @property {string} title
  * @property {string} catches What a failure of this claim would mean.
- * @property {() => string} verify Returns the evidence it measured, or throws.
+ * @property {string} bound The threshold, and the worst value seen when it was set.
+ * @property {() => Evidence[]} verify Returns measured evidence, or throws.
  */
-
-/**
- * @param {boolean} condition
- * @param {string} message
- */
-function assert(condition, message) {
-  if (!condition) throw new Error(message);
-}
-
-/** @param {number} value */
-const pct = (value) => `${(value * 100).toFixed(2)}%`;
 
 /** @type {Claim[]} */
 export const claims = [
   {
-    name: 'A person reached through a friendship has 1 + CV\u00b2 times the average number of friends',
+    id: 'threshold-tracks-spread',
+    title: 'The tipping point sits at twice the spread of natural frequencies',
     catches:
-      'If this fails, the friendship paradox is not size-biased sampling and the whole page is wrong. ' +
-      'Worst deviation observed over seeds 1-5 was 0.87%; the limit is 4%.',
+      'A simulation whose threshold is a fixed number baked into the code rather than one set by how unalike the oscillators are. If the onset did not move when the spread moved, the pairing would be a coincidence of one tuning.',
+    bound:
+      'onset within 0.92-1.32 x K_c. Across 6 seeds x 4 spreads the onset landed between 1.00 and 1.20; the scan advances in 4% steps, so 1.00 is the finest reading available.',
     verify() {
-      let worst = 0;
-      let worstAt = '';
-      for (const seed of SEEDS) {
-        for (const cv of TARGET_CVS) {
-          const run = runNetwork({ ...NETWORK, cv, seed });
-          const deviation = Math.abs(run.friendshipInflation / run.predicted - 1);
-          if (deviation > worst) {
-            worst = deviation;
-            worstAt = `seed ${seed}, realised CV ${run.cv.toFixed(3)}: measured \u00d7${run.friendshipInflation.toFixed(4)} against predicted \u00d7${run.predicted.toFixed(4)}`;
-          }
-        }
-      }
-      assert(worst < 0.04, `worst deviation ${pct(worst)} exceeds 4% (${worstAt})`);
-      return `30 runs, worst deviation from 1 + CV\u00b2 was ${pct(worst)}\n${worstAt}`;
-    },
-  },
-  {
-    name: 'A passenger arriving at random waits 1 + CV\u00b2 times half the average gap',
-    catches:
-      'If this fails, the bus half of the pairing is not the same phenomenon. Worst deviation over ' +
-      'seeds 1-5 was 2.53%, at a timetable whose own realised CV had run away to 2.47; the limit is 5%.',
-    verify() {
-      let worst = 0;
-      let worstAt = '';
-      for (const seed of SEEDS) {
-        for (const cv of TARGET_CVS) {
-          const run = runBuses({ ...BUSES, cv, seed });
-          const deviation = Math.abs(run.inflation / run.predicted - 1);
-          if (deviation > worst) {
-            worst = deviation;
-            worstAt = `seed ${seed}, realised CV ${run.cv.toFixed(3)}: waited \u00d7${run.inflation.toFixed(4)} against predicted \u00d7${run.predicted.toFixed(4)}`;
-          }
-        }
-      }
-      assert(worst < 0.05, `worst deviation ${pct(worst)} exceeds 5% (${worstAt})`);
-      return `30 runs, worst deviation from 1 + CV\u00b2 was ${pct(worst)}\n${worstAt}`;
-    },
-  },
-  {
-    name: 'Both systems sit on one curve, each measured against its own variability',
-    catches:
-      'The cross-domain claim. A failure would mean the two inflations are separate coincidences ' +
-      'rather than one formula. Note what is NOT asserted: the two raw inflations are not compared ' +
-      'to each other, because a 3000-bus timetable and a 3000-person network drawn at the same ' +
-      'target do not end up with the same realised CV.',
-    verify() {
-      let worst = 0;
-      let worstAt = '';
-      /** @type {string[]} */
+      /** @type {Evidence[]} */
       const rows = [];
-      for (const cv of TARGET_CVS) {
-        const network = runNetwork({ ...NETWORK, cv, seed: 1 });
-        const buses = runBuses({ ...BUSES, cv, seed: 1 });
-        for (const [label, measured, predicted, realised] of /** @type {[string, number, number, number][]} */ ([
-          ['friends', network.friendshipInflation, network.predicted, network.cv],
-          ['waits', buses.inflation, buses.predicted, buses.cv],
-        ])) {
-          const deviation = Math.abs(measured / predicted - 1);
-          if (deviation > worst) {
-            worst = deviation;
-            worstAt = `${label} at realised CV ${realised.toFixed(3)}`;
-          }
+      for (const gamma of CLAIM_CONFIG.spreads) {
+        for (const seed of CLAIM_CONFIG.seeds) {
+          const { onsetRatio, floor } = measureOnset(gamma, seed);
+          const ok = onsetRatio >= 0.92 && onsetRatio <= 1.32;
+          rows.push({
+            label: `spread ${gamma} (K_c = ${criticalCoupling(gamma).toFixed(2)}), seed ${seed}`,
+            value: `onset at ${onsetRatio.toFixed(2)} x K_c, incoherent floor ${round(floor, 3)}`,
+            ok,
+          });
+          if (!ok) throw new Error(`onset ${onsetRatio.toFixed(2)} x K_c is outside 0.92-1.32 (gamma=${gamma}, seed=${seed})`);
         }
-        rows.push(
-          `CV ${network.cv.toFixed(2)} \u2192 friends \u00d7${network.friendshipInflation.toFixed(3)} (pred \u00d7${network.predicted.toFixed(3)})  |  ` +
-            `CV ${buses.cv.toFixed(2)} \u2192 waits \u00d7${buses.inflation.toFixed(3)} (pred \u00d7${buses.predicted.toFixed(3)})`,
-        );
       }
-      assert(worst < 0.04, `worst deviation ${pct(worst)} exceeds 4% (${worstAt})`);
-      return `${rows.join('\n')}\nworst deviation across both domains: ${pct(worst)} (${worstAt})`;
+      return rows;
     },
   },
   {
-    name: 'Take the variability away and both paradoxes vanish',
+    id: 'amplitude-law',
+    title: 'Above the tipping point, coherence follows sqrt(1 - K_c/K)',
     catches:
-      'This is the falsifier. If a regular network and a perfectly punctual timetable still showed ' +
-      'inflation, the effect would be coming from somewhere other than variance and the explanation ' +
-      'on this page would be wrong. Worst residual observed was 0.57%; the limit is 2%.',
+      'A simulation that locks up at roughly the right place but climbs on the wrong curve. Getting the threshold right is easy; getting the whole growth law right is the part that would expose a hand-tuned fake.',
+    bound: 'deviation <= 0.025 for K >= 1.2 x K_c. Worst observed 0.0084, across 6 seeds x 4 spreads x 4 couplings.',
     verify() {
-      let worst = 0;
-      /** @type {string[]} */
+      /** @type {Evidence[]} */
       const rows = [];
-      for (const seed of SEEDS) {
-        const network = runNetwork({ ...NETWORK, cv: 0, seed });
-        const buses = runBuses({ ...BUSES, cv: 0, seed });
-        worst = Math.max(worst, Math.abs(network.friendshipInflation - 1), Math.abs(buses.inflation - 1));
-        rows.push(`seed ${seed}: friends \u00d7${network.friendshipInflation.toFixed(4)}, waits \u00d7${buses.inflation.toFixed(4)}`);
-      }
-      assert(worst < 0.02, `residual inflation of ${pct(worst)} at zero variability exceeds 2%`);
-      assert(predictedInflation(0) === 1, 'the formula itself must give exactly 1 at CV = 0');
-      return `${rows.join('\n')}\nlargest residual: ${pct(worst)} away from \u00d71.0000`;
-    },
-  },
-  {
-    name: 'Sampling people directly shows no inflation at all',
-    catches:
-      'The control. Popular people existing is not the paradox; reaching people through their ' +
-      'friendships is. If uniform sampling also came out high, the bias would be in the graph ' +
-      'generator rather than in the sampling. Worst deviation observed was 0.81%; the limit is 2%.',
-    verify() {
       let worst = 0;
-      let worstAt = '';
-      for (const seed of SEEDS) {
-        for (const cv of TARGET_CVS) {
-          const run = runNetwork({ ...NETWORK, cv, seed });
-          const deviation = Math.abs(run.uniformMean / run.meanDegree - 1);
-          if (deviation > worst) {
-            worst = deviation;
-            worstAt = `seed ${seed}, realised CV ${run.cv.toFixed(3)}: \u00d7${(run.uniformMean / run.meanDegree).toFixed(4)}`;
+      for (const gamma of CLAIM_CONFIG.spreads) {
+        for (const seed of CLAIM_CONFIG.seeds) {
+          for (const multiple of [1.2, 1.6, 2.2, 3.0]) {
+            const m = measureAmplitude(gamma, seed, multiple);
+            worst = Math.max(worst, m.deviation);
+            if (m.deviation > 0.025) {
+              throw new Error(
+                `at K=${m.K.toFixed(2)} (gamma=${gamma}, seed=${seed}) measured r=${m.measured.toFixed(4)} but theory says ${m.predicted.toFixed(4)}`,
+              );
+            }
           }
         }
       }
-      assert(worst < 0.02, `uniform sampling drifted ${pct(worst)} from \u00d71, above the 2% limit`);
-      return `30 runs, worst drift from \u00d71.0000 was ${pct(worst)}\n${worstAt}`;
+      rows.push({
+        label: 'worst gap between measured coherence and the square-root law',
+        value: `${round(worst, 4)} across ${CLAIM_CONFIG.spreads.length} spreads x ${CLAIM_CONFIG.seeds.length} seeds x 4 couplings`,
+        ok: true,
+      });
+      for (const multiple of [1.2, 1.6, 2.2, 3.0]) {
+        const m = measureAmplitude(0.5, 7, multiple);
+        rows.push({
+          label: `spread 0.5, K = ${round(multiple, 1)} x K_c`,
+          value: `measured ${round(m.measured, 4)}, theory ${round(m.predicted, 4)}`,
+          ok: true,
+        });
+      }
+      return rows;
     },
   },
   {
-    name: 'Make popular people befriend popular people and the everyday version dies',
+    id: 'locked-fraction',
+    title: 'The share that actually locks is set by arctan, and the rest never join',
     catches:
-      'The prediction that failed, kept as a test. "Ask a person about their friends" was expected ' +
-      'to differ from friendship sampling in an ordinary network; it did not. It only breaks when ' +
-      'degrees are correlated across friendships, and then it breaks completely.',
+      'The comfortable but wrong story that above the threshold everyone is in step. A population split on the wrong law would mean the visual is showing something other than what the equations do.',
+    bound: 'deviation <= 0.015 from (2/pi) arctan(Kr/gamma). Worst observed 0.0037, across 6 seeds x 4 spreads x 4 couplings.',
     verify() {
-      /** @type {string[]} */
+      /** @type {Evidence[]} */
       const rows = [];
-      let worstFriendshipDrift = 0;
-      let strongestSurvivingPersonView = 0;
-      for (const seed of SEEDS) {
-        const mixed = runNetwork({ ...NETWORK, cv: 1.2, seed, assortativity: 1 });
-        worstFriendshipDrift = Math.max(worstFriendshipDrift, Math.abs(mixed.friendshipInflation / mixed.predicted - 1));
-        strongestSurvivingPersonView = Math.max(strongestSurvivingPersonView, mixed.personThenFriendInflation);
-        rows.push(
-          `seed ${seed}: assortativity r = ${mixed.assortativity.toFixed(3)}, ` +
-            `friendship sampling \u00d7${mixed.friendshipInflation.toFixed(3)} (pred \u00d7${mixed.predicted.toFixed(3)}), ` +
-            `person-then-friend \u00d7${mixed.personThenFriendInflation.toFixed(3)}`,
-        );
+      let worst = 0;
+      for (const gamma of CLAIM_CONFIG.spreads) {
+        for (const seed of CLAIM_CONFIG.seeds) {
+          for (const multiple of [1.2, 1.6, 2.2, 3.0]) {
+            const m = measureLockedFraction(gamma, seed, multiple);
+            worst = Math.max(worst, m.deviation);
+            if (m.deviation > 0.02) {
+              throw new Error(
+                `at K=${m.K.toFixed(2)} (gamma=${gamma}, seed=${seed}) ${(m.measured * 100).toFixed(1)}% locked but theory says ${(m.predicted * 100).toFixed(1)}%`,
+              );
+            }
+          }
+        }
       }
-      assert(
-        worstFriendshipDrift < 0.03,
-        `friendship sampling should be untouched by mixing, but drifted ${pct(worstFriendshipDrift)}`,
-      );
-      assert(
-        strongestSurvivingPersonView < 1.05,
-        `person-then-friend sampling should collapse to \u00d71 under perfect mixing, but reached \u00d7${strongestSurvivingPersonView.toFixed(3)}`,
-      );
-      return `${rows.join('\n')}\nfriendship sampling held to within ${pct(worstFriendshipDrift)}; person-then-friend fell to at most \u00d7${strongestSurvivingPersonView.toFixed(3)}`;
+      rows.push({ label: 'worst gap from the arctan law', value: `${round(worst, 4)}`, ok: true });
+      for (const multiple of [1.2, 2.2, 3.0]) {
+        const m = measureLockedFraction(0.5, 7, multiple);
+        rows.push({
+          label: `spread 0.5, K = ${round(multiple, 1)} x K_c`,
+          value: `${(m.measured * 100).toFixed(1)}% locked, theory ${(m.predicted * 100).toFixed(1)}% - the remainder never joins`,
+          ok: true,
+        });
+      }
+      return rows;
     },
   },
   {
-    name: 'What gets unreliable at high variability is the input, not the law',
+    id: 'no-hysteresis',
+    title: 'Raising and lowering the coupling retrace the same curve',
     catches:
-      'An honest caveat, encoded so it cannot be quietly dropped. Ask for a heavy-tailed timetable ' +
-      'and the timetable you actually get has a realised CV that wanders a long way from what was ' +
-      'requested. The law still holds \u2014 but only when measured against the CV that occurred.',
+      'An explosive, first-order transition being presented as the classic continuous one. If the two branches separated, the system would have a memory of how it got there, and the page would be describing the wrong kind of tipping point.',
+    bound:
+      'branches agree within 0.030 at and above 1.5 x K_c, and within 0.200 anywhere. Worst observed 0.0053 and 0.0913 - and every large gap sat at the point closest to the threshold.',
     verify() {
-      let worstInputDrift = 0;
-      let worstLawDrift = 0;
-      let worstAt = '';
-      for (const seed of SEEDS) {
-        const run = runBuses({ ...BUSES, cv: 1.5, seed });
-        const inputDrift = Math.abs(run.cv / 1.5 - 1);
-        if (inputDrift > worstInputDrift) {
-          worstInputDrift = inputDrift;
-          worstAt = `seed ${seed}: asked for CV 1.500, got ${run.cv.toFixed(3)}`;
+      /** @type {Evidence[]} */
+      const rows = [];
+      for (const gamma of CLAIM_CONFIG.spreads) {
+        for (const seed of CLAIM_CONFIG.seeds) {
+          const { maxGap, atK, gapAwayFromThreshold } = measureHysteresis(gamma, seed);
+          const ok = maxGap <= 0.2 && gapAwayFromThreshold <= 0.03;
+          rows.push({
+            label: `spread ${gamma}, seed ${seed}`,
+            value: `${round(gapAwayFromThreshold, 4)} clear of the threshold, ${round(maxGap, 4)} at worst (K = ${round(atK, 2)})`,
+            ok,
+          });
+          if (!ok) {
+            throw new Error(
+              `up and down branches differ by ${maxGap.toFixed(4)} at K=${atK.toFixed(2)} and ${gapAwayFromThreshold.toFixed(4)} clear of the threshold (gamma=${gamma}, seed=${seed})`,
+            );
+          }
         }
-        worstLawDrift = Math.max(worstLawDrift, Math.abs(run.inflation / run.predicted - 1));
       }
-      assert(worstInputDrift > 0.05, 'the caveat is only worth recording if the input really does drift');
-      assert(worstLawDrift < 0.05, `the law drifted ${pct(worstLawDrift)} against the realised CV, above 5%`);
-      return `requested CV missed by up to ${pct(worstInputDrift)} (${worstAt})\nyet against the realised CV the law held to ${pct(worstLawDrift)}`;
+      return rows;
+    },
+  },
+  {
+    id: 'critical-slowing-down',
+    title: 'Close to the tipping point, both collapse and recovery take far longer',
+    catches:
+      'The claim that only the threshold matters. If timescales did not stretch near the threshold, operating close to the margin would carry no penalty until the margin was actually crossed, and the grid half of this pairing would lose its point. This also backs step 3 of the experiment above, which asks the reader to time a recovery - so it is checked in the recovery direction, not only the collapse one.',
+    bound:
+      'collapse at K_c at least 2.0x slower than at 0.6 x K_c (worst observed 3.24x), and recovery at 1.25 x K_c at least 1.8x slower than at 3.0 x K_c (worst observed 2.80x). Both across 6 seeds x 4 spreads.',
+    verify() {
+      /** @type {Evidence[]} */
+      const rows = [];
+      for (const gamma of CLAIM_CONFIG.spreads) {
+        for (const seed of CLAIM_CONFIG.seeds) {
+          const atThreshold = measureRelaxationSteps(gamma, seed, 1.0);
+          const wellBelow = measureRelaxationSteps(gamma, seed, 0.6);
+          const collapseRatio = atThreshold / wellBelow;
+          const okCollapse = collapseRatio >= 2;
+          rows.push({
+            label: `collapse · spread ${gamma}, seed ${seed}`,
+            value: `${(atThreshold * CLAIM_CONFIG.dt).toFixed(1)}s at the threshold vs ${(wellBelow * CLAIM_CONFIG.dt).toFixed(1)}s well below it - ${round(collapseRatio, 2)}x slower`,
+            ok: okCollapse,
+          });
+          if (!okCollapse) throw new Error(`collapse only ${collapseRatio.toFixed(2)}x slower at the threshold (gamma=${gamma}, seed=${seed})`);
+
+          const nearThreshold = measureRecoverySteps(gamma, seed, 1.25);
+          const farAbove = measureRecoverySteps(gamma, seed, 3.0);
+          const recoveryRatio = nearThreshold / farAbove;
+          const okRecovery = recoveryRatio >= 1.8;
+          rows.push({
+            label: `recovery after a knock · spread ${gamma}, seed ${seed}`,
+            value: `${(nearThreshold * CLAIM_CONFIG.dt).toFixed(1)}s just above the threshold vs ${(farAbove * CLAIM_CONFIG.dt).toFixed(1)}s far above it - ${round(recoveryRatio, 2)}x slower`,
+            ok: okRecovery,
+          });
+          if (!okRecovery) throw new Error(`recovery only ${recoveryRatio.toFixed(2)}x slower near the threshold (gamma=${gamma}, seed=${seed})`);
+        }
+      }
+      return rows;
+    },
+  },
+  {
+    id: 'incoherent-floor-is-not-zero',
+    title: 'Below the tipping point coherence is small but never zero',
+    catches:
+      'Overclaiming. Theory says coherence vanishes below threshold only for an infinite population; a finite one keeps a residue of order 1/sqrt(N). Reporting a clean zero would mean the page had rounded its own measurement towards the tidier story.',
+    bound: 'floor between 0.3 and 4.0 times 1/sqrt(N). Observed 0.85 to 1.71 across 6 seeds and three population sizes.',
+    verify() {
+      /** @type {Evidence[]} */
+      const rows = [];
+      for (const n of [120, 240, 480]) {
+        for (const seed of CLAIM_CONFIG.seeds) {
+          const gamma = 0.5;
+          const swarm = createSwarm({ n, gamma, seed });
+          const r = settle(swarm, { K: 0.6 * criticalCoupling(gamma), dt: CLAIM_CONFIG.dt, ...CLAIM_CONFIG.branch });
+          const scale = r * Math.sqrt(n);
+          const ok = scale >= 0.3 && scale <= 4;
+          rows.push({
+            label: `N = ${n}, seed ${seed}`,
+            value: `floor ${round(r, 4)} = ${round(scale, 2)} x 1/sqrt(N)`,
+            ok,
+          });
+          if (!ok) throw new Error(`floor at N=${n} was ${scale.toFixed(2)} x 1/sqrt(N), outside 0.3-4.0 (seed=${seed})`);
+        }
+      }
+      return rows;
     },
   },
 ];

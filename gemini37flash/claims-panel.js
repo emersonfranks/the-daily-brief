@@ -1,24 +1,17 @@
 // @ts-check
-
-/**
- * @fileoverview Browser runner and interactive UI component for verifying
- * empirical claims directly on the web page.
- */
-
 import { CLAIMS } from './claims.js';
 
 /**
- * Mounts the claims verification panel inside the specified container.
  * @param {HTMLElement} container
  */
 export function mountClaimsPanel(container) {
   container.innerHTML = `
     <div class="claims-header">
       <div class="claims-summary">
-        <h3>Live Experimental Proof Suite</h3>
-        <p>Run the identical headless verification assertions that govern CI. Every test evaluates real numerical PDE simulations in your browser.</p>
+        <h3>Empirical Claims & Browser Test Suite</h3>
+        <p>Run the exact same headless assertions that govern CI. Every claim evaluates the mathematical simulation directly in your browser.</p>
       </div>
-      <button id="btn-run-claims" class="btn-primary">▶ Run Proof Suite</button>
+      <button id="btn-run-claims" class="btn-primary">▶ Run Test Suite</button>
     </div>
     <div id="claims-list" class="claims-list"></div>
   `;
@@ -26,14 +19,12 @@ export function mountClaimsPanel(container) {
   const listEl = /** @type {HTMLElement} */ (container.querySelector('#claims-list'));
   const runBtn = /** @type {HTMLButtonElement} */ (container.querySelector('#btn-run-claims'));
 
-  // Render initial claim cards in pending state
   renderClaimCards(listEl, null);
 
   runBtn.addEventListener('click', () => {
     runBtn.disabled = true;
-    runBtn.textContent = 'Running Simulations...';
+    runBtn.textContent = 'Running Assertions...';
 
-    // Small delay to allow UI refresh
     setTimeout(() => {
       const results = CLAIMS.map(claim => {
         try {
@@ -44,7 +35,7 @@ export function mountClaimsPanel(container) {
             title: claim.title,
             statement: claim.statement,
             passed: false,
-            evidence: `Error thrown during verification: ${err instanceof Error ? err.message : String(err)}`,
+            evidence: `Error during verification: ${err instanceof Error ? err.message : String(err)}`,
             metrics: {}
           };
         }
@@ -52,14 +43,14 @@ export function mountClaimsPanel(container) {
 
       renderClaimCards(listEl, results);
       runBtn.disabled = false;
-      runBtn.textContent = '↻ Re-run Proof Suite';
-    }, 50);
+      runBtn.textContent = '↻ Re-run Test Suite';
+    }, 40);
   });
 }
 
 /**
  * @param {HTMLElement} listEl
- * @param {import('./claims.js').ClaimResult[] | null} results
+ * @param {any[] | null} results
  */
 function renderClaimCards(listEl, results) {
   listEl.innerHTML = '';
@@ -83,7 +74,7 @@ function renderClaimCards(listEl, results) {
           ? `<div class="claim-evidence">
                <strong>Measured Evidence:</strong> ${res.evidence}
              </div>`
-          : `<div class="claim-evidence text-muted">Click "Run Proof Suite" above to execute this numerical experiment live.</div>`
+          : `<div class="claim-evidence text-muted">Click "Run Test Suite" to execute this assertion live.</div>`
       }
     `;
 

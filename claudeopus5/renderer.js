@@ -1,251 +1,208 @@
 // @ts-check
 
 /**
- * Canvas drawing for both panels. No simulation happens here; everything is handed in already
- * measured by inspection-model.js.
+ * Draws one swarm twice. The two panels are fed the same `theta` array on the
+ * same frame; nothing is simulated here and nothing is simulated separately per
+ * panel. That is the whole argument of the page, so it is worth stating in code:
+ * if the panels ever disagree it is a drawing bug, not two systems behaving
+ * differently.
  */
 
-/** @typedef {import('./inspection-model.js').Network} Network */
+import { makeRandom } from './kuramoto.js';
+
+const LOCKED = '#ffcf5c';
+const DRIFTING = '#4a6b8a';
 
 /**
- * Fixed positions for a network, so the picture stays still while the sampler runs over it.
- * High-degree people are pulled toward the middle purely so the eye can find them.
- *
- * @param {Network} network
- * @param {number} width
- * @param {number} height
- * @returns {{ x: number, y: number, r: number }[]}
+ * @typedef {object} Frame
+ * @property {Float64Array} theta
+ * @property {Float64Array} omega
+ * @property {number} K
+ * @property {number} r
+ * @property {number} psi
+ * @property {number[]} history Recent coherence values, oldest first.
  */
-export function layoutNetwork(network, width, height) {
-  const cx = width / 2;
-  const cy = height / 2;
-  const span = Math.min(width, height) / 2 - 14;
-  let maxDegree = 1;
-  for (const degree of network.degrees) maxDegree = Math.max(maxDegree, degree);
 
-  return network.degrees.map((degree, index) => {
-    const popularity = Math.min(1, Math.log(1 + degree) / Math.log(1 + maxDegree));
-    const spiral = Math.sqrt((index + 0.5) / network.size);
-    const radius = span * (0.18 + 0.82 * spiral) * (1 - 0.55 * popularity);
-    const angle = index * 2.399963229728653;
-    return {
-      x: cx + radius * Math.cos(angle) * (width / Math.min(width, height)),
-      y: cy + radius * Math.sin(angle),
-      r: 1.4 + 2.6 * Math.sqrt(degree / maxDegree) * 2,
-    };
-  });
+/**
+ * @param {HTMLCanvasElement} canvas
+ * @returns {{ ctx: CanvasRenderingContext2D, width: number, height: number }}
+ */
+function prepare(canvas) {
+  const ratio = Math.min(window.devicePixelRatio || 1, 2);
+  const width = canvas.clientWidth;
+  const height = canvas.clientHeight;
+  if (canvas.width !== Math.round(width * ratio) || canvas.height !== Math.round(height * ratio)) {
+    canvas.width = Math.round(width * ratio);
+    canvas.height = Math.round(height * ratio);
+  }
+  const ctx = /** @type {CanvasRenderingContext2D} */ (canvas.getContext('2d'));
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  ctx.clearRect(0, 0, width, height);
+  return { ctx, width, height };
 }
 
 /**
- * @typedef {object} NetworkView
- * @property {Network} network
- * @property {{ x: number, y: number, r: number }[]} layout
- * @property {readonly [number, number] | null} lastEdge
- * @property {number} lastPerson
- * @property {number} meanDegree
- * @property {number} sampledMean
- * @property {number} predictedMean Where 1 + CV² says the sampled mean should land.
- * @property {number} draws
+ * @param {number} n
+ * @param {number} seed
+ * @returns {{ x: number, y: number, size: number }[]}
  */
+function scatter(n, seed) {
+  const random = makeRandom(seed);
+  const spots = [];
+  for (let i = 0; i < n; i++) {
+    // Biased towards the lower half so the swarm reads as sitting in foliage
+    // rather than floating in a uniform box.
+    const y = 0.12 + 0.86 * Math.sqrt(random());
+    spots.push({ x: 0.04 + 0.92 * random(), y, size: 1.4 + 2.2 * random() });
+  }
+  return spots;
+}
 
 /**
- * @param {CanvasRenderingContext2D} ctx
- * @param {number} width
- * @param {number} height
- * @param {NetworkView} view
+ * @param {object} options
+ * @param {HTMLCanvasElement} options.fireflies
+ * @param {HTMLCanvasElement} options.rotors
+ * @param {HTMLCanvasElement} options.trace
+ * @param {number} options.n
+ * @param {number} [options.seed]
  */
-export function drawNetwork(ctx, width, height, view) {
-  ctx.clearRect(0, 0, width, height);
-  const { network, layout } = view;
+export function createRenderer({ fireflies, rotors, trace, n, seed = 3 }) {
+  const spots = scatter(n, seed);
 
-  ctx.lineWidth = 0.5;
-  ctx.strokeStyle = 'rgba(124, 196, 255, 0.10)';
-  ctx.beginPath();
-  for (const [a, b] of network.edges) {
-    if (a === b) continue;
-    ctx.moveTo(layout[a].x, layout[a].y);
-    ctx.lineTo(layout[b].x, layout[b].y);
+  /**
+   * @param {Frame} frame
+   * @returns {Uint8Array} 1 where the oscillator is entrained by the mean field.
+   */
+  function lockedMask(frame) {
+    const mask = new Uint8Array(n);
+    const pull = frame.K * frame.r;
+    for (let i = 0; i < n; i++) mask[i] = Math.abs(frame.omega[i]) <= pull ? 1 : 0;
+    return mask;
   }
-  ctx.stroke();
 
-  ctx.fillStyle = 'rgba(124, 196, 255, 0.55)';
-  for (const point of layout) {
+  /**
+   * @param {Frame} frame
+   * @param {Uint8Array} mask
+   */
+  function drawFireflies(frame, mask) {
+    const { ctx, width, height } = prepare(fireflies);
+    const backdrop = ctx.createLinearGradient(0, 0, 0, height);
+    backdrop.addColorStop(0, '#080d14');
+    backdrop.addColorStop(1, '#0d1520');
+    ctx.fillStyle = backdrop;
+    ctx.fillRect(0, 0, width, height);
+
+    for (let i = 0; i < n; i++) {
+      const phase = Math.cos(frame.theta[i]);
+      const glow = phase > 0 ? phase ** 10 : 0;
+      if (glow < 0.02) continue;
+      const spot = spots[i];
+      const x = spot.x * width;
+      const y = spot.y * height;
+      const radius = spot.size * (1 + 2.4 * glow);
+      const halo = ctx.createRadialGradient(x, y, 0, x, y, radius * 3.4);
+      const tint = mask[i] ? '255, 214, 110' : '132, 178, 226';
+      halo.addColorStop(0, `rgba(${tint}, ${0.95 * glow})`);
+      halo.addColorStop(0.35, `rgba(${tint}, ${0.34 * glow})`);
+      halo.addColorStop(1, `rgba(${tint}, 0)`);
+      ctx.fillStyle = halo;
+      ctx.beginPath();
+      ctx.arc(x, y, radius * 3.4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  /**
+   * @param {Frame} frame
+   * @param {Uint8Array} mask
+   */
+  function drawRotors(frame, mask) {
+    const { ctx, width, height } = prepare(rotors);
+    ctx.fillStyle = '#080d14';
+    ctx.fillRect(0, 0, width, height);
+
+    const cx = width / 2;
+    const cy = height / 2;
+    const ring = Math.min(width, height) * 0.36;
+
+    ctx.strokeStyle = 'rgba(120, 150, 180, 0.22)';
+    ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.arc(point.x, point.y, point.r, 0, Math.PI * 2);
+    ctx.arc(cx, cy, ring, 0, Math.PI * 2);
+    ctx.stroke();
+
+    for (let i = 0; i < n; i++) {
+      const angle = frame.theta[i];
+      const wobble = ring + ((i % 7) - 3) * 2.1;
+      const x = cx + wobble * Math.cos(angle);
+      const y = cy + wobble * Math.sin(angle);
+      ctx.fillStyle = mask[i] ? LOCKED : DRIFTING;
+      ctx.globalAlpha = mask[i] ? 0.85 : 0.5;
+      ctx.beginPath();
+      ctx.arc(x, y, mask[i] ? 2.3 : 1.7, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    const armX = cx + ring * frame.r * Math.cos(frame.psi);
+    const armY = cy + ring * frame.r * Math.sin(frame.psi);
+    ctx.strokeStyle = '#ffcf5c';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(armX, armY);
+    ctx.stroke();
+    ctx.fillStyle = '#ffcf5c';
+    ctx.beginPath();
+    ctx.arc(armX, armY, 4, 0, Math.PI * 2);
     ctx.fill();
   }
 
-  if (view.lastEdge) {
-    const [a, b] = view.lastEdge;
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 1.6;
-    ctx.beginPath();
-    ctx.moveTo(layout[a].x, layout[a].y);
-    ctx.lineTo(layout[b].x, layout[b].y);
-    ctx.stroke();
+  /**
+   * @param {Frame} frame
+   * @param {number} critical
+   */
+  function drawTrace(frame, critical) {
+    const { ctx, width, height } = prepare(trace);
+    ctx.fillStyle = '#080d14';
+    ctx.fillRect(0, 0, width, height);
 
-    const chosen = layout[view.lastPerson];
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.arc(chosen.x, chosen.y, chosen.r + 2.5, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.strokeStyle = 'rgba(120, 150, 180, 0.2)';
+    ctx.lineWidth = 1;
+    for (const level of [0.25, 0.5, 0.75]) {
+      const y = height - level * height;
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(width, y);
+      ctx.stroke();
+    }
 
-    ctx.fillStyle = '#0b0f16';
-    ctx.font = '600 11px ui-sans-serif, system-ui, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(String(network.degrees[view.lastPerson]), chosen.x, chosen.y + 0.5);
+    const points = frame.history;
+    if (points.length > 1) {
+      ctx.strokeStyle = frame.K >= critical ? LOCKED : '#6f93b8';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      points.forEach((value, index) => {
+        const x = (index / (points.length - 1)) * width;
+        const y = height - value * height;
+        if (index === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+    }
   }
 
-  drawMeter(ctx, width, height, {
-    baselineLabel: 'average person',
-    baseline: view.meanDegree,
-    measuredLabel: 'person found through a friendship',
-    measured: view.sampledMean,
-    predicted: view.predictedMean,
-    unit: ' friends',
-    colour: '#7cc4ff',
-    draws: view.draws,
-  });
-}
-
-/**
- * @typedef {object} TimelineView
- * @property {readonly number[]} headways
- * @property {number} windowStart Index of the first headway drawn.
- * @property {number} windowCount
- * @property {{ gap: number, offset: number } | null} lastRider Position of the newest passenger.
- * @property {number} meanHeadway
- * @property {number} meanWait
- * @property {number} predictedWait Where 1 + CV² says the mean wait should land.
- * @property {number} draws
- */
-
-/**
- * @param {CanvasRenderingContext2D} ctx
- * @param {number} width
- * @param {number} height
- * @param {TimelineView} view
- */
-export function drawTimeline(ctx, width, height, view) {
-  ctx.clearRect(0, 0, width, height);
-
-  const left = 14;
-  const right = width - 14;
-  const axisY = height * 0.46;
-  const slice = view.headways.slice(view.windowStart, view.windowStart + view.windowCount);
-  const total = slice.reduce((sum, gap) => sum + gap, 0) || 1;
-  const scale = (right - left) / total;
-
-  ctx.strokeStyle = 'rgba(255, 180, 84, 0.30)';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(left, axisY);
-  ctx.lineTo(right, axisY);
-  ctx.stroke();
-
-  let x = left;
-  /** @type {number[]} */
-  const stops = [x];
-  for (const gap of slice) {
-    x += gap * scale;
-    stops.push(x);
-  }
-
-  for (let i = 0; i < stops.length; i += 1) {
-    ctx.strokeStyle = '#ffb454';
-    ctx.lineWidth = 1.8;
-    ctx.beginPath();
-    ctx.moveTo(stops[i], axisY - 13);
-    ctx.lineTo(stops[i], axisY + 13);
-    ctx.stroke();
-  }
-
-  for (let i = 0; i < slice.length; i += 1) {
-    const mid = (stops[i] + stops[i + 1]) / 2;
-    const gapWidth = stops[i + 1] - stops[i];
-    if (gapWidth < 26) continue;
-    ctx.fillStyle = 'rgba(255, 180, 84, 0.45)';
-    ctx.font = '10px ui-monospace, monospace';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    ctx.fillText(`${slice[i].toFixed(1)}m`, mid, axisY + 17);
-  }
-
-  if (view.lastRider && view.lastRider.gap >= view.windowStart && view.lastRider.gap < view.windowStart + view.windowCount) {
-    const index = view.lastRider.gap - view.windowStart;
-    const riderX = stops[index] + view.lastRider.offset * scale;
-    const nextX = stops[index + 1];
-
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
-    ctx.fillRect(riderX, axisY - 9, Math.max(1, nextX - riderX), 18);
-
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(riderX, axisY - 22);
-    ctx.lineTo(riderX, axisY + 22);
-    ctx.stroke();
-
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '600 11px ui-sans-serif, system-ui, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'bottom';
-    ctx.fillText(`waits ${(slice[index] - view.lastRider.offset).toFixed(1)}m`, riderX, axisY - 25);
-  }
-
-  drawMeter(ctx, width, height, {
-    baselineLabel: 'half the average gap',
-    baseline: view.meanHeadway / 2,
-    measuredLabel: 'what a passenger actually waits',
-    measured: view.meanWait,
-    predicted: view.predictedWait,
-    unit: ' min',
-    colour: '#ffb454',
-    draws: view.draws,
-  });
-}
-
-/**
- * A two-bar comparison strip pinned to the bottom of a panel, with a marker showing where the
- * formula says the measured bar should stop.
- *
- * @param {CanvasRenderingContext2D} ctx
- * @param {number} width
- * @param {number} height
- * @param {{ baselineLabel: string, baseline: number, measuredLabel: string, measured: number, predicted: number, unit: string, colour: string, draws: number }} spec
- */
-function drawMeter(ctx, width, height, spec) {
-  const left = 14;
-  const right = width - 14;
-  const top = height - 62;
-  const scale = (right - left) / Math.max(spec.baseline * 2.2, spec.predicted * 1.24, spec.measured * 1.12, 1e-6);
-
-  ctx.font = '11px ui-sans-serif, system-ui, sans-serif';
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'middle';
-
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
-  ctx.fillRect(left, top, Math.max(1, spec.baseline * scale), 11);
-  ctx.fillStyle = '#98a4b6';
-  ctx.fillText(`${spec.baselineLabel}: ${spec.baseline.toFixed(2)}${spec.unit}`, left, top + 21);
-
-  ctx.fillStyle = spec.colour;
-  ctx.fillRect(left, top + 32, Math.max(1, spec.measured * scale), 11);
-
-  const markerX = left + spec.predicted * scale;
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.moveTo(markerX, top + 28);
-  ctx.lineTo(markerX, top + 47);
-  ctx.stroke();
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-  ctx.textAlign = 'center';
-  ctx.fillText('1 + CV\u00b2', markerX, top + 21);
-
-  ctx.textAlign = 'left';
-  ctx.fillStyle = spec.colour;
-  const trailer = spec.draws === 0 ? '\u2014' : `${spec.measured.toFixed(2)}${spec.unit}`;
-  ctx.fillText(`${spec.measuredLabel}: ${trailer}`, left, top + 53);
+  return {
+    /**
+     * @param {Frame} frame
+     * @param {number} critical
+     */
+    draw(frame, critical) {
+      const mask = lockedMask(frame);
+      drawFireflies(frame, mask);
+      drawRotors(frame, mask);
+      drawTrace(frame, critical);
+      return mask;
+    },
+  };
 }

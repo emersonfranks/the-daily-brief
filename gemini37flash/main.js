@@ -1,188 +1,199 @@
 // @ts-check
-
-/**
- * @fileoverview Main controller entry point wiring UI controls, simulation loop,
- * canvas interactions, and empirical test runner.
- */
-
-import { TuringSimulation, PRESETS } from './turing-model.js';
-import { TuringRenderer } from './renderer.js';
+import { SandpileModel } from './sandpile-model.js';
+import { SandpileRenderer } from './renderer.js';
 import { mountClaimsPanel } from './claims-panel.js';
 
 window.addEventListener('DOMContentLoaded', () => {
   const mainCanvas = /** @type {HTMLCanvasElement} */ (document.getElementById('sim-canvas'));
-  const profileCanvas = /** @type {HTMLCanvasElement} */ (document.getElementById('profile-canvas'));
-  const waveCanvas = /** @type {HTMLCanvasElement} */ (document.getElementById('wave-canvas'));
+  const plotCanvas = /** @type {HTMLCanvasElement} */ (document.getElementById('plot-canvas'));
+  const distCanvas = /** @type {HTMLCanvasElement} */ (document.getElementById('dist-canvas'));
 
-  if (!mainCanvas || !profileCanvas || !waveCanvas) return;
+  if (!mainCanvas || !plotCanvas || !distCanvas) return;
 
-  const sim = new TuringSimulation({
-    width: 96,
-    height: 96,
-    Du: PRESETS.LEOPARD_SPOTS.Du,
-    Dv: PRESETS.LEOPARD_SPOTS.Dv,
-    F: PRESETS.LEOPARD_SPOTS.F,
-    k: PRESETS.LEOPARD_SPOTS.k,
-    slopeAdvection: PRESETS.LEOPARD_SPOTS.slopeAdvection
-  });
+  let modelSize = 64;
+  let model = new SandpileModel(modelSize, 42);
+  const renderer = new SandpileRenderer(mainCanvas, plotCanvas, distCanvas);
 
-  const renderer = new TuringRenderer(mainCanvas, profileCanvas, waveCanvas);
-  renderer.currentSkin = 'split';
+  let isRunning = true;
+  let dropsPerFrame = 4;
+  let drivingMode = 'stochastic';
+  let isPointerDown = false;
+  let pointerPos = { x: 0, y: 0 };
+  /** @type {Uint8Array|null} */
+  let activeTopples = null;
 
-  // HUD Elements
-  const statSteps = document.getElementById('stat-steps');
-  const statCoverage = document.getElementById('stat-coverage');
-  const statWavelength = document.getElementById('stat-wavelength');
-  const statDepletion = document.getElementById('stat-depletion');
-  const domainLabelA = document.getElementById('domain-label-a');
-  const domainLabelB = document.getElementById('domain-label-b');
-
-  // Sliders & Controls
-  const sliderF = /** @type {HTMLInputElement} */ (document.getElementById('slider-f'));
-  const sliderK = /** @type {HTMLInputElement} */ (document.getElementById('slider-k'));
-  const sliderDu = /** @type {HTMLInputElement} */ (document.getElementById('slider-du'));
-  const sliderDv = /** @type {HTMLInputElement} */ (document.getElementById('slider-dv'));
-  const sliderSlope = /** @type {HTMLInputElement} */ (document.getElementById('slider-slope'));
-  const sliderSpeed = /** @type {HTMLInputElement} */ (document.getElementById('slider-speed'));
-
-  const valF = document.getElementById('val-f');
-  const valK = document.getElementById('val-k');
-  const valDu = document.getElementById('val-du');
-  const valDv = document.getElementById('val-dv');
-  const valSlope = document.getElementById('val-slope');
+  const statAdded = document.getElementById('stat-added');
+  const statTopplings = document.getElementById('stat-topplings');
+  const statMeanHeight = document.getElementById('stat-mean-height');
+  const statTau = document.getElementById('stat-tau');
+  const statMaxAvalanche = document.getElementById('stat-max-avalanche');
+  const statDissipated = document.getElementById('stat-dissipated');
 
   const btnPlayPause = /** @type {HTMLButtonElement} */ (document.getElementById('btn-play-pause'));
   const btnStep = /** @type {HTMLButtonElement} */ (document.getElementById('btn-step'));
-  const btnReset = /** @type {HTMLButtonElement} */ (document.getElementById('btn-reset'));
-  const brushModeSelect = /** @type {HTMLSelectElement} */ (document.getElementById('brush-mode'));
+  const btnClear = /** @type {HTMLButtonElement} */ (document.getElementById('btn-clear'));
+  const btnFastForward = /** @type {HTMLButtonElement} */ (document.getElementById('btn-fastforward'));
+  const btnShock = /** @type {HTMLButtonElement} */ (document.getElementById('btn-shock'));
+  const sliderSpeed = /** @type {HTMLInputElement} */ (document.getElementById('slider-speed'));
+  const valSpeed = document.getElementById('val-speed');
+  const drivingSelect = /** @type {HTMLSelectElement} */ (document.getElementById('driving-mode'));
+  const sizeSelect = /** @type {HTMLSelectElement} */ (document.getElementById('lattice-size'));
 
-  let isRunning = true;
-  let stepsPerFrame = 8;
-  let isPointerDown = false;
-  let pointerPos = { x: 0, y: 0 };
+  /** @type {AudioContext|null} */
+  let audioCtx = null;
 
-  function updateControlDisplays() {
-    if (sliderF && valF) {
-      sliderF.value = String(sim.F);
-      valF.textContent = sim.F.toFixed(3);
-    }
-    if (sliderK && valK) {
-      sliderK.value = String(sim.k);
-      valK.textContent = sim.k.toFixed(3);
-    }
-    if (sliderDu && valDu) {
-      sliderDu.value = String(sim.Du);
-      valDu.textContent = sim.Du.toFixed(2);
-    }
-    if (sliderDv && valDv) {
-      sliderDv.value = String(sim.Dv);
-      valDv.textContent = sim.Dv.toFixed(2);
-    }
-    if (sliderSlope && valSlope) {
-      sliderSlope.value = String(sim.slopeAdvection);
-      valSlope.textContent = sim.slopeAdvection.toFixed(2);
+  function initAudio() {
+    if (!audioCtx) {
+      const AudioContextClass = window.AudioContext || /** @type {any} */ (window).webkitAudioContext;
+      if (AudioContextClass) {
+        audioCtx = new AudioContextClass();
+      }
     }
   }
 
-  function loadPreset(presetKey) {
-    const preset = PRESETS[presetKey];
-    if (!preset) return;
+  /**
+   * @param {number} avalancheSize
+   */
+  function playAvalancheSound(avalancheSize) {
+    if (!audioCtx || audioCtx.state !== 'running' || avalancheSize <= 0) return;
+    try {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      const now = audioCtx.currentTime;
 
-    sim.Du = preset.Du;
-    sim.Dv = preset.Dv;
-    sim.F = preset.F;
-    sim.k = preset.k;
-    sim.slopeAdvection = preset.slopeAdvection;
-    sim.reset('multi_spot');
+      const baseFreq = 120 + Math.min(800, Math.log2(avalancheSize + 1) * 70);
+      osc.type = avalancheSize > 100 ? 'triangle' : 'sine';
+      osc.frequency.setValueAtTime(baseFreq, now);
+      osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.5, now + 0.08);
 
-    if (domainLabelA) domainLabelA.textContent = preset.domainA;
-    if (domainLabelB) domainLabelB.textContent = preset.domainB;
+      const volume = Math.min(0.15, 0.02 + Math.log10(avalancheSize + 1) * 0.03);
+      gain.gain.setValueAtTime(volume, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
 
-    updateControlDisplays();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
 
-    // Update active preset button highlight
-    document.querySelectorAll('.preset-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.getAttribute('data-preset') === presetKey);
-    });
+      osc.start(now);
+      osc.stop(now + 0.08);
+    } catch {
+      // Audio fallback
+    }
   }
 
-  // Bind Preset Buttons
-  document.querySelectorAll('.preset-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const key = btn.getAttribute('data-preset');
-      if (key) loadPreset(key);
-    });
-  });
+  function updateHUD() {
+    if (statAdded) statAdded.textContent = model.totalAdded.toLocaleString();
+    if (statTopplings) statTopplings.textContent = model.totalTopplings.toLocaleString();
+    if (statMeanHeight) statMeanHeight.textContent = model.getMeanHeight().toFixed(3);
+    if (statDissipated) statDissipated.textContent = model.totalDissipated.toLocaleString();
 
-  // Bind Skin View Selector
+    let maxS = 0;
+    for (let i = 0; i < model.avalancheHistory.length; i++) {
+      if (model.avalancheHistory[i].size > maxS) maxS = model.avalancheHistory[i].size;
+    }
+    if (statMaxAvalanche) statMaxAvalanche.textContent = maxS.toLocaleString();
+
+    const stats = model.getLogLogDistribution(14);
+    if (statTau) {
+      if (stats.r2 > 0.5) {
+        statTau.textContent = `${Math.abs(stats.slope).toFixed(2)} (R²=${stats.r2.toFixed(2)})`;
+      } else {
+        statTau.textContent = 'Measuring...';
+      }
+    }
+  }
+
+  function renderAll() {
+    renderer.renderGrid(model, activeTopples, {
+      brushX: pointerPos.x,
+      brushY: pointerPos.y,
+      brushRadius: 3
+    });
+    renderer.renderLogLogPlot(model);
+    renderer.renderDistribution(model);
+    updateHUD();
+  }
+
   document.querySelectorAll('.skin-btn').forEach(btn => {
     btn.addEventListener('click', () => {
+      initAudio();
       const skin = /** @type {import('./renderer.js').RenderSkin} */ (btn.getAttribute('data-skin'));
       if (skin) {
         renderer.currentSkin = skin;
         document.querySelectorAll('.skin-btn').forEach(b => b.classList.toggle('active', b === btn));
+        renderAll();
       }
     });
   });
 
-  // Slider events
-  if (sliderF) {
-    sliderF.addEventListener('input', () => {
-      sim.F = parseFloat(sliderF.value);
-      if (valF) valF.textContent = sim.F.toFixed(3);
-    });
-  }
-  if (sliderK) {
-    sliderK.addEventListener('input', () => {
-      sim.k = parseFloat(sliderK.value);
-      if (valK) valK.textContent = sim.k.toFixed(3);
-    });
-  }
-  if (sliderDu) {
-    sliderDu.addEventListener('input', () => {
-      sim.Du = parseFloat(sliderDu.value);
-      if (valDu) valDu.textContent = sim.Du.toFixed(2);
-    });
-  }
-  if (sliderDv) {
-    sliderDv.addEventListener('input', () => {
-      sim.Dv = parseFloat(sliderDv.value);
-      if (valDv) valDv.textContent = sim.Dv.toFixed(2);
-    });
-  }
-  if (sliderSlope) {
-    sliderSlope.addEventListener('input', () => {
-      sim.slopeAdvection = parseFloat(sliderSlope.value);
-      if (valSlope) valSlope.textContent = sim.slopeAdvection.toFixed(2);
-    });
-  }
   if (sliderSpeed) {
     sliderSpeed.addEventListener('input', () => {
-      stepsPerFrame = parseInt(sliderSpeed.value, 10);
+      dropsPerFrame = parseInt(sliderSpeed.value, 10);
+      if (valSpeed) valSpeed.textContent = String(dropsPerFrame);
     });
   }
 
-  // Play / Pause / Reset
+  if (drivingSelect) {
+    drivingSelect.addEventListener('change', () => {
+      drivingMode = drivingSelect.value;
+    });
+  }
+
+  if (sizeSelect) {
+    sizeSelect.addEventListener('change', () => {
+      modelSize = parseInt(sizeSelect.value, 10);
+      model = new SandpileModel(modelSize, Date.now() & 0xffff);
+      model.fastForward(modelSize * modelSize * 3);
+      renderAll();
+    });
+  }
+
   if (btnPlayPause) {
     btnPlayPause.addEventListener('click', () => {
+      initAudio();
       isRunning = !isRunning;
       btnPlayPause.textContent = isRunning ? '⏸ Pause' : '▶ Play';
     });
   }
+
   if (btnStep) {
     btnStep.addEventListener('click', () => {
-      sim.step(10);
-      renderAll();
-    });
-  }
-  if (btnReset) {
-    btnReset.addEventListener('click', () => {
-      sim.reset('multi_spot');
+      initAudio();
+      const res = model.dropRandom();
+      activeTopples = res.toppledCells;
+      if (res.size > 0) playAvalancheSound(res.size);
       renderAll();
     });
   }
 
-  // Canvas interaction (Painting / Injecting)
+  if (btnClear) {
+    btnClear.addEventListener('click', () => {
+      model.reset();
+      activeTopples = null;
+      renderAll();
+    });
+  }
+
+  if (btnFastForward) {
+    btnFastForward.addEventListener('click', () => {
+      initAudio();
+      model.fastForward(model.size * model.size * 4);
+      activeTopples = null;
+      renderAll();
+    });
+  }
+
+  if (btnShock) {
+    btnShock.addEventListener('click', () => {
+      initAudio();
+      const midX = Math.floor(model.size / 2);
+      const midY = Math.floor(model.size / 2);
+      const res = model.addGrain(midX, midY, 64);
+      activeTopples = res.toppledCells;
+      if (res.size > 0) playAvalancheSound(res.size);
+      renderAll();
+    });
+  }
+
   /**
    * @param {MouseEvent | Touch} e
    */
@@ -190,25 +201,17 @@ window.addEventListener('DOMContentLoaded', () => {
     const rect = mainCanvas.getBoundingClientRect();
     const clientX = 'clientX' in e ? e.clientX : 0;
     const clientY = 'clientY' in e ? e.clientY : 0;
-    const scaleX = sim.width / rect.width;
-    const scaleY = sim.height / rect.height;
-    const x = (clientX - rect.left) * scaleX;
-    const y = (clientY - rect.top) * scaleY;
+    const scaleX = model.size / rect.width;
+    const scaleY = model.size / rect.height;
+    const x = Math.floor((clientX - rect.left) * scaleX);
+    const y = Math.floor((clientY - rect.top) * scaleY);
     pointerPos = { x, y };
 
-    // Select row for cross-section
-    renderer.selectedRow = Math.floor(y);
-
-    if (isPointerDown) {
-      const mode = brushModeSelect ? brushModeSelect.value : 'activator';
-      const radius = 4;
-      if (mode === 'activator') {
-        sim.inject(x, y, radius, 0.4, 0);
-      } else if (mode === 'water') {
-        sim.inject(x, y, radius, 0, 0.5);
-      } else if (mode === 'drought') {
-        sim.inject(x, y, radius, -0.4, -0.4);
-      }
+    if (isPointerDown && x >= 0 && x < model.size && y >= 0 && y < model.size) {
+      initAudio();
+      const res = model.addGrain(x, y, 2);
+      activeTopples = res.toppledCells;
+      if (res.size > 0) playAvalancheSound(res.size);
     }
   }
 
@@ -223,7 +226,6 @@ window.addEventListener('DOMContentLoaded', () => {
     handlePointer(e);
   });
 
-  // Touch support
   mainCanvas.addEventListener('touchstart', e => {
     if (e.touches.length > 0) {
       isPointerDown = true;
@@ -239,45 +241,51 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   }, { passive: true });
 
-  function renderAll() {
-    renderer.renderField(sim, {
-      brushX: pointerPos.x,
-      brushY: pointerPos.y,
-      brushRadius: 4
-    });
-    renderer.renderProfile(sim);
-    renderer.renderAutocorrelation(sim);
+  function stepSimulation() {
+    let biggestAvalanche = 0;
+    let combinedTopples = new Uint8Array(model.size * model.size);
 
-    const stats = sim.getStats();
-    const wave = sim.measureWavelength(24);
-    const halo = sim.measureDepletionHalo();
+    for (let i = 0; i < dropsPerFrame; i++) {
+      let res;
+      if (drivingMode === 'center') {
+        const mid = Math.floor(model.size / 2);
+        res = model.addGrain(mid, mid, 1);
+      } else {
+        res = model.dropRandom();
+      }
 
-    if (statSteps) statSteps.textContent = String(sim.stepCount);
-    if (statCoverage) statCoverage.textContent = `${(stats.activeCoverage * 100).toFixed(1)}%`;
-    if (statWavelength) statWavelength.textContent = wave.dominantWavelength > 0 ? `${wave.dominantWavelength} px` : 'None';
-    if (statDepletion) statDepletion.textContent = `${(halo.depletionRatio * 100).toFixed(0)}%`;
+      if (res.size > biggestAvalanche) {
+        biggestAvalanche = res.size;
+      }
+      for (let c = 0; c < res.toppledCells.length; c++) {
+        if (res.toppledCells[c] === 1) combinedTopples[c] = 1;
+      }
+    }
+
+    activeTopples = combinedTopples;
+    if (biggestAvalanche > 0) {
+      playAvalancheSound(biggestAvalanche);
+    }
   }
 
   function loop() {
     if (isRunning) {
-      sim.step(stepsPerFrame);
+      stepSimulation();
       renderAll();
     }
     requestAnimationFrame(loop);
   }
 
-  // Mount Claims Panel
   const claimsContainer = document.getElementById('claims-panel-container');
   if (claimsContainer) {
     mountClaimsPanel(claimsContainer);
   }
 
-  // Initial setup
-  loadPreset('LEOPARD_SPOTS');
+  model.fastForward(model.size * model.size * 5);
+  renderAll();
 
-  // If capture flag is present in URL, fast-forward 1000 steps and run claims suite immediately
   if (window.location.search.includes('capture')) {
-    sim.step(1000);
+    model.fastForward(3000);
     renderAll();
     const runBtn = /** @type {HTMLButtonElement} */ (document.getElementById('btn-run-claims'));
     if (runBtn) {

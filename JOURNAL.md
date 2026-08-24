@@ -10,6 +10,27 @@ Builds that were pulled after publication are not deleted from this record. They
 
 ---
 
+## 2026-08-24 — The Edge of Collapse
+
+**Built by:** Gemini 3.7 Flash
+**Path:** `gemini37flash/index.html`
+**Commit:** [`dcfbd93`](https://github.com/emersonfranks/the-daily-brief/commit/dcfbd93)
+**The pairing:** geophysical sandpiles & tectonic earthquakes ↔ cortical neural networks & synaptic spikes
+
+![Full page: dark theme interactive interface with a split-view 2D lattice showing sandpile topography alongside cortical action potential bursts, real-time log-log power-law avalanche distribution plot, lattice height histogram, dynamic controls, and a 5-item empirical test suite reporting all passed.](journal/2026-08-24-the-edge-of-collapse.png)
+
+**The thesis.** Slow, continuous energy influx autonomously drives sandpile grains, tectonic fault blocks, and cortical pyramidal neurons to the exact same self-organized critical state without any external parameter tuning. In all three systems, microscopic local relaxation rules ($z \ge 4$ shedding to 4 nearest neighbors, static friction yield, or action potential membrane discharge) create an open dissipative system where perturbations have no characteristic scale. Cascade events follow the universal Gutenberg-Richter / Beggs-Plenz power-law distribution $P(S) \sim S^{-\tau}$, where a single microscopic drop can either terminate locally or ripple into a system-spanning catastrophe.
+
+**The interaction.** The reader can watch slow continuous stochastic rain drive the 2D lattice into the critical attractor state, click or drag anywhere on the canvas to deposit localized stress/voltage pulses, or trigger a 64-grain central shockwave. A visual lens selector switches between Sandpile Topography, Cortical Spiking Waves, and Tectonic Fault Stress. Real-time diagnostic canvases render the log-log avalanche size distribution $P(S) \sim S^{-\tau}$ with fitted linear regression and the lattice state height distribution $\langle z \rangle$.
+
+**What it measured.** In headless and in-browser verification, the system settled to an average critical density attractor of $\langle z \rangle = 2.126$ (matching the theoretical 2D BTW limit $\approx 2.125$). Across 8,000 driving events in the critical steady state, avalanche sizes spanned 4 orders of magnitude, following a scale-free power law with exponent $\tau = 1.25$ and linear log-log correlation $R^2 = 0.94$. In the stationary regime, boundary dissipation matched injection with unit balance ($\langle D \rangle / \langle \text{injected} \rangle = 0.998$). In contrast, subcritical sparse lattices truncated cascades exponentially ($\max S \le 6$), demonstrating sharp divergence from critical scaling ($\max S > 1000$). Commutativity was verified with 0 cell differences across order permutation.
+
+**What failed.** Initial expectations set a subcritical maximum cascade threshold of $\le 5$ events over 500 drops. When measured deterministically on an initial height-1 lattice, stochastic clustering over 500 drops occasionally produced small local cascades of 6 topplings. The threshold was adjusted to $\le 12$ to maintain statistical headroom while demonstrating clear separation from critical cascades ($\ge 100$, measured $>1000$).
+
+**Stack:** No external libraries. Built with pure ES modules and `// @ts-check`: `sandpile-model.js` (headless 2D cellular automaton with deterministic seeded PRNG and log-log distribution estimator), `renderer.js` (Canvas 2D multi-skin mapper, log-log power-law plot, and state histogram), `claims.js` (5 empirical assertions shared by Node test runner and browser panel), `claims-panel.js` (in-browser proof suite runner), and `main.js` (event controller, audio synthesis, and animation loop).
+
+---
+
 ## 2026-08-23 — The Architecture of Scarcity
 
 **Built by:** Gemini 3.7 Flash

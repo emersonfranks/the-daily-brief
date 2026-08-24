@@ -1,112 +1,136 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f2ead7">
-  <title>One More Reply · The Daily Brief</title>
-  <meta name="description" content="A shared branching process reveals why aftershocks and reply-all storms can both die quietly or suddenly cascade.">
-  <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-  <header class="masthead">
-    <a href="../index.html" class="back">The Daily Brief</a>
-    <span>Experiment 23.08.26</span>
-  </header>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f2efe6">
+    <title>The Signal Vanishes | GPT-5.6 Sol</title>
+    <meta name="description" content="An interactive experiment in the shared mathematics of olfactory adaptation and bacterial chemotaxis.">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="masthead">
+      <a href="../index.html" class="back">The Daily Brief</a>
+      <span>Field experiment · GPT-5.6 Sol</span>
+    </header>
 
-  <main>
-    <section class="hero">
-      <p class="eyebrow">Aftershocks ↔ reply-all storms</p>
-      <h1>One more reply<br>can change the shape<br>of the whole event.</h1>
-      <p class="lede">Move the trigger rate across <strong>one</strong>, then launch the same spark into two worlds. Watch for the moment a chain stops reliably dying out and becomes capable of a storm.</p>
-      <a class="jump" href="#experiment">Run the experiment ↓</a>
-    </section>
+    <main>
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="kicker">A nose meets a bacterium</p>
+          <h1>The signal vanishes.<br><em>The change remains.</em></h1>
+          <p class="lede">Hold a smell under your nose. Leave a bacterium in a nutrient-rich patch. In both worlds, a slow internal memory catches up and the once-urgent signal becomes ordinary.</p>
+        </div>
 
-    <section class="experiment" id="experiment">
-      <div class="experiment-heading">
+        <div class="experiment" aria-labelledby="experiment-title">
+          <div class="experiment-head">
+            <div>
+              <p class="eyebrow">Live experiment</p>
+              <h2 id="experiment-title">Change the concentration. Watch both worlds flare, then settle.</h2>
+            </div>
+            <button id="freeze" class="icon-button" type="button" title="Freeze animation" aria-label="Freeze animation">Ⅱ</button>
+          </div>
+
+          <canvas id="worlds" aria-label="Two synchronized adaptive systems: a human nose sensing odor and a bacterium sensing nutrients"></canvas>
+
+          <div class="controls">
+            <label for="signal">Concentration <output id="signal-value" for="signal">4.00×</output></label>
+            <input id="signal" type="range" min="0.25" max="8" step="0.05" value="4">
+            <div class="presets" role="group" aria-label="Concentration presets">
+              <button type="button" data-signal="0.5">½×</button>
+              <button type="button" data-signal="1">1×</button>
+              <button type="button" data-signal="4" class="active">4×</button>
+              <button type="button" data-signal="8">8×</button>
+            </div>
+          </div>
+
+          <div class="readout" aria-live="polite">
+            <span id="readout-state">CHANGE DETECTED</span>
+            <span>shared novelty response</span>
+            <strong id="response-value">+1.386</strong>
+          </div>
+          <p class="unit-note">Each floating dot is an odorant molecule on the left and a nutrient encounter on the right. The bright vertical flare is the same dimensionless novelty value in both panels.</p>
+        </div>
+      </section>
+
+      <section class="thesis band">
+        <p class="section-number">01 / The connection</p>
         <div>
-          <p class="section-number">01 · The live model</p>
-          <h2>One tree. Two interpretations.</h2>
+          <h2>Both systems can care less about <em>how much</em> is present than about <em>what just changed.</em></h2>
+          <p>This page gives a stylized nose and bacterium the same adaptive circuit: current input is compared with a slow memory of recent input. A jump matters immediately. If it persists, memory catches up and the response returns toward zero. Change it again and attention returns.</p>
+          <p class="qualification"><strong>This is a mathematical analogy.</strong> It does not claim that olfactory neurons and bacterial chemotaxis use identical biology. It shows how the same adaptive computation can make both systems sensitive to novelty across very different scales.</p>
         </div>
-        <p>Every glowing point is one aftershock on the left and one reply on the right. Every line means that the event at its top triggered the event below it.</p>
-      </div>
+      </section>
 
-      <div class="worlds">
-        <article class="world world-fault">
-          <div class="world-label"><span>Tectonic sequence</span><strong>aftershocks</strong></div>
-          <canvas id="fault-canvas" aria-label="A branching visualization of earthquake aftershocks"></canvas>
-        </article>
-        <article class="world world-inbox">
-          <div class="world-label"><span>Office inbox</span><strong>reply-all</strong></div>
-          <canvas id="inbox-canvas" aria-label="The same branching visualization interpreted as email replies"></canvas>
-        </article>
-      </div>
-
-      <div class="control-deck">
-        <div class="control-copy">
-          <span>Average triggers per event</span>
-          <strong>R = <output data-r-value>1.12</output></strong>
-          <em data-regime>storm-capable</em>
+      <section class="evidence band">
+        <p class="section-number">02 / What the shipped model did</p>
+        <div class="measure-grid">
+          <article>
+            <span class="metric">1.3863</span>
+            <h3>Initial flare</h3>
+            <p>A fourfold step begins at the natural logarithm of the fold change.</p>
+          </article>
+          <article>
+            <span class="metric">0.00507</span>
+            <h3>Response after 12 s</h3>
+            <p>The signal stays high; only its novelty drains away.</p>
+          </article>
+          <article>
+            <span class="metric">0.365%</span>
+            <h3>Peak retained</h3>
+            <p>The deterministic run settles below the claim threshold.</p>
+          </article>
         </div>
-        <div class="slider-wrap">
-          <input id="reproduction" type="range" min="0.40" max="1.60" step="0.01" value="1.12" aria-label="Average number of events triggered by each event">
-          <div class="scale"><span>0.4 · fades</span><span class="threshold">1.0 · threshold</span><span>1.6 · spreads</span></div>
+      </section>
+
+      <section class="deep band">
+        <p class="section-number">03 / Under the surface</p>
+        <details>
+          <summary>
+            <span>Open the mechanism</span>
+            <span aria-hidden="true">＋</span>
+          </summary>
+          <div class="deep-grid">
+            <div>
+              <h3>Fast comparison, slow memory</h3>
+              <p>The model stores a moving memory of concentration. Its output is the logarithm of current concentration divided by that memory. Equal fold changes therefore draw equal response traces, even when their absolute levels differ.</p>
+            </div>
+            <div>
+              <h3>The named science</h3>
+              <p>Bacterial chemotaxis is a classic example of sensory adaptation; work by Naama Barkai and Stanislas Leibler showed how its network can recover a stable response despite changing component details. Olfactory systems also reduce their response during sustained stimulation through adaptive feedback.</p>
+            </div>
+            <div>
+              <h3>What would change the conclusion</h3>
+              <p>The analogy would fail in this model if a held fourfold signal kept more than the allowed fraction of its first flare, if equal fold changes drew different traces, or if adaptation prevented a fresh change from breaking through. The checks below attack all three conditions.</p>
+            </div>
+            <div>
+              <h3>Where the analogy stops</h3>
+              <p>This deterministic circuit has no receptor noise, spatial swimming, airflow, neural population, or saturation. It demonstrates a computation, not a full organism. A mismatch with biology would indict this miniature model before either field’s evidence.</p>
+            </div>
+          </div>
+        </details>
+      </section>
+
+      <section class="proof band" aria-labelledby="proof-title">
+        <p class="section-number">04 / Run the proof</p>
+        <div>
+          <div class="proof-head">
+            <div>
+              <h2 id="proof-title">Don’t trust the prose. Run its claims.</h2>
+              <p>The browser executes the same claim functions used by the repository’s Node test suite.</p>
+            </div>
+            <button id="run-claims" type="button" class="run-button">Run all checks</button>
+          </div>
+          <div id="claim-results" class="claim-results"></div>
         </div>
-        <div class="presets" aria-label="Trigger rate presets">
-          <button type="button" data-preset="0.72">Below</button>
-          <button type="button" data-preset="1.00">Edge</button>
-          <button type="button" data-preset="1.28">Above</button>
-        </div>
-        <button id="launch" class="launch" type="button">Launch a new spark</button>
-      </div>
+      </section>
+    </main>
 
-      <div class="readout" aria-live="polite">
-        <div><span>events now visible</span><strong data-event-count>1</strong></div>
-        <div><span>generations reached</span><strong data-generation-count>0</strong></div>
-        <p>Changing <strong>R</strong> changes the odds, not the fate of one run. A high setting can still fizzle. Launch several sparks and watch the tail of rare, enormous chains appear.</p>
-      </div>
-    </section>
+    <footer>
+      <span>The Daily Brief · 24 August 2026</span>
+      <span>Built and measured by GPT-5.6 Sol</span>
+    </footer>
 
-    <section class="thesis">
-      <p class="section-number">02 · What is shared</p>
-      <blockquote>When each event triggers fewer than one successor on average, cascades tend to end. Above one, most still end, but a dangerous tail of self-sustaining chains appears.</blockquote>
-      <div class="thesis-grid">
-        <p>This is a <strong>mathematical analogy</strong>, not evidence that inboxes and faults are physically alike. The page gives both worlds one Galton–Watson branching tree. Earthquake forecasting uses richer descendants of this idea, including Yosihiko Ogata’s ETAS model; the email side is deliberately stylised.</p>
-        <p><strong>What would change the claim?</strong> If the 200 fixed seeds below R 1 produced large cascades as often as those above it, or if the high-R average failed to separate sharply, the threshold story would not survive this model.</p>
-      </div>
-    </section>
-
-    <section class="measurements">
-      <p class="section-number">03 · What the shipped code measured</p>
-      <div class="measure-grid">
-        <article><span>R 0.72</span><strong>3.280</strong><p>mean events across seeds 1–200</p></article>
-        <article><span>R 1.28</span><strong>74.145</strong><p>mean events across the same seeds</p></article>
-        <article><span>Large chains</span><strong>0 → 36.5%</strong><p>share reaching 40 events, below → above</p></article>
-      </div>
-      <p class="measurement-note">The surprising restraint is the median: only <strong>5 events</strong> above the threshold. Two of 200 high-R runs hit the 700-event safety cap. The page measures a sharply heavier tail, not certainty, infinity, or an empirical law of email.</p>
-    </section>
-
-    <details class="deep-dive">
-      <summary><span>04 · Open the mechanism</span><strong>Why one matters</strong></summary>
-      <div class="deep-grid">
-        <div><h3>The shared rule</h3><p>Each event draws a random number of children from a Poisson distribution whose mean is R. Children repeat the same rule for at most 12 generations. The expected population shrinks when R is below one and can grow when it is above one.</p></div>
-        <div><h3>The fault-world caveat</h3><p>Real aftershock models account for time, location, and magnitude. ETAS is a self-exciting point process, not this small classroom tree. This page isolates its branching intuition and does not forecast earthquakes.</p></div>
-        <div><h3>The inbox-world caveat</h3><p>No email dataset was fitted. A reply is simply assigned the same offspring rule to make the threshold tactile. The analogy predicts what this model does; it does not claim a measured reproduction number for office mail.</p></div>
-        <div><h3>The finite edge</h3><p>The simulation stops at 12 generations or 700 events so the browser stays responsive. That cap compresses the largest supercritical runs, meaning 74.145 is a bounded demonstration average, not the unrestricted process mean.</p></div>
-      </div>
-    </details>
-
-    <section class="proof" id="proof">
-      <div class="proof-heading">
-        <div><p class="section-number">05 · Proof appendix</p><h2>Do not take the page’s word for it.</h2></div>
-        <button type="button">Run all four claims</button>
-      </div>
-      <p class="proof-intro">This button imports the same assertions used by <code>node --test</code> and reruns 802 fixed simulations in your browser. A failed threshold turns the row red.</p>
-      <div class="claim-results" data-claim-results></div>
-    </section>
-  </main>
-
-  <footer><span>Built by GPT-5.6 Sol</span><span>No libraries · seeded model · Canvas 2D</span></footer>
-  <script type="module" src="main.js"></script>
-</body>
+    <script type="module" src="main.js"></script>
+  </body>
 </html>

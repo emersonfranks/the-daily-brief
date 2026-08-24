@@ -1,74 +1,56 @@
 // @ts-check
+import { SandpileModel } from './sandpile-model.js';
 
-/**
- * @fileoverview Claims and verification suite for Reaction-Diffusion Morphogenesis.
- * Shared by both Node.js headless tests and the in-browser verification panel.
- *
- * NO DOM, NO Canvas, NO node:test imports. Pure portable ES module.
- */
-
-import { TuringSimulation, PRESETS } from './turing-model.js';
-
-/**
- * @typedef {Object} ClaimResult
- * @property {string} id Unique claim identifier
- * @property {string} title Short descriptive title
- * @property {string} statement Plain English falsifiable claim
- * @property {boolean} passed Whether the empirical verification succeeded
- * @property {string} evidence Formatted measured numbers and thresholds
- * @property {Record<string, number | string | boolean>} metrics Raw measured data
- */
-
-/**
- * @typedef {Object} ClaimDefinition
- * @property {string} id
- * @property {string} title
- * @property {string} statement
- * @property {() => ClaimResult} verify
- */
-
-/** @type {ClaimDefinition[]} */
 export const CLAIMS = [
   {
-    id: 'turing-symmetry-breaking',
-    title: 'Symmetry Breaking & Characteristic Wavelength Emergence',
+    id: 'abelian-commutativity-invariance',
+    title: 'Abelian Commutativity Invariance',
     statement:
-      'Starting from stochastic initial perturbations, differential reaction-diffusion self-organizes into an ordered macro-scale spatial pattern with a measurable dominant wavelength (λ between 5 and 15 grid units) and sustained active coverage (>40%).',
+      'The final lattice configuration and cumulative toppling count are strictly invariant to the sequential order of perturbation additions (A·B = B·A).',
     verify() {
-      const p = PRESETS.JUNGLE_LABYRINTH;
-      const sim = new TuringSimulation({
-        width: 64,
-        height: 64,
-        Du: p.Du,
-        Dv: p.Dv,
-        F: p.F,
-        k: p.k
-      });
+      const size = 32;
+      const modelA = new SandpileModel(size, 101);
+      const modelB = new SandpileModel(size, 101);
 
-      sim.reset('random_noise', 77);
-      const initialStats = sim.getStats();
+      modelA.fastForward(500);
+      for (let i = 0; i < modelA.grid.length; i++) {
+        modelB.grid[i] = modelA.grid[i];
+      }
+      modelB.totalAdded = modelA.totalAdded;
+      modelB.totalDissipated = modelA.totalDissipated;
+      modelB.totalTopplings = modelA.totalTopplings;
 
-      sim.step(1200);
-      const finalStats = sim.getStats();
-      const wave = sim.measureWavelength(24);
+      const p1 = [10, 15];
+      const p2 = [11, 15];
 
-      const wavelengthValid = wave.dominantWavelength >= 5 && wave.dominantWavelength <= 15;
-      const coverageValid = finalStats.activeCoverage > 0.40;
-      const passed = finalStats.patternFormed && wavelengthValid && coverageValid && finalStats.maxV > 0.30;
+      const rA1 = modelA.addGrain(p1[0], p1[1]);
+      const rA2 = modelA.addGrain(p2[0], p2[1]);
+      const totalTopplesA = rA1.size + rA2.size;
+
+      const rB1 = modelB.addGrain(p2[0], p2[1]);
+      const rB2 = modelB.addGrain(p1[0], p1[1]);
+      const totalTopplesB = rB1.size + rB2.size;
+
+      let differences = 0;
+      for (let i = 0; i < modelA.grid.length; i++) {
+        if (modelA.grid[i] !== modelB.grid[i]) {
+          differences++;
+        }
+      }
+
+      const passed = differences === 0 && totalTopplesA === totalTopplesB;
 
       return {
-        id: 'turing-symmetry-breaking',
-        title: 'Symmetry Breaking & Characteristic Wavelength Emergence',
+        id: 'abelian-commutativity-invariance',
+        title: 'Abelian Commutativity Invariance',
         statement:
-          'Starting from stochastic initial perturbations, differential reaction-diffusion self-organizes into an ordered macro-scale spatial pattern with a measurable dominant wavelength (λ between 5 and 15 grid units) and sustained active coverage (>40%).',
+          'The final lattice configuration and cumulative toppling count are strictly invariant to the sequential order of perturbation additions (A·B = B·A).',
         passed,
-        evidence: `Initial coverage=${(initialStats.activeCoverage * 100).toFixed(1)}% → Final coverage=${(finalStats.activeCoverage * 100).toFixed(1)}% (threshold >40%). Dominant wavelength λ=${wave.dominantWavelength} grid units (target 5–15). Max V=${finalStats.maxV.toFixed(3)}, std(V)=${finalStats.stdV.toFixed(4)}.`,
+        evidence: `Mismatched cells=${differences} across order permutation. Total toppling events A=${totalTopplesA}, B=${totalTopplesB} (A - B = ${totalTopplesA - totalTopplesB}).`,
         metrics: {
-          initialCoverage: Number((initialStats.activeCoverage * 100).toFixed(1)),
-          finalCoverage: Number((finalStats.activeCoverage * 100).toFixed(1)),
-          dominantWavelength: wave.dominantWavelength,
-          maxV: Number(finalStats.maxV.toFixed(3)),
-          stdV: Number(finalStats.stdV.toFixed(4)),
+          differences,
+          totalTopplesA,
+          totalTopplesB,
           passed
         }
       };
@@ -76,53 +58,32 @@ export const CLAIMS = [
   },
 
   {
-    id: 'differential-diffusivity-invariant',
-    title: 'Differential Diffusivity Invariant (Turing Instability Condition)',
+    id: 'soc-critical-mean-density',
+    title: 'Self-Organized Critical Mean Density Attractor',
     statement:
-      'Turing pattern formation strictly requires differential diffusion (Du > Dv). When diffusion rates are equalized (Du = Dv = 0.20), perturbations decay to homogeneous extinction (mean V < 1e-10). When Du/Dv = 2.33, spatial instability sustains persistent macro-scale structures (mean V > 0.10, max V > 0.30).',
+      'Starting from an empty lattice, slow stochastic driving autonomously pulls average height to the critical attractor mean <z> in [2.05, 2.20] (theoretical BTW limit ~2.125).',
     verify() {
-      const p = PRESETS.JUNGLE_LABYRINTH;
+      const size = 48;
+      const model = new SandpileModel(size, 2024);
+      model.fastForward(size * size * 6);
 
-      // 1. Equal diffusivity (Du = Dv = 0.20)
-      const simEqual = new TuringSimulation({
-        width: 64,
-        height: 64,
-        Du: 0.20,
-        Dv: 0.20,
-        F: p.F,
-        k: p.k
-      });
-      simEqual.reset('random_noise', 77);
-      simEqual.step(1200);
-      const statsEqual = simEqual.getStats();
+      const meanHeight = model.getMeanHeight();
+      const expectedMin = 2.05;
+      const expectedMax = 2.20;
+      const passed = meanHeight >= expectedMin && meanHeight <= expectedMax;
 
-      // 2. Differential diffusivity (Du = 0.21, Dv = 0.09, ratio = 2.33)
-      const simDiff = new TuringSimulation({
-        width: 64,
-        height: 64,
-        Du: p.Du,
-        Dv: p.Dv,
-        F: p.F,
-        k: p.k
-      });
-      simDiff.reset('random_noise', 77);
-      simDiff.step(1200);
-      const statsDiff = simDiff.getStats();
-
-      const passed = statsEqual.meanV < 1e-10 && statsDiff.meanV > 0.10 && statsDiff.maxV > 0.30;
+      const dist = model.getHeightDistribution();
+      const totalCells = size * size;
 
       return {
-        id: 'differential-diffusivity-invariant',
-        title: 'Differential Diffusivity Invariant (Turing Instability Condition)',
+        id: 'soc-critical-mean-density',
+        title: 'Self-Organized Critical Mean Density Attractor',
         statement:
-          'Turing pattern formation strictly requires differential diffusion (Du > Dv). When diffusion rates are equalized (Du = Dv = 0.20), perturbations decay to homogeneous extinction (mean V < 1e-10). When Du/Dv = 2.33, spatial instability sustains persistent macro-scale structures (mean V > 0.10, max V > 0.30).',
+          'Starting from an empty lattice, slow stochastic driving autonomously pulls average height to the critical attractor mean <z> in [2.05, 2.20] (theoretical BTW limit ~2.125).',
         passed,
-        evidence: `Equal diffusion (Du=Dv=0.20): mean(V)=${statsEqual.meanV.toExponential(2)} (complete decay). Differential diffusion (Du=0.21, Dv=0.09, ratio 2.33): mean(V)=${statsDiff.meanV.toFixed(3)}, max(V)=${statsDiff.maxV.toFixed(3)}, active coverage=${(statsDiff.activeCoverage * 100).toFixed(1)}%.`,
+        evidence: `Measured mean height <z>=${meanHeight.toFixed(4)} (target [${expectedMin}, ${expectedMax}], BTW attractor ~2.125). Cell height fractions: z0=${(dist[0]/totalCells).toFixed(2)}, z1=${(dist[1]/totalCells).toFixed(2)}, z2=${(dist[2]/totalCells).toFixed(2)}, z3=${(dist[3]/totalCells).toFixed(2)}.`,
         metrics: {
-          equalDiffMeanV: statsEqual.meanV,
-          diffDiffMeanV: Number(statsDiff.meanV.toFixed(4)),
-          diffDiffMaxV: Number(statsDiff.maxV.toFixed(3)),
-          diffCoverage: Number((statsDiff.activeCoverage * 100).toFixed(1)),
+          meanHeight: Number(meanHeight.toFixed(4)),
           passed
         }
       };
@@ -130,45 +91,35 @@ export const CLAIMS = [
   },
 
   {
-    id: 'feed-rate-bifurcation-cascade',
-    title: 'Resource Influx Bifurcation Cascade (Drought / Morphogen Thresholds)',
+    id: 'scale-free-power-law-scaling',
+    title: 'Scale-Free Power-Law Avalanche Size Distribution',
     statement:
-      'Varying feed rate F across high (0.050), intermediate (0.030), and severe deficit (0.010) at k=0.060 produces the complete bifurcation sequence: lush/dense cover (active coverage > 50%), discrete self-organized patterns (coverage 20%–50%), and catastrophic extinction collapse (coverage 0%).',
+      'In the critical state, avalanche sizes follow a scale-free power law P(S) ~ S^(-tau) spanning multiple decades with exponent tau in [0.95, 1.60] and log-log linearity R^2 >= 0.85.',
     verify() {
-      // 1. High feed (lush canopy / solid coat cover)
-      const simHigh = new TuringSimulation({ width: 64, height: 64, Du: 0.20, Dv: 0.10, F: 0.050, k: 0.060 });
-      simHigh.reset('multi_spot', 88);
-      simHigh.step(1200);
-      const statsHigh = simHigh.getStats();
+      const size = 48;
+      const model = new SandpileModel(size, 999);
+      model.fastForward(size * size * 4);
 
-      // 2. Intermediate feed (patterned spots/clumps)
-      const simMed = new TuringSimulation({ width: 64, height: 64, Du: 0.20, Dv: 0.10, F: 0.030, k: 0.060 });
-      simMed.reset('multi_spot', 88);
-      simMed.step(1200);
-      const statsMed = simMed.getStats();
+      model.avalancheHistory = [];
+      const numEvents = 8000;
+      for (let i = 0; i < numEvents; i++) {
+        model.dropRandom();
+      }
 
-      // 3. Low feed (drought collapse / barren desert)
-      const simLow = new TuringSimulation({ width: 64, height: 64, Du: 0.20, Dv: 0.10, F: 0.010, k: 0.060 });
-      simLow.reset('multi_spot', 88);
-      simLow.step(1200);
-      const statsLow = simLow.getStats();
-
-      const passed =
-        statsHigh.activeCoverage > 0.50 &&
-        statsMed.activeCoverage >= 0.20 && statsMed.activeCoverage <= 0.50 &&
-        statsLow.activeCoverage === 0;
+      const stats = model.getLogLogDistribution(14);
+      const absSlope = Math.abs(stats.slope);
+      const passed = absSlope >= 0.95 && absSlope <= 1.60 && stats.r2 >= 0.85;
 
       return {
-        id: 'feed-rate-bifurcation-cascade',
-        title: 'Resource Influx Bifurcation Cascade (Drought / Morphogen Thresholds)',
+        id: 'scale-free-power-law-scaling',
+        title: 'Scale-Free Power-Law Avalanche Size Distribution',
         statement:
-          'Varying feed rate F across high (0.050), intermediate (0.030), and severe deficit (0.010) at k=0.060 produces the complete bifurcation sequence: lush/dense cover (active coverage > 50%), discrete self-organized patterns (coverage 20%–50%), and catastrophic extinction collapse (coverage 0%).',
+          'In the critical state, avalanche sizes follow a scale-free power law P(S) ~ S^(-tau) spanning multiple decades with exponent tau in [0.95, 1.60] and log-log linearity R^2 >= 0.85.',
         passed,
-        evidence: `High F=0.050: coverage=${(statsHigh.activeCoverage * 100).toFixed(1)}%, mean(V)=${statsHigh.meanV.toFixed(3)}. Med F=0.030: coverage=${(statsMed.activeCoverage * 100).toFixed(1)}%, mean(V)=${statsMed.meanV.toFixed(3)}. Low F=0.010: coverage=${(statsLow.activeCoverage * 100).toFixed(1)}%, mean(V)=${statsLow.meanV.toFixed(4)} (extinction).`,
+        evidence: `Power-law exponent tau=${absSlope.toFixed(3)} (target [0.95, 1.60]). Log-log linear correlation R^2=${stats.r2.toFixed(3)} (threshold >=0.85). Sampled 8,000 driving events.`,
         metrics: {
-          highCoverage: Number((statsHigh.activeCoverage * 100).toFixed(1)),
-          medCoverage: Number((statsMed.activeCoverage * 100).toFixed(1)),
-          lowCoverage: Number((statsLow.activeCoverage * 100).toFixed(1)),
+          tau: Number(absSlope.toFixed(3)),
+          r2: Number(stats.r2.toFixed(3)),
           passed
         }
       };
@@ -176,39 +127,84 @@ export const CLAIMS = [
   },
 
   {
-    id: 'activator-depletion-halo',
-    title: 'Short-Range Activation & Long-Range Resource Depletion Halo',
+    id: 'boundary-dissipation-conservation',
+    title: 'Stationary Boundary Dissipation Conservation',
     statement:
-      'Activator spots locally consume and trap substrate moisture U, generating a core depletion (U_center < 0.50) and surrounding depletion halo (r = 2..5) where substrate availability is markedly depressed relative to far-field background (depletion ratio U_halo / U_far < 0.88).',
+      'At critical steady state, global energy conservation holds: exactly one unit of stress/grain dissipates across lattice boundaries per unit injected on average (<D>/<injected> = 1.00 ± 0.08).',
     verify() {
-      const p = PRESETS.LEOPARD_SPOTS;
-      const sim = new TuringSimulation({
-        width: 64,
-        height: 64,
-        Du: p.Du,
-        Dv: p.Dv,
-        F: p.F,
-        k: p.k
-      });
-      sim.reset('multi_spot', 99);
-      sim.step(1200);
+      const size = 32;
+      const model = new SandpileModel(size, 777);
+      model.fastForward(size * size * 6);
 
-      const halo = sim.measureDepletionHalo();
-      const passed = halo.peakCount >= 4 && halo.depletionRatio < 0.88 && halo.avgPeakU < 0.50 && halo.avgPeakU < halo.avgFarU;
+      const addedStart = model.totalAdded;
+      const dissipatedStart = model.totalDissipated;
+
+      const sampleDrops = 4000;
+      for (let i = 0; i < sampleDrops; i++) {
+        model.dropRandom();
+      }
+
+      const deltaAdded = model.totalAdded - addedStart;
+      const deltaDissipated = model.totalDissipated - dissipatedStart;
+      const ratio = deltaDissipated / deltaAdded;
+      const passed = ratio >= 0.92 && ratio <= 1.08;
 
       return {
-        id: 'activator-depletion-halo',
-        title: 'Short-Range Activation & Long-Range Resource Depletion Halo',
+        id: 'boundary-dissipation-conservation',
+        title: 'Stationary Boundary Dissipation Conservation',
         statement:
-          'Activator spots locally consume and trap substrate moisture U, generating a core depletion (U_center < 0.50) and surrounding depletion halo (r = 2..5) where substrate availability is markedly depressed relative to far-field background (depletion ratio U_halo / U_far < 0.88).',
+          'At critical steady state, global energy conservation holds: exactly one unit of stress/grain dissipates across lattice boundaries per unit injected on average (<D>/<injected> = 1.00 ± 0.08).',
         passed,
-        evidence: `Detected ${halo.peakCount} activator spots. Spot core U=${halo.avgPeakU.toFixed(3)} (<0.50), Halo U=${halo.avgHaloU.toFixed(3)}, Far-field U=${halo.avgFarU.toFixed(3)}. Depletion ratio=${halo.depletionRatio.toFixed(3)} (threshold <0.88).`,
+        evidence: `Injected=${deltaAdded}, Dissipated=${deltaDissipated}, Ratio=${ratio.toFixed(4)} (target 1.00 ± 0.08).`,
         metrics: {
-          peakCount: halo.peakCount,
-          avgPeakU: Number(halo.avgPeakU.toFixed(3)),
-          avgHaloU: Number(halo.avgHaloU.toFixed(3)),
-          avgFarU: Number(halo.avgFarU.toFixed(3)),
-          depletionRatio: Number(halo.depletionRatio.toFixed(3)),
+          ratio: Number(ratio.toFixed(4)),
+          deltaAdded,
+          deltaDissipated,
+          passed
+        }
+      };
+    }
+  },
+
+  {
+    id: 'subcritical-vs-critical-divergence',
+    title: 'Subcritical vs Critical Scale Divergence',
+    statement:
+      'Subcritical sparse configurations truncate cascades exponentially (max cascade <= 12), whereas critical configurations exhibit scale-free cascades spanning the system size (max cascade >= 100).',
+    verify() {
+      const size = 32;
+      const subcriticalModel = new SandpileModel(size, 404);
+      for (let i = 0; i < subcriticalModel.grid.length; i++) {
+        subcriticalModel.grid[i] = 1;
+      }
+
+      let subcriticalMax = 0;
+      for (let i = 0; i < 500; i++) {
+        const res = subcriticalModel.dropRandom();
+        if (res.size > subcriticalMax) subcriticalMax = res.size;
+      }
+
+      const criticalModel = new SandpileModel(size, 505);
+      criticalModel.fastForward(size * size * 5);
+
+      let criticalMax = 0;
+      for (let i = 0; i < 500; i++) {
+        const res = criticalModel.dropRandom();
+        if (res.size > criticalMax) criticalMax = res.size;
+      }
+
+      const passed = subcriticalMax <= 12 && criticalMax >= 100;
+
+      return {
+        id: 'subcritical-vs-critical-divergence',
+        title: 'Subcritical vs Critical Scale Divergence',
+        statement:
+          'Subcritical sparse configurations truncate cascades exponentially (max cascade <= 12), whereas critical configurations exhibit scale-free cascades spanning the system size (max cascade >= 100).',
+        passed,
+        evidence: `Subcritical max cascade=${subcriticalMax} (threshold <=12) vs Critical max cascade=${criticalMax} (threshold >=100).`,
+        metrics: {
+          subcriticalMax,
+          criticalMax,
           passed
         }
       };

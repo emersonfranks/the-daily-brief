@@ -1,238 +1,361 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Why your friends are popular and your bus is late</title>
-<meta name="description" content="The friendship paradox and the bus waiting-time paradox are the same theorem. One slider drives both.">
+<title>The blackout and the mangrove &middot; The Daily Brief</title>
+<meta name="description" content="Fireflies flashing in unison and a power grid holding its frequency are the same event, governed by the same threshold. An interactive Kuramoto simulation, measured and tested in the browser.">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<main>
 
-<header>
-  <p class="pairing">friendship networks &harr; bus waiting times</p>
-  <h1>Why your friends are popular and your bus is late</h1>
-  <p class="thesis">
-    Almost everyone has fewer friends than their friends do. Almost everyone waits longer for a bus
-    than half the timetabled gap. These are not two curiosities. They are one theorem, and it says
-    the inflation factor in both cases is exactly <code>1 + CV&sup2;</code> &mdash; one plus the
-    squared variability of the thing being counted.
-  </p>
-  <p class="kind">
-    <strong>This pairing is mathematical, not empirical.</strong> It is not a claim that sociology
-    and public transport were observed behaving alike; it is that both are instances of the same
-    identity about size-biased sampling, and the simulations below are there to check that the
-    identity survives contact with an actual network and an actual timetable.
+<header class="masthead">
+  <p class="kicker">The Daily Brief &middot; 24 August 2026</p>
+  <h1>The blackout and the mangrove</h1>
+  <p class="pairing"><b>fireflies flashing in unison</b> &harr; <b>generators holding a power grid at 50&nbsp;Hz</b></p>
+  <p class="standfirst">
+    A tree full of fireflies falling into rhythm and a national grid staying synchronised are not
+    two phenomena that resemble each other. Under the standard model of both, they are the same
+    equation, with the same threshold, in different units. Below you are watching one population of
+    oscillators drawn twice.
   </p>
 </header>
 
-<div class="lede">
-  <p><strong>The experiment:</strong> drag the one slider below from left to right.</p>
-  <p>
-    It sets how uneven things are &mdash; on the left, everyone has the same number of friends and every
-    bus runs exactly on schedule; on the right, both are wildly uneven. Each panel draws a white marker
-    where <code>1 + CV&sup2;</code> says its coloured bar should stop. <strong>Watch the coloured bars
-    grow to their markers and halt there, in both panels, at every slider position.</strong> The markers
-    are not measured from the simulations; they are computed from the spread alone. The third box below
-    is the one to keep your eye on: it divides what was measured by what was predicted, in each world
-    separately, and both should sit at 1.00.
-  </p>
-</div>
+<main>
 
-<section class="controls" aria-label="Simulation controls">
-  <div class="control">
-    <label for="cv">Unevenness &mdash; the coefficient of variation, CV: <span class="value" id="cv-value">0.90</span></label>
-    <input type="range" id="cv" min="0" max="1.5" step="0.01" value="0.9">
+<section class="experiment">
+  <h2>The experiment</h2>
+  <ol class="steps">
+    <li>
+      <b>Find the tipping point.</b> Drag <b>coupling</b> up slowly from zero. For a long stretch
+      nothing happens &mdash; the flashes stay scattered and the rotor dots stay smeared around the
+      ring. Then, over a very short range, both panels lock at once. Note the number.
+    </li>
+    <li>
+      <b>Move it on purpose.</b> Now drag <b>rhythm spread</b> to a different value and repeat. The
+      tipping point moves &mdash; and it lands at twice the spread, every time. The dashed marker on
+      the coupling slider is that prediction, drawn before you get there.
+    </li>
+    <li>
+      <b>Knock it.</b> Park the coupling just above the tipping point and press <b>knock</b>. Watch
+      how long the trace takes to climb back &mdash; and expect it to be erratic as well as slow.
+      Now park it far above and knock again. The same disturbance clears several times faster. A grid
+      run close to its margin is not only nearer to failing; it is slower to shrug off everything
+      that happens to it in the meantime.
+    </li>
+  </ol>
+</section>
+
+<section class="stage">
+  <div class="panels">
+    <figure class="panel">
+      <figcaption>
+        <span class="panel-title">A mangrove at dusk</span>
+        <span class="panel-sub">One dot is one firefly. It brightens as its own internal clock comes round to flashing.</span>
+      </figcaption>
+      <canvas id="fireflies" aria-label="Fireflies flashing in a mangrove, brightness following each insect's phase"></canvas>
+    </figure>
+    <figure class="panel">
+      <figcaption>
+        <span class="panel-title">The same population, as a grid</span>
+        <span class="panel-sub">One dot is one generator, placed at its rotor angle. The arm is the grid's average phase; its length is how together the fleet is.</span>
+      </figcaption>
+      <canvas id="rotors" aria-label="Generator rotor angles around a ring, with the mean-field phasor drawn from the centre"></canvas>
+    </figure>
   </div>
-  <div class="control" style="flex: 0 0 auto; min-width: 0;">
-    <button id="play">Pause</button>
-    <button id="reset">New random draw</button>
+
+  <p class="samepoint">
+    Both panels are drawn from the <b>same array of numbers on the same frame</b>. Nothing is
+    simulated twice. A dot is <span class="swatch locked"></span><b>gold</b> when the population has
+    captured it and it is running at the common rhythm, and
+    <span class="swatch drifting"></span><b>blue</b> when it is too far off its neighbours' pace and
+    is sliding through, never joining. The same insect is the same generator.
+  </p>
+
+  <div class="readouts">
+    <div class="readout"><span class="label">coherence</span><span class="value" id="r-value">0.00</span><span class="hint">0 = every clock its own way &middot; 1 = one clock</span></div>
+    <div class="readout"><span class="label">coupling</span><span class="value" id="k-value">0.00</span><span class="hint">how hard the population pulls on each member</span></div>
+    <div class="readout"><span class="label">predicted tipping point</span><span class="value" id="kc-value">1.00</span><span class="hint">twice the rhythm spread</span></div>
+    <div class="readout"><span class="label">locked</span><span class="value" id="locked-value">0%</span><span class="hint">share running at the common rhythm</span></div>
+  </div>
+
+  <div class="status" id="status" data-state="dark">grid dark</div>
+
+  <figure class="tracewrap">
+    <canvas id="trace" aria-label="Coherence over the last thirty seconds"></canvas>
+    <figcaption>coherence over the last ~30 seconds of simulated time</figcaption>
+  </figure>
+
+  <div class="controls">
+    <div class="control">
+      <label for="coupling">coupling <b id="coupling-out">0.00</b></label>
+      <div class="slider-wrap">
+        <input type="range" id="coupling" min="0" max="4" step="0.01" value="0">
+        <div class="marker" id="coupling-marker" title="predicted tipping point"></div>
+      </div>
+      <p class="control-note">
+        How strongly each member is pulled towards the crowd. In the mangrove that is how brightly
+        each firefly sees its neighbours through the leaves. On the grid it is how much power the
+        transmission lines between generators can carry. Raising it is the one move that starts
+        synchrony.
+      </p>
+    </div>
+    <div class="control">
+      <label for="spread">rhythm spread <b id="spread-out">0.50</b></label>
+      <input type="range" id="spread" min="0.15" max="1.20" step="0.01" value="0.5">
+      <p class="control-note">
+        How unalike the members are when left alone. In the mangrove, the range of natural flash
+        rates across the swarm. On the grid, how far individual machines drift from the nominal
+        frequency with no interconnection. Widening it raises the bar for synchrony, and the dashed
+        marker moves with it.
+      </p>
+    </div>
+    <div class="buttons">
+      <button id="knock" type="button">knock the swarm</button>
+      <button id="reset" type="button">reset</button>
+      <label class="check"><input type="checkbox" id="freeze"> freeze</label>
+    </div>
+    <p class="control-note">
+      <b>knock</b> scatters every phase at random without touching the coupling &mdash; a lightning
+      strike, or a cloud passing over the tree. It is the only way to see how fast the population
+      pulls itself back together, which is the point of step 3.
+    </p>
   </div>
 </section>
-<p class="hint">
-  <strong>Unevenness</strong> redraws both worlds with the same amount of spread. <strong>Pause</strong>
-  stops the sampler so you can read a frame. <strong>New random draw</strong> rebuilds both from a fresh
-  seed, which is the check that you are not looking at one lucky arrangement. At CV&nbsp;=&nbsp;0 both
-  measured numbers should read &times;1.000, and nothing surprising is left. Note that the two worlds do
-  <em>not</em> end up with identical spread even though one slider set them both &mdash; a 900-person town
-  and a 4000-bus timetable land on different realised CVs, which is why each is judged against its own
-  prediction rather than against the other. Give the bus number a few seconds longer to settle than the
-  friends number: long waits are rare but enormous, so its average is the slower of the two to converge.
-</p>
 
-<div class="panels">
-  <div class="panel">
-    <h3>A town of 900 people</h3>
-    <p class="unit">
-      One dot is one person, drawn larger the more friends they have; one line is one friendship.
-      The sampler picks a <em>friendship</em> at random, then one of the two people in it, and reads
-      off how many friends that person has. The white number is that count.
-    </p>
-    <canvas id="network-canvas" width="480" height="346" role="img"
-      aria-label="A network of 900 people with a randomly chosen friendship highlighted"></canvas>
+<section class="thesis">
+  <h2>What you are actually looking at</h2>
+  <p>
+    Put a large number of things that each tick at their own pace in a room together, and let each
+    one feel a pull towards the average of the rest. That is the whole setup. It describes fireflies
+    signalling through a canopy, and it describes alternators wired into the same grid, and the
+    surprising part is not that both settle down &mdash; it is <b>how</b> they settle down.
+  </p>
+  <p>
+    Synchrony does not arrive gradually. Turn the coupling up from zero and for a long stretch you
+    get nothing: coherence sits flat at a low value that is pure statistical noise. Then, at a
+    threshold, order appears and climbs steeply. The threshold is not a property of the coupling
+    alone; it is set by how unalike the population already is. Under this model it sits at
+    <b>exactly twice the spread of the natural rhythms</b>, and this page measures that number rather
+    than asserting it.
+  </p>
+  <p>
+    That is why the grid half matters. A grid running below its threshold is not slightly out of
+    step, in the way a slightly overloaded road is slightly slower. It is <b>dark</b>. The same sharp
+    line that decides whether a mangrove lights up in unison decides whether a country has power, and
+    the quantity on the other side of that line is how much the machines already disagree.
+  </p>
+  <p class="claim-type">
+    <b>What kind of claim this is.</b> This is a <b>mathematical</b> analogy, not an empirical one.
+    The assertion is that one equation &mdash; the Kuramoto model &mdash; is the standard reduced
+    description of both systems, and that its behaviour is what you see above. It is <em>not</em> a
+    claim that anyone has measured a firefly swarm and a power grid side by side and got matching
+    numbers. Where the mapping is loose, that is spelled out below rather than left for the picture
+    to imply.
+  </p>
+</section>
+
+<section class="deep">
+  <h2>The deeper mechanics</h2>
+
+  <details>
+    <summary>The one equation, and what each symbol is in each world</summary>
+    <div class="detail-body">
+      <p class="equation">d&theta;<sub>i</sub>/dt = &omega;<sub>i</sub> + (K/N) &sum;<sub>j</sub> sin(&theta;<sub>j</sub> &minus; &theta;<sub>i</sub>)</p>
+      <table>
+        <thead><tr><th>symbol</th><th>in the mangrove</th><th>on the grid</th></tr></thead>
+        <tbody>
+          <tr><td>&theta;<sub>i</sub></td><td>where firefly <i>i</i> is in its flash cycle</td><td>the rotor angle of generator <i>i</i></td></tr>
+          <tr><td>&omega;<sub>i</sub></td><td>the rate it would flash alone</td><td>the frequency it would run at, unconnected</td></tr>
+          <tr><td>K</td><td>how strongly the swarm's light reaches each insect</td><td>the carrying capacity of the lines between machines</td></tr>
+          <tr><td>r</td><td>how unified the flashing looks</td><td>how firmly the grid holds one frequency</td></tr>
+        </tbody>
+      </table>
+      <p>
+        Collapsing the sum into a population average turns it into
+        d&theta;<sub>i</sub>/dt = &omega;<sub>i</sub> + K&middot;r&middot;sin(&psi; &minus; &theta;<sub>i</sub>):
+        nobody talks to anybody in particular, everyone talks to the average. That average is the
+        gold arm in the right-hand panel, and its length is <i>r</i>.
+      </p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Where the analogy is exact, and where it is stretched</summary>
+    <div class="detail-body">
+      <p><b>Exact.</b> Both systems are populations of phase oscillators with dispersed natural
+      frequencies pulled towards a common phase. The threshold, the growth law, and the split between
+      captured and drifting members follow from the equation itself, not from tuning.</p>
+      <p><b>Stretched, and it matters.</b> Three simplifications sit underneath the picture above,
+      and a reader should know all three:</p>
+      <ul>
+        <li>
+          <b>Everyone is connected to everyone.</b> This page uses the mean-field model, where each
+          member feels the whole population equally. A real grid is a sparse network with specific
+          lines, and a real mangrove is limited by what each insect can actually see. Network
+          structure changes the threshold and can localise a failure to one region &mdash; a
+          behaviour this page cannot show at all.
+        </li>
+        <li>
+          <b>The grid is second-order, not first.</b> Generators have rotational inertia, so the
+          physically faithful description is the swing equation, which carries a second derivative.
+          The first-order form used here is its strongly damped limit. That limit drops the
+          inertia-driven oscillation that matters a great deal in real grid stability work.
+        </li>
+        <li>
+          <b>Fireflies do not couple sinusoidally.</b> They pulse. Pulse-coupled oscillators are a
+          related but distinct model, and species differ: <i>Pteroptyx malaccae</i> adjusts its
+          natural period, which plain Kuramoto does not do.
+        </li>
+      </ul>
+      <p>
+        So: the shared structure is real and the threshold behaviour is a genuine property of both
+        standard models. The animation is a faithful picture of the mean-field model, and a
+        simplified picture of either real system.
+      </p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Where this comes from</summary>
+    <div class="detail-body">
+      <p>
+        The model is <b>Yoshiki Kuramoto's</b>, introduced in 1975 and analysed by him through the
+        following decade; <b>Steven Strogatz's</b> 2000 review in <i>Physica D</i>, "From Kuramoto to
+        Crawford", is the standard account of the transition shown here. The result that the critical
+        coupling for a Lorentzian spread is exactly twice its half-width is Kuramoto's own, and it is
+        the prediction the dashed marker draws.
+      </p>
+      <p>
+        The firefly connection runs through <b>John Buck's</b> field and laboratory work on
+        synchronous flashing, and <b>Bard Ermentrout's</b> 1991 model of <i>Pteroptyx malaccae</i>.
+        The power-grid connection runs through <b>Filatrella, Nielsen and Pedersen</b>, who set out
+        the Kuramoto-like reduction of a grid in 2008, and <b>Motter, Myers, Anghel and
+        Nishikawa's</b> 2013 <i>Nature Physics</i> work on spontaneous synchrony in power-grid
+        networks.
+      </p>
+      <p class="caveat">
+        These are named rather than linked deliberately. A fabricated link is worse than no link, and
+        rather than risk pointing at a plausible-looking address I have not confirmed, the authors and
+        years are given so you can find them yourself.
+      </p>
+    </div>
+  </details>
+
+  <details>
+    <summary>What was measured, and under what conditions</summary>
+    <div class="detail-body">
+      <p>
+        Every number here came out of the same <code>kuramoto.js</code> that drives the animation,
+        run headlessly. Unless stated, N&nbsp;=&nbsp;400, explicit Euler at dt&nbsp;=&nbsp;0.02, with
+        natural frequencies taken as evenly spaced quantiles of a Lorentzian rather than drawn at
+        random, which removes sampling noise that would otherwise dominate at this population size.
+      </p>
+      <ul>
+        <li>
+          <b>The tipping point.</b> Scanned across four spreads (0.35, 0.5, 0.8, 1.2) and six seeds.
+          Onset landed between <b>1.00 and 1.20 times</b> the predicted 2&gamma;. The scan advances in
+          4% steps, so 1.00 is the finest reading available &mdash; it cannot report low.
+        </li>
+        <li>
+          <b>The growth law.</b> Measured coherence against &radic;(1&nbsp;&minus;&nbsp;K<sub>c</sub>/K)
+          at 1.2, 1.6, 2.2 and 3.0 times the threshold. Worst gap across 6 seeds &times; 4 spreads:
+          <b>0.0084</b>.
+        </li>
+        <li>
+          <b>Who actually locks.</b> The captured share matched
+          (2/&pi;)&middot;arctan(Kr/&gamma;) to within <b>0.0037</b>.
+        </li>
+        <li>
+          <b>Recovery time.</b> Dropping the coupling to the threshold left the population needing
+          <b>at least 3.24&times;</b> as long to fall back to incoherence as dropping it to 0.6 of the
+          threshold. In the other direction &mdash; the one the button above tests &mdash; climbing
+          back after a knock took <b>at least 2.80&times;</b> as long just above the threshold as far
+          above it. Both figures are worst cases, i.e. the least impressive runs, not the best.
+        </li>
+        <li>
+          <b>How variable that is.</b> Recovery close to the threshold is not merely slow, it is
+          erratic: at 1.1&times; the threshold, three seeds took <b>24s, 53s and 124s</b> of simulated
+          time to climb back. That spread is itself the phenomenon, and it is why the claim below
+          tests at 1.25&times; rather than closer in, where a fixed step budget would time out on
+          some seeds and not others.
+        </li>
+      </ul>
+    </div>
+  </details>
+
+  <details>
+    <summary>What failed, what surprised me, and what would have killed the thesis</summary>
+    <div class="detail-body">
+      <p>
+        <b>What would have falsified it.</b> If the lock-up point had stayed put when the rhythm
+        spread changed, the "twice the spread" law would have been a coincidence of one tuning and
+        this pairing would be decoration. It moved every time, proportionally, across four spreads.
+        That was the test worth failing.
+      </p>
+      <p>
+        <b>A false positive I nearly published.</b> Sweeping the coupling up and then back down left
+        a gap of <b>0.09</b> between the two branches near the threshold. Read naively that is
+        hysteresis, which would mean a completely different &mdash; explosive, first-order &mdash;
+        kind of transition, and it is a far more exciting claim. It is not real. Holding the system
+        at the threshold for progressively longer showed the descending branch decaying to the
+        incoherent floor rather than sitting on a second stable state. Away from the threshold the two
+        branches retrace each other to within <b>0.0053</b>. The gap is critical fluctuation, made to
+        look like memory by a measurement window that is too short exactly where the system is
+        slowest. The claim below tests both numbers so the distinction cannot quietly rot.
+      </p>
+      <p>
+        <b>A measurement I had to throw away.</b> The first version of the test suite ran at
+        N&nbsp;=&nbsp;240 to stay fast in a browser tab. At that size the finite-size fluctuations were
+        <em>larger than three of the thresholds</em> &mdash; the onset wandered to 1.24&times;, the
+        growth-law gap hit 0.032, the branch gap hit 0.14. The tempting fix is to widen the bounds
+        until they pass, which would have produced six green ticks that proved nothing. The population
+        went up to 400 instead and the suite got slower.
+      </p>
+      <p>
+        <b>An overclaim avoided.</b> Below the threshold the honest answer is not zero. A finite
+        population keeps a residue of order 1/&radic;N &mdash; measured between 0.85 and 1.71 times
+        that, across three population sizes and six seeds. The flat stretch at the left of the trace
+        is small, not empty, and the last claim below exists to stop that being rounded away.
+      </p>
+    </div>
+  </details>
+</section>
+
+<section class="proof">
+  <h2>Run the tests yourself</h2>
+  <p>
+    These are not a description of the test suite. They <b>are</b> the test suite &mdash; the same
+    <code>claims.js</code> that CI runs under <code>node --test</code>, imported straight into this
+    page. Each one measures the simulation live and shows what it found. Every threshold was set from
+    the worst value seen across a wider scan (6 seeds &times; 4 spreads) than the run below performs,
+    then given headroom.
+  </p>
+  <p class="proof-note">
+    It takes a few seconds &mdash; it is running thousands of integration steps for each claim, not
+    replaying a recording.
+  </p>
+  <div class="proof-controls">
+    <button id="run-claims" type="button">run all claims</button>
+    <span id="claims-summary" class="claims-summary"></span>
   </div>
-  <div class="panel">
-    <h3>A bus route with 4000 buses</h3>
-    <p class="unit">
-      One tick is one bus arriving; the width between ticks is the gap in minutes. The sampler drops
-      a passenger at a uniformly random moment &mdash; they do not consult the timetable &mdash; and
-      measures how long they stand there. The white bar is that wait.
-    </p>
-    <canvas id="bus-canvas" width="480" height="346" role="img"
-      aria-label="A bus timetable with a randomly arriving passenger and their wait highlighted"></canvas>
-  </div>
-</div>
+  <ol id="claims-list" class="claims-list"></ol>
+</section>
 
-<div class="readout">
-  <div class="stat net">
-    <div class="label">Friends of a friendship</div>
-    <div class="big" id="net-big">&mdash;</div>
-    <div class="note" id="net-note"></div>
-  </div>
-  <div class="stat bus">
-    <div class="label">Wait of a passenger</div>
-    <div class="big" id="bus-big">&mdash;</div>
-    <div class="note" id="bus-note"></div>
-  </div>
-  <div class="stat">
-    <div class="label">Measured &divide; predicted, in each world</div>
-    <div class="big" id="predicted-big">&mdash;</div>
-    <div class="note" id="predicted-note"></div>
-  </div>
-</div>
-
-<h2>What is actually going on</h2>
-<p>
-  Neither system is unfair to you personally. Both are counting the wrong things.
-</p>
-<p>
-  When you sample a <em>friendship</em> rather than a <em>person</em>, someone with twenty friends is
-  in twenty of the things you might pick and someone with two is in two. Popular people are
-  over-represented in the sample by exactly their own popularity. When a passenger turns up at a
-  random <em>moment</em> rather than picking a random <em>gap</em>, a forty-minute gap catches twenty
-  times as many passengers as a two-minute one. Long gaps are over-represented in the sample by
-  exactly their own length.
-</p>
-<p>
-  That is the same move twice: the chance of landing on an item is proportional to its size. Averaging
-  over such a sample gives you <code>E[X&sup2;]/E[X]</code> rather than <code>E[X]</code>, and that
-  ratio is <code>mean &times; (1 + CV&sup2;)</code>. Nothing in it knows whether X is a friend count or
-  a number of minutes, which is why the same slider moves both panels together.
-</p>
-<p>
-  The consequence is worth stating plainly: <strong>the inflation is driven entirely by variance, not
-  by the average.</strong> Doubling the buses on a route with erratic gaps helps you less than making the
-  existing gaps even. At CV&nbsp;=&nbsp;0 the paradox does not shrink, it disappears.
-</p>
-
-<h2>Deeper</h2>
-
-<details>
-  <summary>Where this comes from, and what is mine versus known</summary>
-  <p>
-    <strong>Not mine.</strong> The social half is Scott L. Feld's, published as
-    &ldquo;Why Your Friends Have More Friends Than You Do&rdquo; in the
-    <em>American Journal of Sociology</em> in 1991; he showed the mean number of friends-of-friends
-    exceeds the mean number of friends whenever degrees vary at all. The transport half is older and
-    is standard renewal theory, usually taught as the <em>inspection paradox</em> or the
-    <em>waiting-time paradox</em>, and set out in William Feller's
-    <em>An Introduction to Probability Theory and Its Applications</em>. The same identity is also
-    taught as the class-size paradox: the average class a student sits in is bigger than the average
-    class a registrar counts.
-  </p>
-  <p>
-    <strong>Mine, and only this.</strong> Building both as one simulation driven by one parameter, then
-    checking that each lands on <code>1 + CV&sup2;</code> measured against its own realised spread, and
-    reporting where that stops being a useful way to talk about it.
-  </p>
-  <p>
-    <strong>What would have changed my mind.</strong> Written down before measuring: if the measured
-    inflation had stayed flat as the slider moved, or had tracked something other than
-    <code>1 + CV&sup2;</code>, or had survived at CV&nbsp;=&nbsp;0, the thesis was dead. It is checked
-    in the appendix below as &ldquo;take the variability away and both paradoxes vanish&rdquo;, and it
-    is the test I would look at first if I were trying to knock this page down.
-  </p>
-</details>
-
-<details>
-  <summary>A prediction I made that did not reproduce</summary>
-  <p>
-    Before running anything, I predicted that the everyday phrasing &mdash; <em>ask a random person
-    about a random one of their friends</em> &mdash; would give a visibly different, smaller answer
-    than sampling a friendship directly. It did not. In the graphs built here, both estimators landed
-    on <code>1 + CV&sup2;</code> and differed only by sampling noise, within about 1.5% of each other
-    over the seeds I ran.
-  </p>
-  <p>
-    The reason is a property of the generator I had not accounted for: a configuration-model graph
-    pairs friendships at random, so a person's popularity carries no information about their friends'
-    popularity. The realised degree assortativity of the network in the panel above is
-    <strong id="base-assortativity">&mdash;</strong>, essentially zero. With no correlation, the two
-    estimators coincide.
-  </p>
-  <p>
-    So I built the correlation in and looked again. The slider below rewires the graph so that popular
-    people preferentially befriend popular people, and the result is sharper than my original guess:
-    the friendship version is <em>completely unaffected</em>, while the everyday version collapses to
-    nothing.
-  </p>
-  <div class="control" style="max-width: 420px; margin: 14px 0 8px;">
-    <label for="mixing">Popular-befriends-popular mixing: <span class="value" id="mixing-value">0.00</span></label>
-    <input type="range" id="mixing" min="0" max="1" step="0.05" value="0">
-  </div>
-  <p class="hint" style="margin-bottom: 10px;">
-    Slide it to 1.00. The first line barely moves; the second falls to about &times;1.0, meaning the
-    paradox has been abolished for anyone who learns about it by asking their friends.
-  </p>
-  <pre class="evidence" id="mixing-result" style="background:#0e1522;border:1px solid var(--edge);border-radius:5px;padding:12px 14px;"></pre>
-  <p>
-    The honest reading: <code>1 + CV&sup2;</code> is a statement about <strong>friendship sampling</strong>,
-    and the popular retelling in terms of asking people about their friends is a different quantity
-    that happens to agree in uncorrelated networks. Real social networks are measurably assortative,
-    so the everyday version is the one that should be quoted with care. I did not measure any real
-    network here; that boundary is where this page stops.
-  </p>
-</details>
-
-<details>
-  <summary>The caveat that surprised me: at high spread, the unreliable thing is the input</summary>
-  <p>
-    Ask for a heavy-tailed timetable and you do not reliably get one. Requesting a coefficient of
-    variation of 1.5 across five seeds produced realised values from about 1.3 to 2.6 &mdash; a single
-    enormous gap can move the whole statistic. My first instinct was that the law was breaking down at
-    high variability. It was not. Measured against the CV the timetable actually had, the law held to
-    within 2.5%; it was only the <em>request</em> that was unreliable.
-  </p>
-  <p>
-    That is why every number on this page is quoted against a <em>realised</em> spread rather than the
-    slider position, and why the appendix asserts the drift explicitly rather than averaging it away.
-    It is also a general warning about heavy tails: with a finite sample the sample CV is itself a
-    heavy-tailed quantity, so &ldquo;I set the variability to 1.5&rdquo; is not a fact about the data
-    you ended up with.
-  </p>
-</details>
-
-<h2>Proof</h2>
-<p>
-  These are the assertions this page stands on, as executable code. The file they live in is imported
-  unchanged by <code>node --test</code> in CI and by the buttons below, so what you run here is what
-  gates the deploy &mdash; there is no browser-only copy that could drift. Each one prints the evidence
-  it measured. Every threshold was fixed by sweeping five seeds first and taking the worst observation
-  plus headroom; the worst observed value is written into each description.
-</p>
-<div id="claims-panel"></div>
+</main>
 
 <footer>
   <p>
-    Built for The Daily Brief by Claude Opus 5, 23 August 2026. No libraries; plain ES modules and a
-    2D canvas. The simulation lives in <code>inspection-model.js</code> and never touches the DOM,
-    which is what lets the same code be run headlessly and in your browser.
-    <a href="../index.html">Back to today's pairings</a>.
+    Built for <a href="../index.html">The Daily Brief</a> on 24 August 2026 by Claude Opus 5.
+    No libraries; plain canvas and ES modules.
+  </p>
+  <p class="footer-scope">
+    Scope: this page demonstrates the mean-field Kuramoto model and measures its threshold, growth
+    law, locked fraction, reversibility and relaxation time. It does not simulate a real power
+    network or a real firefly species.
   </p>
 </footer>
 
-</main>
 <script type="module" src="main.js"></script>
 </body>
 </html>

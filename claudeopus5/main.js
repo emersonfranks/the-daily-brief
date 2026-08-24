@@ -1,268 +1,152 @@
 // @ts-check
 
 /**
- * Wires the two panels to one slider. Every number printed here comes out of the running
- * simulation; nothing on this page is a figure that was typed in by hand.
+ * Wires the simulation to the page. Holds no physics of its own: everything
+ * numeric comes from `kuramoto.js`, so what the reader watches and what the
+ * tests check are the same code.
  */
 
-import {
-  createRng,
-  makeDegreeSequence,
-  buildNetwork,
-  makeTimetable,
-  drawFriendship,
-  drawRiderWait,
-  summarise,
-  predictedInflation,
-  degreeAssortativity,
-  runNetwork,
-} from './inspection-model.js';
-import { layoutNetwork, drawNetwork, drawTimeline } from './renderer.js';
+import { createSwarm, step, coherence, criticalCoupling, lorentzianFrequencies, makeRandom } from './kuramoto.js';
+import { createRenderer } from './renderer.js';
 import { mountClaimsPanel } from './claims-panel.js';
 
-const NETWORK_SIZE = 900;
-const MEAN_DEGREE = 10;
-const BUS_COUNT = 4000;
-const MEAN_HEADWAY = 10;
-const DRAWS_PER_FRAME = 900;
-const TIMELINE_WINDOW = 14;
+const POPULATION = 320;
+const DT = 0.02;
+// Five steps a frame puts a settle at roughly three seconds of watching. Two was
+// faithful and unusable: dragging the slider meant waiting twelve seconds to find
+// out whether anything had happened.
+const STEPS_PER_FRAME = 5;
+// 300 frames x 5 steps x dt = 30 seconds of simulated time, matching the caption.
+const HISTORY_LENGTH = 300;
 
-/** @param {string} id */
+/**
+ * @param {string} id
+ * @returns {HTMLElement}
+ */
 function need(id) {
   const element = document.getElementById(id);
-  if (!element) throw new Error(`missing #${id}`);
+  if (!element) throw new Error(`missing element #${id}`);
   return element;
 }
 
-const netCanvas = /** @type {HTMLCanvasElement} */ (need('network-canvas'));
-const busCanvas = /** @type {HTMLCanvasElement} */ (need('bus-canvas'));
-const netCtx = /** @type {CanvasRenderingContext2D} */ (netCanvas.getContext('2d'));
-const busCtx = /** @type {CanvasRenderingContext2D} */ (busCanvas.getContext('2d'));
+const couplingInput = /** @type {HTMLInputElement} */ (need('coupling'));
+const spreadInput = /** @type {HTMLInputElement} */ (need('spread'));
+const freezeInput = /** @type {HTMLInputElement} */ (need('freeze'));
+const marker = need('coupling-marker');
 
-const cvSlider = /** @type {HTMLInputElement} */ (need('cv'));
-const cvValue = need('cv-value');
-const playButton = /** @type {HTMLButtonElement} */ (need('play'));
-const resetButton = /** @type {HTMLButtonElement} */ (need('reset'));
-
-const predictedBig = need('predicted-big');
-const predictedNote = need('predicted-note');
-const netBig = need('net-big');
-const netNote = need('net-note');
-const busBig = need('bus-big');
-const busNote = need('bus-note');
-
-const state = {
-  cv: Number(cvSlider.value),
-  running: true,
-  seed: 20260823,
-  /** @type {ReturnType<typeof buildNetwork>} */
-  network: buildNetwork([1, 1], createRng(1)),
-  /** @type {{ x: number, y: number, r: number }[]} */
-  layout: [],
-  /** @type {ReturnType<typeof makeTimetable>} */
-  timetable: makeTimetable({ buses: 2, meanHeadway: 10, cv: 0, rng: createRng(1) }),
-  /** @type {ReturnType<typeof createRng>} */
-  rng: createRng(1),
-  meanDegree: 0,
-  realisedNetCv: 0,
-  meanHeadway: 0,
-  realisedBusCv: 0,
-  degreeSum: 0,
-  degreeDraws: 0,
-  waitSum: 0,
-  waitDraws: 0,
-  /** @type {readonly [number, number] | null} */
-  lastEdge: null,
-  lastPerson: 0,
-  /** @type {{ gap: number, offset: number } | null} */
-  lastRider: null,
-  timelineStart: 0,
+const outputs = {
+  coupling: need('coupling-out'),
+  spread: need('spread-out'),
+  r: need('r-value'),
+  k: need('k-value'),
+  kc: need('kc-value'),
+  locked: need('locked-value'),
+  status: need('status'),
 };
 
-function sizeCanvases() {
-  for (const canvas of [netCanvas, busCanvas]) {
-    const ratio = Math.min(2, window.devicePixelRatio || 1);
-    const width = canvas.clientWidth || 480;
-    const height = Math.round(width * 0.72);
-    canvas.width = Math.round(width * ratio);
-    canvas.height = Math.round(height * ratio);
-    canvas.style.height = `${height}px`;
-    const context = /** @type {CanvasRenderingContext2D} */ (canvas.getContext('2d'));
-    context.setTransform(ratio, 0, 0, ratio, 0, 0);
-  }
+const renderer = createRenderer({
+  fireflies: /** @type {HTMLCanvasElement} */ (need('fireflies')),
+  rotors: /** @type {HTMLCanvasElement} */ (need('rotors')),
+  trace: /** @type {HTMLCanvasElement} */ (need('trace')),
+  n: POPULATION,
+});
+
+let gamma = Number(spreadInput.value);
+let coupling = Number(couplingInput.value);
+let swarm = createSwarm({ n: POPULATION, gamma, seed: 11 });
+/** @type {number[]} */
+let history = [];
+const scatterPhases = makeRandom(99);
+
+function syncMarker() {
+  const critical = criticalCoupling(gamma);
+  const max = Number(couplingInput.max);
+  marker.style.left = `${Math.min(100, (critical / max) * 100)}%`;
+  outputs.kc.textContent = critical.toFixed(2);
 }
 
-function rebuild() {
-  const rng = createRng(state.seed);
-  const degrees = makeDegreeSequence({
-    n: NETWORK_SIZE,
-    meanDegree: MEAN_DEGREE,
-    cv: state.cv,
-    rng,
-  });
-  state.network = buildNetwork(degrees, rng);
-  const degreeStats = summarise(state.network.degrees);
-  state.meanDegree = degreeStats.mean;
-  state.realisedNetCv = degreeStats.cv;
-  state.layout = layoutNetwork(state.network, netCanvas.clientWidth || 480, (netCanvas.clientWidth || 480) * 0.72);
-
-  state.timetable = makeTimetable({ buses: BUS_COUNT, meanHeadway: MEAN_HEADWAY, cv: state.cv, rng });
-  const headwayStats = summarise(state.timetable.headways);
-  state.meanHeadway = headwayStats.mean;
-  state.realisedBusCv = headwayStats.cv;
-
-  state.rng = createRng(state.seed ^ 0x5bf03635);
-  state.degreeSum = 0;
-  state.degreeDraws = 0;
-  state.waitSum = 0;
-  state.waitDraws = 0;
-  state.lastEdge = null;
-  state.lastRider = null;
-  state.timelineStart = 0;
+/**
+ * Replace the natural frequencies in place, keeping the phases the swarm has
+ * already reached so the reader sees the threshold move rather than the whole
+ * picture restarting.
+ */
+function applySpread() {
+  const omega = lorentzianFrequencies(POPULATION, gamma);
+  swarm.omega.set(omega);
+  Object.assign(swarm, { gamma });
+  syncMarker();
 }
 
-function step() {
-  for (let i = 0; i < DRAWS_PER_FRAME; i += 1) {
-    const friendship = drawFriendship(state.network, state.rng);
-    state.degreeSum += friendship.degree;
-    state.degreeDraws += 1;
-    state.lastEdge = friendship.edge;
-    state.lastPerson = friendship.person;
-
-    const rider = drawRiderWait(state.timetable, state.rng);
-    state.waitSum += rider.wait;
-    state.waitDraws += 1;
-    state.lastRider = { gap: rider.gap, offset: rider.offset };
-  }
-  if (state.lastRider) {
-    state.timelineStart = Math.max(
-      0,
-      Math.min(state.timetable.headways.length - TIMELINE_WINDOW, state.lastRider.gap - Math.floor(TIMELINE_WINDOW / 2)),
-    );
-  }
+/**
+ * @param {number} r
+ * @returns {{ text: string, state: string }}
+ */
+function describeGrid(r) {
+  if (r >= 0.55) return { text: 'grid synchronised \u00b7 swarm in unison', state: 'locked' };
+  if (r >= 0.2) return { text: 'grid straining \u00b7 partial rhythm', state: 'strained' };
+  return { text: 'grid dark \u00b7 every clock its own way', state: 'dark' };
 }
 
 function render() {
-  const width = netCanvas.clientWidth || 480;
-  const height = width * 0.72;
-  const sampledMean = state.degreeDraws === 0 ? 0 : state.degreeSum / state.degreeDraws;
-  const meanWait = state.waitDraws === 0 ? 0 : state.waitSum / state.waitDraws;
-  const netPredictedFactor = predictedInflation(state.realisedNetCv);
-  const busPredictedFactor = predictedInflation(state.realisedBusCv);
+  const field = coherence(swarm.theta);
+  history.push(field.r);
+  if (history.length > HISTORY_LENGTH) history.shift();
 
-  drawNetwork(netCtx, width, height, {
-    network: state.network,
-    layout: state.layout,
-    lastEdge: state.lastEdge,
-    lastPerson: state.lastPerson,
-    meanDegree: state.meanDegree,
-    sampledMean,
-    predictedMean: state.meanDegree * netPredictedFactor,
-    draws: state.degreeDraws,
-  });
+  const mask = renderer.draw(
+    { theta: swarm.theta, omega: swarm.omega, K: coupling, r: field.r, psi: field.psi, history },
+    criticalCoupling(gamma),
+  );
 
-  drawTimeline(busCtx, busCanvas.clientWidth || 480, (busCanvas.clientWidth || 480) * 0.72, {
-    headways: state.timetable.headways,
-    windowStart: state.timelineStart,
-    windowCount: TIMELINE_WINDOW,
-    lastRider: state.lastRider,
-    meanHeadway: state.meanHeadway,
-    meanWait,
-    predictedWait: (state.meanHeadway / 2) * busPredictedFactor,
-    draws: state.waitDraws,
-  });
+  let locked = 0;
+  for (let i = 0; i < mask.length; i++) locked += mask[i];
 
-  const netInflation = state.meanDegree === 0 ? 0 : sampledMean / state.meanDegree;
-  const busInflation = state.meanHeadway === 0 ? 0 : meanWait / (state.meanHeadway / 2);
+  outputs.r.textContent = field.r.toFixed(2);
+  outputs.k.textContent = coupling.toFixed(2);
+  outputs.locked.textContent = `${Math.round((locked / POPULATION) * 100)}%`;
 
-  const now = performance.now();
-  if (now - lastTextUpdate < 250) return;
-  lastTextUpdate = now;
+  const status = describeGrid(field.r);
+  outputs.status.textContent = status.text;
+  outputs.status.dataset.state = status.state;
+}
 
-  netBig.textContent = state.degreeDraws === 0 ? '\u2014' : `\u00d7${netInflation.toFixed(3)}`;
-  netNote.textContent =
-    `${sampledMean.toFixed(2)} friends against an average of ${state.meanDegree.toFixed(2)}. ` +
-    `Spread of this town: CV ${state.realisedNetCv.toFixed(3)}, so 1 + CV\u00b2 predicts \u00d7${netPredictedFactor.toFixed(3)}. ` +
-    `${state.degreeDraws.toLocaleString()} friendships sampled.`;
-
-  busBig.textContent = state.waitDraws === 0 ? '\u2014' : `\u00d7${busInflation.toFixed(3)}`;
-  busNote.textContent =
-    `${meanWait.toFixed(2)} min waited against ${(state.meanHeadway / 2).toFixed(2)} min expected. ` +
-    `Spread of this timetable: CV ${state.realisedBusCv.toFixed(3)}, so 1 + CV\u00b2 predicts \u00d7${busPredictedFactor.toFixed(3)}. ` +
-    `${state.waitDraws.toLocaleString()} passengers.`;
-
-  if (state.degreeDraws === 0) {
-    predictedBig.textContent = '\u2014';
-    predictedNote.textContent = '';
-    return;
+function frame() {
+  if (!freezeInput.checked) {
+    for (let i = 0; i < STEPS_PER_FRAME; i++) step(swarm, coupling, DT);
   }
-  predictedBig.textContent =
-    `${(netInflation / netPredictedFactor).toFixed(2)} \u00b7 ${(busInflation / busPredictedFactor).toFixed(2)}`;
-  predictedNote.textContent =
-    'Left number is the town, right number is the bus route. One formula, two unrelated systems, ' +
-    'both landing on 1.00. Neither world was told what the other was doing.';
-}
-
-function tick() {
-  if (state.running) step();
   render();
+  requestAnimationFrame(frame);
 }
 
-let lastTextUpdate = Number.NEGATIVE_INFINITY;
-
-/** @type {number} */
-let timer = 0;
-
-function startLoop() {
-  if (timer !== 0) clearInterval(timer);
-  timer = setInterval(tick, 33);
-}
-
-cvSlider.addEventListener('input', () => {
-  state.cv = Number(cvSlider.value);
-  cvValue.textContent = state.cv.toFixed(2);
-  rebuild();
+couplingInput.addEventListener('input', () => {
+  coupling = Number(couplingInput.value);
+  outputs.coupling.textContent = coupling.toFixed(2);
 });
 
-playButton.addEventListener('click', () => {
-  state.running = !state.running;
-  playButton.textContent = state.running ? 'Pause' : 'Play';
+spreadInput.addEventListener('input', () => {
+  gamma = Number(spreadInput.value);
+  outputs.spread.textContent = gamma.toFixed(2);
+  applySpread();
 });
 
-resetButton.addEventListener('click', () => {
-  state.seed = (state.seed + 977) >>> 0;
-  rebuild();
+need('knock').addEventListener('click', () => {
+  for (let i = 0; i < swarm.n; i++) swarm.theta[i] = scatterPhases() * 2 * Math.PI;
 });
 
-window.addEventListener('resize', () => {
-  sizeCanvases();
-  state.layout = layoutNetwork(state.network, netCanvas.clientWidth || 480, (netCanvas.clientWidth || 480) * 0.72);
+need('reset').addEventListener('click', () => {
+  swarm = createSwarm({ n: POPULATION, gamma, seed: 11 });
+  history = [];
 });
 
-mountClaimsPanel(need('claims-panel'));
-
-const mixingSlider = /** @type {HTMLInputElement} */ (need('mixing'));
-const mixingValue = need('mixing-value');
-const mixingResult = need('mixing-result');
-
-function runMixing() {
-  const assortativity = Number(mixingSlider.value);
-  mixingValue.textContent = assortativity.toFixed(2);
-  const run = runNetwork({ n: 2000, draws: 40000, cv: 1.2, seed: 7, assortativity });
-  mixingResult.textContent =
-    `realised assortativity r = ${run.assortativity.toFixed(3)}\n` +
-    `random friendship  \u2192  \u00d7${run.friendshipInflation.toFixed(3)}  (1 + CV\u00b2 = \u00d7${run.predicted.toFixed(3)})\n` +
-    `ask a person       \u2192  \u00d7${run.personThenFriendInflation.toFixed(3)}`;
-}
-
-mixingSlider.addEventListener('input', runMixing);
-
-sizeCanvases();
-cvValue.textContent = state.cv.toFixed(2);
-rebuild();
-runMixing();
-startLoop();
-tick();
-
-const assortNote = need('base-assortativity');
-assortNote.textContent = degreeAssortativity(state.network).toFixed(3);
+outputs.coupling.textContent = coupling.toFixed(2);
+outputs.spread.textContent = gamma.toFixed(2);
+syncMarker();
+mountClaimsPanel({
+  list: need('claims-list'),
+  button: /** @type {HTMLButtonElement} */ (need('run-claims')),
+  summary: need('claims-summary'),
+});
+// Paint once before the loop starts, so a page opened in a background tab shows a
+// composed frame rather than an empty canvas until it is focused.
+render();
+window.addEventListener('resize', render);
+requestAnimationFrame(frame);

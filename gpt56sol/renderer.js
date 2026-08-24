@@ -1,132 +1,163 @@
 // @ts-check
 
-/** @typedef {import("./cascade-model.js").CascadeResult} CascadeResult */
-
-const palette = {
-  fault: { background: "#11100e", line: "#e65f3d", glow: "#ffb06b", text: "#f3ead7" },
-  inbox: { background: "#e8e4da", line: "#1f6f78", glow: "#ffcf4a", text: "#17282b" },
-};
+const INK = "#17201d";
+const PAPER = "#f2efe6";
+const CORAL = "#ef5b40";
+const TEAL = "#087f78";
 
 /**
  * @param {HTMLCanvasElement} canvas
- * @param {CascadeResult} cascade
- * @param {"fault" | "inbox"} world
- * @param {number} visibleCount
  */
-export function drawWorld(canvas, cascade, world, visibleCount) {
+export function createRenderer(canvas) {
   const context = canvas.getContext("2d");
-  if (!context) return;
-  const bounds = canvas.getBoundingClientRect();
-  const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
-  const width = Math.max(1, Math.round(bounds.width * pixelRatio));
-  const height = Math.max(1, Math.round(bounds.height * pixelRatio));
-  if (canvas.width !== width || canvas.height !== height) {
-    canvas.width = width;
-    canvas.height = height;
+  if (!context) {
+    throw new Error("Canvas rendering is unavailable.");
   }
-  context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-  const displayWidth = width / pixelRatio;
-  const displayHeight = height / pixelRatio;
-  const colors = palette[world];
-  context.fillStyle = colors.background;
-  context.fillRect(0, 0, displayWidth, displayHeight);
-  drawAtmosphere(context, displayWidth, displayHeight, world);
 
-  const shown = cascade.events.slice(0, visibleCount);
-  const byId = new Map(cascade.events.map((event) => [event.id, event]));
-  const maxGeneration = Math.max(1, cascade.generationCounts.length - 1);
-  const point = (event) => ({
-    x: 24 + event.lane * (displayWidth - 48),
-    y: 28 + (event.generation / maxGeneration) * (displayHeight - 60),
-  });
+  /** @param {number} width @param {number} height */
+  function size(width, height) {
+    const ratio = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.floor(width * ratio);
+    canvas.height = Math.floor(height * ratio);
+    context.setTransform(ratio, 0, 0, ratio, 0, 0);
+  }
 
-  context.lineCap = "round";
-  for (const event of shown) {
-    if (event.parentId === null) continue;
-    const parent = byId.get(event.parentId);
-    if (!parent) continue;
-    const start = point(parent);
-    const end = point(event);
-    context.strokeStyle = colors.line;
-    context.globalAlpha = world === "fault" ? 0.34 + event.strength * 0.4 : 0.3;
-    context.lineWidth = world === "fault" ? 0.7 + event.strength * 1.6 : 1;
+  /** @param {number} x @param {number} y @param {number} width @param {number} height @param {number} radius */
+  function roundedRect(x, y, width, height, radius) {
     context.beginPath();
-    context.moveTo(start.x, start.y);
-    context.lineTo(end.x, end.y);
+    context.roundRect(x, y, width, height, radius);
+  }
+
+  /** @param {number} centerX @param {number} centerY @param {number} scale */
+  function drawNose(centerX, centerY, scale) {
+    context.save();
+    context.translate(centerX, centerY);
+    context.scale(scale, scale);
+    context.strokeStyle = INK;
+    context.lineWidth = 3;
+    context.beginPath();
+    context.moveTo(-35, -66);
+    context.bezierCurveTo(-18, -60, -18, -20, -5, -3);
+    context.bezierCurveTo(8, 14, 25, 20, 21, 31);
+    context.bezierCurveTo(17, 42, -7, 41, -18, 33);
+    context.stroke();
+    context.beginPath();
+    context.arc(-7, 29, 3, 0, Math.PI * 2);
+    context.fillStyle = CORAL;
+    context.fill();
+    context.restore();
+  }
+
+  /** @param {number} centerX @param {number} centerY @param {number} scale @param {number} phase */
+  function drawBacterium(centerX, centerY, scale, phase) {
+    context.save();
+    context.translate(centerX, centerY);
+    context.rotate(-0.16 + Math.sin(phase) * 0.035);
+    context.scale(scale, scale);
+    context.fillStyle = "#d5e3c4";
+    context.strokeStyle = INK;
+    context.lineWidth = 2.5;
+    roundedRect(-55, -26, 110, 52, 26);
+    context.fill();
+    context.stroke();
+    context.beginPath();
+    context.moveTo(53, 2);
+    context.bezierCurveTo(90, -28, 98, 38, 132, 11);
+    context.stroke();
+    for (let index = 0; index < 7; index += 1) {
+      const x = -37 + (index % 4) * 24;
+      const y = -11 + Math.floor(index / 4) * 22;
+      context.beginPath();
+      context.arc(x, y, 4, 0, Math.PI * 2);
+      context.fillStyle = index % 2 ? TEAL : CORAL;
+      context.fill();
+    }
+    context.restore();
+  }
+
+  /** @param {number} startX @param {number} endX @param {number} top @param {number} bottom @param {number} count @param {number} phase @param {string} color */
+  function drawParticles(startX, endX, top, bottom, count, phase, color) {
+    context.fillStyle = color;
+    for (let index = 0; index < count; index += 1) {
+      const horizontal = (Math.sin(index * 91.73 + 2.1) + 1) / 2;
+      const vertical = (Math.sin(index * 47.11 + 0.8) + 1) / 2;
+      const drift = Math.sin(phase * (0.55 + (index % 5) * 0.06) + index) * 7;
+      context.globalAlpha = 0.24 + (index % 4) * 0.16;
+      context.beginPath();
+      context.arc(startX + horizontal * (endX - startX) + drift, top + vertical * (bottom - top), 2 + (index % 3), 0, Math.PI * 2);
+      context.fill();
+    }
+    context.globalAlpha = 1;
+  }
+
+  /** @param {number[]} history @param {number} x @param {number} y @param {number} width @param {number} height */
+  function drawTrace(history, x, y, width, height) {
+    context.strokeStyle = "rgba(23, 32, 29, 0.18)";
+    context.lineWidth = 1;
+    context.beginPath();
+    context.moveTo(x, y + height / 2);
+    context.lineTo(x + width, y + height / 2);
+    context.stroke();
+    context.strokeStyle = CORAL;
+    context.lineWidth = 2.5;
+    context.beginPath();
+    history.forEach((value, index) => {
+      const pointX = x + (index / Math.max(history.length - 1, 1)) * width;
+      const pointY = y + height / 2 - Math.max(-1.5, Math.min(1.5, value)) / 3 * height;
+      if (index === 0) context.moveTo(pointX, pointY);
+      else context.lineTo(pointX, pointY);
+    });
     context.stroke();
   }
 
-  for (const event of shown) {
-    const position = point(event);
-    if (world === "fault") drawAftershock(context, position.x, position.y, event.strength, colors);
-    else drawMessage(context, position.x, position.y, event.id, event.strength, colors);
-  }
-  context.globalAlpha = 1;
-}
-
-/**
- * @param {CanvasRenderingContext2D} context
- * @param {number} width
- * @param {number} height
- * @param {"fault" | "inbox"} world
- */
-function drawAtmosphere(context, width, height, world) {
-  context.save();
-  if (world === "fault") {
-    context.strokeStyle = "rgba(243,234,215,.055)";
-    context.lineWidth = 1;
-    for (let line = -height; line < width; line += 22) {
-      context.beginPath();
-      context.moveTo(line, 0);
-      context.lineTo(line + height, height);
-      context.stroke();
+  /** @param {{ signal: number, response: number, memory: number, history: number[], phase: number }} frame */
+  function render(frame) {
+    const bounds = canvas.getBoundingClientRect();
+    const width = bounds.width;
+    const height = bounds.height;
+    if (canvas.width === 0 || Math.abs(canvas.width / Math.min(window.devicePixelRatio || 1, 2) - width) > 1) {
+      size(width, height);
     }
-  } else {
-    context.fillStyle = "rgba(31,111,120,.055)";
-    for (let row = 22; row < height; row += 26) context.fillRect(0, row, width, 1);
+    context.clearRect(0, 0, width, height);
+    context.fillStyle = PAPER;
+    context.fillRect(0, 0, width, height);
+    const gap = width < 720 ? 10 : 18;
+    const panelWidth = (width - gap) / 2;
+    const flare = Math.min(Math.abs(frame.response) / 1.4, 1);
+    const count = Math.round(14 + Math.sqrt(frame.signal) * 12);
+
+    context.fillStyle = `rgba(239, 91, 64, ${0.035 + flare * 0.13})`;
+    context.fillRect(0, 0, panelWidth, height);
+    context.fillStyle = `rgba(8, 127, 120, ${0.035 + flare * 0.13})`;
+    context.fillRect(panelWidth + gap, 0, panelWidth, height);
+    context.fillStyle = INK;
+    context.font = "600 12px 'Aptos Narrow', sans-serif";
+    context.fillText("OLFACTORY ADAPTATION", 18, 29);
+    context.fillText("BACTERIAL CHEMOTAXIS", panelWidth + gap + 18, 29);
+
+    drawParticles(12, panelWidth - 12, 42, height - 86, count, frame.phase, CORAL);
+    drawParticles(panelWidth + gap + 12, width - 12, 42, height - 86, count, frame.phase, TEAL);
+    const scale = width < 600 ? 0.72 : 1;
+    drawNose(panelWidth / 2, height * 0.47, scale);
+    drawBacterium(panelWidth + gap + panelWidth / 2, height * 0.47, scale, frame.phase);
+
+    const flareX = panelWidth + gap / 2;
+    const gradient = context.createLinearGradient(0, height * 0.2, 0, height * 0.8);
+    gradient.addColorStop(0, "rgba(239, 91, 64, 0)");
+    gradient.addColorStop(0.5, `rgba(239, 91, 64, ${0.2 + flare * 0.8})`);
+    gradient.addColorStop(1, "rgba(239, 91, 64, 0)");
+    context.fillStyle = gradient;
+    context.fillRect(flareX - 2 - flare * 7, height * 0.17, 4 + flare * 14, height * 0.66);
+
+    drawTrace(frame.history, 18, height - 67, panelWidth - 36, 48);
+    drawTrace(frame.history, panelWidth + gap + 18, height - 67, panelWidth - 36, 48);
+    context.fillStyle = INK;
+    context.globalAlpha = 0.58;
+    context.font = "11px 'Aptos', sans-serif";
+    context.fillText(`memory ${frame.memory.toFixed(2)}×`, 18, height - 76);
+    context.fillText(`memory ${frame.memory.toFixed(2)}×`, panelWidth + gap + 18, height - 76);
+    context.globalAlpha = 1;
   }
-  context.restore();
-}
 
-/**
- * @param {CanvasRenderingContext2D} context
- * @param {number} x
- * @param {number} y
- * @param {number} strength
- * @param {{ line: string, glow: string }} colors
- */
-function drawAftershock(context, x, y, strength, colors) {
-  const radius = 1.7 + strength * 2.6;
-  context.save();
-  context.shadowColor = colors.glow;
-  context.shadowBlur = 11;
-  context.fillStyle = colors.glow;
-  context.globalAlpha = 0.35 + strength * 0.65;
-  context.beginPath();
-  context.arc(x, y, radius, 0, Math.PI * 2);
-  context.fill();
-  context.restore();
-}
-
-/**
- * @param {CanvasRenderingContext2D} context
- * @param {number} x
- * @param {number} y
- * @param {number} id
- * @param {number} strength
- * @param {{ line: string, glow: string }} colors
- */
-function drawMessage(context, x, y, id, strength, colors) {
-  const width = 8 + strength * 8;
-  context.save();
-  context.translate(x, y);
-  context.fillStyle = id === 0 ? colors.glow : "#fffdf6";
-  context.strokeStyle = colors.line;
-  context.globalAlpha = 0.72 + strength * 0.28;
-  context.lineWidth = 1;
-  context.beginPath();
-  context.roundRect(-width / 2, -3.5, width, 7, 2);
-  context.fill();
-  context.stroke();
-  context.restore();
+  return { render };
 }
