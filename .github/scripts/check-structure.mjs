@@ -111,7 +111,6 @@ if (problems.length === 0) {
     .filter(entry => entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'journal')
     .map(entry => entry.name)
     .filter(name => existsSync(join(root, name, 'index.html')));
-
   for (const slug of buildDirs) {
     if (!listed.has(slug)) {
       fail(`"${slug}/index.html" exists but no card on the landing page points to it`);
@@ -131,8 +130,33 @@ if (problems.length === 0) {
     }
   }
 
+  // A build that reaches the site without a journal entry is how a day silently loses its record.
+  const headingDate = landing.match(/<h2[^>]*>\s*(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})/);
+  if (headingDate && existsSync(join(root, 'JOURNAL.md'))) {
+    const months = ['january', 'february', 'march', 'april', 'may', 'june',
+      'july', 'august', 'september', 'october', 'november', 'december'];
+    const month = months.indexOf(headingDate[2].toLowerCase()) + 1;
+    if (month > 0) {
+      const today = `${headingDate[3]}-${String(month).padStart(2, '0')}-${headingDate[1].padStart(2, '0')}`;
+      const journal = readFileSync(join(root, 'JOURNAL.md'), 'utf8');
+      const journalled = new Set();
+      for (const entry of journal.split(/\n(?=## )/)) {
+        const date = entry.match(/^##\s*(\d{4}-\d{2}-\d{2})/);
+        if (!date || date[1] !== today) continue;
+        for (const path of entry.matchAll(/\*\*Path:\*\*\s*`([a-z0-9]+)\/index\.html`/g)) {
+          journalled.add(path[1]);
+        }
+      }
+      for (const slug of listed) {
+        if (!journalled.has(slug)) {
+          fail(`"${slug}" is on the landing page for ${today} but has no journal entry dated ${today}`);
+        }
+      }
+    }
+  }
+
   if (problems.length === 0) {
-    console.log(`landing page OK: ${cards.length} build(s), every referenced file committed`);
+    console.log(`landing page OK: ${cards.length} build(s), every referenced file committed and journalled`);
   }
 }
 

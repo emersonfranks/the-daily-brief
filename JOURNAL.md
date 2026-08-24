@@ -10,6 +10,96 @@ Builds that were pulled after publication are not deleted from this record. They
 
 ---
 
+## 2026-08-24 — The Blackout and the Mangrove
+
+> **Backfilled on 24 August.** This page was published inside another model's commit and never got
+> its own entry at the time. See *What failed* for how that happened; nothing about the page itself
+> was changed when this entry was written.
+
+**Built by:** Claude Opus 5
+**Path:** `claudeopus5/index.html`
+**Commit:** [`7aed049`](https://github.com/emersonfranks/the-daily-brief/commit/7aed049)
+**The pairing:** fireflies flashing in unison ↔ generators holding a power grid at 50 Hz
+
+![Full page: dark interface with a ring of phase dots and a coupled-oscillator field, a coherence-versus-coupling plot marking the tipping point, and a proof panel listing the page's own tests.](journal/2026-08-24-the-blackout-and-the-mangrove.png)
+
+**The thesis.** Put a large number of things that each tick at their own pace in one room and let
+each feel a pull towards the average of the rest, and the surprising part is not that they settle —
+it is *how*. A canopy of fireflies and a set of alternators wired into the same grid are the same
+Kuramoto system, and both lock at the same place: a coupling of twice the spread of their natural
+rhythms.
+
+**The interaction.** The reader raises the coupling and watches the swarm go from wandering to
+phase-locked, with the transition landing at the predicted threshold rather than anywhere the slider
+happens to be.
+
+**What it measured.** Every figure came from the same `kuramoto.js` that drives the animation, run
+headlessly: N = 400, explicit Euler at dt = 0.02, natural frequencies taken as evenly spaced
+quantiles of a Lorentzian rather than random draws, which removes sampling noise that would dominate
+at this population size. The onset was scanned across four spreads (0.35, 0.5, 0.8, 1.2) and six
+seeds and landed between 1.00 and 1.20 times the predicted 2γ; the scan advances in 4% steps, so
+1.00 is the finest reading available and it cannot report low. Coherence above threshold was checked
+against √(1 − K_c/K) at 1.2, 1.6, 2.2 and 3.0 times critical. Nine tests ship with it, including
+ones for the arctan locked fraction, critical slowing down, and the finite-size floor below
+threshold.
+
+**What failed.** Two things, one scientific and one operational.
+
+- **A false positive it nearly published.** Sweeping the coupling up and then back down left a gap
+  of 0.09 between the branches near threshold. Read naively that is hysteresis, which would imply a
+  first-order, explosive transition — a far more exciting claim. Holding the system at threshold for
+  progressively longer collapsed the gap: it was insufficient settling, not physics. The page says
+  so, and the test *"Raising and lowering the coupling retrace the same curve"* now pins it.
+- **The run itself failed.** The build finished but the agent errored while handling its own
+  full-page screenshot: `image dimensions exceed max allowed size: 8000 pixels`. The capture was
+  1838 × 10862. The page was left uncommitted and was later swept into Gemini 3.7 Flash's commit,
+  which is why this entry is backfilled.
+
+**Stack:** No external libraries. `kuramoto.js` (headless model, no DOM), `kuramoto.test.js`,
+`claims.js` shared by Node and the browser, `claims-panel.js`, `renderer.js`, `main.js`, all under
+`// @ts-check`.
+
+---
+
+## 2026-08-24 — The Signal Vanishes
+
+> **Backfilled on 24 August.** Published inside another model's commit without an entry of its own.
+> The build was complete and its author deliberately declined to publish it; see *What failed*.
+
+**Built by:** GPT-5.6 Sol
+**Path:** `gpt56sol/index.html`
+**Commit:** [`7aed049`](https://github.com/emersonfranks/the-daily-brief/commit/7aed049)
+**The pairing:** olfactory sensory adaptation ↔ bacterial chemotaxis memory
+
+![Full page: dark interface showing a stimulus trace against a slow memory trace, with the response flaring on change and decaying to silence while the stimulus is held.](journal/2026-08-24-the-signal-vanishes.png)
+
+**The thesis.** A nose in a perfumed room and a bacterium swimming up a nutrient gradient solve the
+same problem the same way. Each keeps a slow memory of the recent concentration and reports the
+logarithm of the current level divided by that memory. A held signal therefore fades to nothing,
+however strong it is, while any *change* flares immediately — and equal fold changes produce equal
+responses even when the absolute levels differ by orders of magnitude.
+
+**The interaction.** Hold a concentration and watch the response decay to silence; step it and watch
+the flare return. Stepping by the same ratio from a different baseline reproduces the same trace,
+which is the claim made visible.
+
+**What it measured.** Three claims ship with the page and run in the browser as well as in CI: *a
+held signal becomes old news*, *fold-change rather than absolute level drives the flare*, and *a new
+change breaks through adaptation*. The page names its science rather than implying it: sensory
+adaptation in bacterial chemotaxis, and the robustness result of Barkai and Leibler showing the
+network recovers a stable response despite changing component details.
+
+**What failed.** Nothing in the science. The publish step failed, and it failed *correctly*: the
+landing page still read 23 August, so a teardown was required, but `claudeopus5/` held uncommitted
+work from a run that had crashed, and the brief forbids touching another model's directory. Rather
+than publish a half-finished state it stopped and reported. That was the right call, and the page
+reached the site anyway because a later model committed everything in the tree.
+
+**Stack:** No external libraries. `adaptive-model.js` with `adaptive-model.test.js`, `claims.js`
+shared by Node and the browser, `claims-panel.js`, `renderer.js`, `main.js`, `styles.css`.
+
+---
+
 ## 2026-08-24 — The Edge of Collapse
 
 **Built by:** Gemini 3.7 Flash
