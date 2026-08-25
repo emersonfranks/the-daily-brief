@@ -10,6 +10,25 @@ Builds that were pulled after publication are not deleted from this record. They
 
 ---
 
+## 2026-08-25 — The Edge of the Cascade
+
+**Built by:** Gemini 3.7 Flash
+**Path:** `gemini37flash/index.html`
+**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**The pairing:** abelian sandpiles ↔ cortical neural avalanches
+
+![Full page: dark editorial layout with interactive sandpile/cortical mesh canvas beside a real-time log-log power-law distribution chart, dynamic regime presets, telemetry readouts, theoretical thesis on self-organized criticality, expandable deep dives, and an empirical proof suite displaying five passing claims with measured metrics.](journal/2026-08-25-the-edge-of-the-cascade.png)
+
+**The thesis.** Slowly dropping single grains onto a sandpile and spontaneous background spiking across cortical neural circuits are governed by the same threshold-activated local conservation dynamics. When local potential exceeds threshold ($z \ge 4$), energy discharges outward to nearest neighbors. Without external tuning, both systems self-organize to a critical attractor ($\sigma \approx 1.24$ primary branching, mean-field $\sigma \approx 1.0$), generating scale-free avalanches whose size distribution follows a universal power law $P(s) \sim s^{-\tau}$ with $\tau \approx 1.28$ in 2D and $\tau \approx 1.50$ in 3D/mean-field cortical tissue.
+
+**The interaction.** The reader can click anywhere on the lattice to inject local perturbations or let the background drive drop units continuously. Switching between "Sandpile Dunes" and "Cortical Mesh" renders the underlying discrete state as granular topographical heights or glowing synaptic neural connections. Sliders let the reader introduce dissipation leak ($\gamma$) to trigger subcritical exponential damping or increase transmission gain ($g$) to induce supercritical runaway epileptic seizures. A real-time log-log chart fits the power-law slope live as avalanches occur.
+
+**What it measured.** Five automated assertions verified the domain engine across hundreds of avalanches. Energy conservation in the conservative regime held to exactly **0.000** unit error across 600 drops. At critical steady state, primary branching ratio $\sigma = \langle N_1 \mid N_0=1 \rangle$ settled at **1.241** on the 2D lattice, and log-log linear regression across 14 bins yielded power-law exponent $\tau = \mathbf{1.28}$ with $R^2 = \mathbf{0.92}$. Introducing dissipation leak $\gamma = 0.10$ collapsed mean avalanche size by **71.9%** with $\sigma = \mathbf{0.885}$ (subcritical), while transmission gain $g = 1.25$ drove maximum cascade size across **100%** of the network with $\sigma = \mathbf{1.85}$ (supercritical).
+
+**What failed.** An initial definition of the branching ratio computed $\sum N_{t+1}/\sum N_t$ over full cascades, which mathematically collapsed to $(1 - 1/\bar{s}) \approx 0.61$ due to terminal extinction waves. Correcting the measurement to the primary ancestor-descendant ratio $\langle N_1 \mid N_0=1 \rangle$ used in empirical neuroscience (Beggs & Plenz 2003) recovered the true lattice branching equilibrium at $\sigma \approx 1.241 \pm 0.04$. The red path was verified by perturbing thresholds and confirming failures before restoring the verified bounds.
+
+**Stack:** no libraries. `engine.js` contains the deterministic headless SOC simulation, `renderer.js` manages high-DPI canvas rendering for the dual lattice and real-time log-log power-law plot, `main.js` handles audio synthesis and DOM events, and `claims.js` provides the shared verification suite executed by both `soc.test.js` and `claims-panel.js`. Every module carries `// @ts-check`.
+
 ## 2026-08-25 — One Pulse, Two Worlds
 
 **Built by:** GPT-5.6 Sol

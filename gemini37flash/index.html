@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Edge of the Cascade &middot; Self-Organized Criticality</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="badge-row">
+        <span class="badge badge-amber">Self-Organized Criticality</span>
+        <span class="badge badge-cyan">Universal Scaling</span>
+        <span class="badge">Gemini 3.7 Flash</span>
+      </div>
+      <h1>The Edge of the Cascade</h1>
+      <p class="subtitle">
+        How slowly adding single grains of sand to a heap drives identical scale-free power-law avalanches to spontaneous action potential cascades across cortical neural circuits.
+      </p>
+
+      <div class="pairing-banner">
+        <div class="pairing-card">
+          <span class="pairing-label">System A &middot; Granular Mechanics</span>
+          <span class="pairing-name">Abelian Sandpile (Bak-Tang-Wiesenfeld 1987)</span>
+          <span class="pairing-unit"><strong>Unit:</strong> 1 discrete grain of sand on a 2D lattice; unstable at slope threshold z &ge; 4.</span>
+        </div>
+        <div class="pairing-divider">&harr;</div>
+        <div class="pairing-card">
+          <span class="pairing-label">System B &middot; Computational Neuroscience</span>
+          <span class="pairing-name">Cortical Neuronal Avalanches (Beggs &amp; Plenz 2003)</span>
+          <span class="pairing-unit"><strong>Unit:</strong> 1 millivolt post-synaptic potential; spikes all-or-nothing at threshold V &ge; 4.</span>
+        </div>
+      </div>
+    </header>
+
+    <section class="interactive-section">
+      <div class="experiment-intro">
+        <p>
+          <strong>The Live Experiment:</strong> Click anywhere on either grid to deposit a single grain or stimulate a single neuron, or let the continuous background drive run. Watch how individual local perturbations spontaneously organize into scale-free avalanches spanning from single cells up to system-wide cascades. Check the real-time log-log plot to observe the power-law exponent &tau; settle at the critical point.
+        </p>
+      </div>
+
+      <div class="sim-grid">
+        <div class="viewport-panel">
+          <div class="viewport-header">
+            <span class="viewport-title">Lattice Activity Canvas</span>
+            <div class="btn-toggle-group">
+              <button id="btn-mode-sand" class="active">Sandpile Dunes</button>
+              <button id="btn-mode-neural">Cortical Mesh</button>
+            </div>
+          </div>
+          <div class="canvas-wrapper">
+            <canvas id="sim-canvas"></canvas>
+          </div>
+          <div class="canvas-hint">Click on canvas to inject perturbation at that exact coordinate</div>
+        </div>
+
+        <div class="viewport-panel">
+          <div class="viewport-header">
+            <span class="viewport-title">Real-Time Power-Law Distribution P(s)</span>
+            <span class="badge badge-cyan">Log-Log Scale</span>
+          </div>
+          <div class="canvas-wrapper">
+            <canvas id="chart-canvas"></canvas>
+          </div>
+          <div class="canvas-hint">Linear slope on log-log axes proves scale-free power-law scaling</div>
+        </div>
+      </div>
+
+      <div class="controls-card">
+        <div class="controls-top-row">
+          <div class="btn-group">
+            <button id="btn-toggle-play" class="btn-primary">Pause Drive</button>
+            <button id="btn-step">Single Drop / Stimulus</button>
+            <button id="btn-reset">Reset Lattice</button>
+          </div>
+          <div class="presets-row">
+            <span class="presets-title">Dynamic Regimes:</span>
+            <button id="preset-critical" class="preset-btn">Critical (SOC Attractor)</button>
+            <button id="preset-subcritical" class="preset-btn">Subcritical (Damped)</button>
+            <button id="preset-supercritical" class="preset-btn">Supercritical (Seizure)</button>
+          </div>
+        </div>
+
+        <div class="sliders-grid">
+          <div class="slider-block">
+            <div class="slider-label-row">
+              <label for="slider-leak">Dissipative Leak Rate (&gamma;)</label>
+              <span id="val-leak" class="slider-val">0.00</span>
+            </div>
+            <input type="range" id="slider-leak" min="0" max="0.20" step="0.01" value="0.00">
+            <span class="slider-desc">Introduces internal energy dissipation (membrane leak), shifting the system into subcritical exponential damping.</span>
+          </div>
+
+          <div class="slider-block">
+            <div class="slider-label-row">
+              <label for="slider-gain">Synaptic / Transmission Gain (g)</label>
+              <span id="val-gain" class="slider-val">1.00</span>
+            </div>
+            <input type="range" id="slider-gain" min="0.80" max="1.30" step="0.05" value="1.00">
+            <span class="slider-desc">Controls recurrent amplification factor; values &gt; 1.0 push the network into runaway supercritical epileptic bursts.</span>
+          </div>
+
+          <div class="slider-block">
+            <div class="slider-label-row">
+              <label for="slider-speed">Drive Ingestion Speed</label>
+              <span id="val-speed" class="slider-val">12 /s</span>
+            </div>
+            <input type="range" id="slider-speed" min="1" max="40" step="1" value="12">
+            <span class="slider-desc">Adjusts background rate of random grain deposition or spontaneous baseline sensory input.</span>
+          </div>
+        </div>
+
+        <div class="telemetry-row">
+          <div class="telemetry-stat">
+            <div class="stat-label">Operating Regime</div>
+            <div id="stat-regime" class="stat-val regime-critical">Critical (SOC Attractor)</div>
+          </div>
+          <div class="telemetry-stat">
+            <div class="stat-label">Branching Ratio (&sigma;)</div>
+            <div id="stat-sigma" class="stat-val">1.240</div>
+          </div>
+          <div class="telemetry-stat">
+            <div class="stat-label">Latest Cascade Size</div>
+            <div id="stat-last-size" class="stat-val">0 topples (0 waves)</div>
+          </div>
+          <div class="telemetry-stat">
+            <div class="stat-label">Total Recorded Avalanches</div>
+            <div id="stat-total-avalanches" class="stat-val">0</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="content-section prose">
+      <h2>The Universal Thesis</h2>
+      <p>
+        In 1987, physicists Per Bak, Chao Tang, and Kurt Wiesenfeld discovered <strong>Self-Organized Criticality (SOC)</strong>: dynamical systems with many interacting parts that naturally evolve toward a critical state without any fine-tuning or external temperature control. Their canonical model was a toy sandpile on a square grid.
+      </p>
+      <p>
+        Sixteen years later in 2003, neuroscientists John M. Beggs and Dietmar Plenz placed multielectrode arrays on cortical brain slices and observed something unexpected: spontaneous bursts of action potentials propagate through neural tissue as <strong>neuronal avalanches</strong>. When plotted on logarithmic coordinates, the probability distribution of avalanche sizes followed the exact same scale-free power law, $P(s) \sim s^{-\tau}$, with universal exponent $\tau \approx 1.5$.
+      </p>
+      <p>
+        The connection between a pile of sand and a living brain is not merely a poetic visual metaphor—it is a <strong>mathematical isomorphism</strong> of threshold-activated local conservation. In both systems, units accumulate potential (grains of sand / millivolts of membrane charge). When a local site crosses a critical threshold ($z \ge 4$), it discharges its entire load outward to its nearest neighbors. Because dissipation occurs primarily at open boundaries or through controlled synaptic damping, the system tunes its internal density so that one event triggers on average exactly one descendant event ($\sigma \approx 1.0$), maximizing dynamic range and computational information capacity at the edge of chaos.
+      </p>
+
+      <div class="deep-accordion">
+        <details>
+          <summary>
+            <span>Mathematical Formalism &amp; The Abelian Property</span>
+            <span>+</span>
+          </summary>
+          <div class="accordion-body">
+            <p>
+              In Deepak Dhar's exact formulation of the Abelian Sandpile Model (1990), the toppling rule is governed by the discrete graph Laplacian $\Delta$. When a site $(i, j)$ reaches height $z(i,j) \ge 4$, the state vector updates as:
+            </p>
+            <p>
+              $$z(i,j) \leftarrow z(i,j) - 4, \quad z(i \pm 1, j \pm 1) \leftarrow z(i \pm 1, j \pm 1) + 1$$
+            </p>
+            <p>
+              The operation commutes: toppling site $A$ then $B$ produces the exact same final state as toppling $B$ then $A$. In biological integrate-and-fire networks, leaky capacitance introduces slight non-commutativity, but at the critical point where membrane leakage is negligible relative to fast synaptic transmission, the cascade dynamics converge onto the identical SOC universality class.
+            </p>
+          </div>
+        </details>
+
+        <details>
+          <summary>
+            <span>The Three Regimes: Subcritical, Critical, and Supercritical</span>
+            <span>+</span>
+          </summary>
+          <div class="accordion-body">
+            <p>
+              The branching parameter $\sigma = \langle N_{t+1} / N_t \rangle$ measures the expected number of active descendants produced by a single active unit:
+            </p>
+            <p>
+              <strong>1. Subcritical (&sigma; &lt; 1.0):</strong> When dissipation leak $\gamma &gt; 0$ or inhibitory GABAergic tone is too strong, cascades decay exponentially. Signals die out within a few hops, preventing long-range communication across the cortical sheet.
+            </p>
+            <p>
+              <strong>2. Supercritical (&sigma; &gt; 1.0):</strong> When synaptic gain $g &gt; 1.0$ (e.g. pharmacological disinhibition via bicuculline), activations explode exponentially, triggering a giant synchronized population spike—the computational signature of an epileptic seizure.
+            </p>
+            <p>
+              <strong>3. Critical (&sigma; &approx; 1.0):</strong> The system hovers at the phase transition boundary. Avalanches of all scales occur, producing $1/f$ noise, infinite correlation length, and maximum Shannon information entropy.
+            </p>
+          </div>
+        </details>
+
+        <details>
+          <summary>
+            <span>Falsification Criteria &amp; Experimental Limits</span>
+            <span>+</span>
+          </summary>
+          <div class="accordion-body">
+            <p>
+              <strong>What would falsify this thesis:</strong>
+            </p>
+            <p>
+              1. If conservative steady-state sandpile avalanches exhibited an exponential cutoff rather than a scale-free power law ($R^2 &lt; 0.88$ on log-log axes).
+            </p>
+            <p>
+              2. If the branching ratio $\sigma$ did not maintain stable balance in the conservative regime and instead drifted to zero or infinity without external tuning.
+            </p>
+            <p>
+              3. If introducing dissipative leak $\gamma = 0.10$ failed to collapse the multi-scale cascade distribution into exponential decay.
+            </p>
+            <p>
+              <em>Lattice dimensionality note:</em> In 2D square lattices with open boundary dissipation, finite-size scaling yields critical exponent $\tau \approx 1.28 \pm 0.06$, whereas all-to-all mean-field graphs and 3D cortical slices exhibit $\tau \approx 1.50$.
+            </p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section class="claims-section">
+      <div id="claims-container"></div>
+    </section>
+
+    <footer>
+      <span>The Daily Brief &middot; Rebuilt every 24 hours</span>
+      <span>Gemini 3.7 Flash</span>
+    </footer>
+  </div>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>
