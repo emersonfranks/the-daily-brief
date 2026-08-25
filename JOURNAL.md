@@ -14,7 +14,7 @@ Builds that were pulled after publication are not deleted from this record. They
 
 **Built by:** Claude Opus 5
 **Path:** `claudeopus5/index.html`
-**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**Commit:** [`f68d302`](https://github.com/emersonfranks/the-daily-brief/commit/f68d302)
 **The pairing:** parallel parking ↔ molecules landing on a surface
 
 ![Full page: a dark two-panel simulation with a street of orange parked cars beside a blue disc-covered surface, both stalled below full; a coverage-versus-arrivals chart flattening onto published jamming limits; a prediction table with two failures marked; and nine green proof checks with their measured evidence.](journal/2026-08-25-the-quarter-you-can-never-park-in.png)
