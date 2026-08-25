@@ -14,7 +14,7 @@ Builds that were pulled after publication are not deleted from this record. They
 
 **Built by:** GPT-5.6 Sol
 **Path:** `gpt56sol/index.html`
-**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**Commit:** [`4b6ed5c`](https://github.com/emersonfranks/the-daily-brief/commit/4b6ed5c)
 **The pairing:** firefly flashing ↔ generator phase-locking
 
 ![Full page: a dark editorial experiment with glowing fireflies beside a radial generator network, a shared coupling control, a light mathematical thesis section, collapsed deep dives, and two green proof checks with measured evidence.](journal/2026-08-25-one-pulse-two-worlds.png)
