@@ -1,208 +1,256 @@
 // @ts-check
 
 /**
- * Draws one swarm twice. The two panels are fed the same `theta` array on the
- * same frame; nothing is simulated here and nothing is simulated separately per
- * panel. That is the whole argument of the page, so it is worth stating in code:
- * if the panels ever disagree it is a drawing bug, not two systems behaving
- * differently.
+ * Canvas drawing for the two panels and the coverage chart. Everything here
+ * reads simulation state and writes pixels; it never advances a simulation.
  */
 
-import { makeRandom } from './kuramoto.js';
-
-const LOCKED = '#ffcf5c';
-const DRIFTING = '#4a6b8a';
-
-/**
- * @typedef {object} Frame
- * @property {Float64Array} theta
- * @property {Float64Array} omega
- * @property {number} K
- * @property {number} r
- * @property {number} psi
- * @property {number[]} history Recent coherence values, oldest first.
- */
+const INK = '#0d1117';
+const CAR_BODY = '#e8743b';
+const CAR_TRIM = '#ffd7c2';
+const DISC_BODY = '#3d8fd1';
+const DISC_TRIM = '#cfe6f7';
+const MISS = '#c62d42';
+const ASPHALT = '#1c222b';
+const RULE = '#39424f';
 
 /**
  * @param {HTMLCanvasElement} canvas
- * @returns {{ ctx: CanvasRenderingContext2D, width: number, height: number }}
+ * @returns {CanvasRenderingContext2D}
  */
-function prepare(canvas) {
+export function fitCanvas(canvas) {
   const ratio = Math.min(window.devicePixelRatio || 1, 2);
-  const width = canvas.clientWidth;
-  const height = canvas.clientHeight;
-  if (canvas.width !== Math.round(width * ratio) || canvas.height !== Math.round(height * ratio)) {
-    canvas.width = Math.round(width * ratio);
-    canvas.height = Math.round(height * ratio);
-  }
-  const ctx = /** @type {CanvasRenderingContext2D} */ (canvas.getContext('2d'));
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = Math.max(1, Math.round(rect.width * ratio));
+  canvas.height = Math.max(1, Math.round(rect.height * ratio));
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('this browser did not provide a 2D canvas context');
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-  ctx.clearRect(0, 0, width, height);
-  return { ctx, width, height };
+  return ctx;
 }
 
 /**
- * @param {number} n
- * @param {number} seed
- * @returns {{ x: number, y: number, size: number }[]}
+ * The kerb is one long street folded into rows, the way a paragraph wraps.
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {import('./rsa.js').Kerb} kerb
+ * @param {number} rows
+ * @param {{ aim: number, age: number }[]} misses
+ * @param {number} w
+ * @param {number} h
  */
-function scatter(n, seed) {
-  const random = makeRandom(seed);
-  const spots = [];
-  for (let i = 0; i < n; i++) {
-    // Biased towards the lower half so the swarm reads as sitting in foliage
-    // rather than floating in a uniform box.
-    const y = 0.12 + 0.86 * Math.sqrt(random());
-    spots.push({ x: 0.04 + 0.92 * random(), y, size: 1.4 + 2.2 * random() });
-  }
-  return spots;
-}
+export function drawKerb(ctx, kerb, rows, misses, w, h) {
+  const perRow = kerb.length / rows;
+  const rowHeight = h / rows;
+  const unit = w / perRow;
+  const carHeight = Math.min(rowHeight * 0.56, 26);
 
-/**
- * @param {object} options
- * @param {HTMLCanvasElement} options.fireflies
- * @param {HTMLCanvasElement} options.rotors
- * @param {HTMLCanvasElement} options.trace
- * @param {number} options.n
- * @param {number} [options.seed]
- */
-export function createRenderer({ fireflies, rotors, trace, n, seed = 3 }) {
-  const spots = scatter(n, seed);
-
-  /**
-   * @param {Frame} frame
-   * @returns {Uint8Array} 1 where the oscillator is entrained by the mean field.
-   */
-  function lockedMask(frame) {
-    const mask = new Uint8Array(n);
-    const pull = frame.K * frame.r;
-    for (let i = 0; i < n; i++) mask[i] = Math.abs(frame.omega[i]) <= pull ? 1 : 0;
-    return mask;
-  }
-
-  /**
-   * @param {Frame} frame
-   * @param {Uint8Array} mask
-   */
-  function drawFireflies(frame, mask) {
-    const { ctx, width, height } = prepare(fireflies);
-    const backdrop = ctx.createLinearGradient(0, 0, 0, height);
-    backdrop.addColorStop(0, '#080d14');
-    backdrop.addColorStop(1, '#0d1520');
-    ctx.fillStyle = backdrop;
-    ctx.fillRect(0, 0, width, height);
-
-    for (let i = 0; i < n; i++) {
-      const phase = Math.cos(frame.theta[i]);
-      const glow = phase > 0 ? phase ** 10 : 0;
-      if (glow < 0.02) continue;
-      const spot = spots[i];
-      const x = spot.x * width;
-      const y = spot.y * height;
-      const radius = spot.size * (1 + 2.4 * glow);
-      const halo = ctx.createRadialGradient(x, y, 0, x, y, radius * 3.4);
-      const tint = mask[i] ? '255, 214, 110' : '132, 178, 226';
-      halo.addColorStop(0, `rgba(${tint}, ${0.95 * glow})`);
-      halo.addColorStop(0.35, `rgba(${tint}, ${0.34 * glow})`);
-      halo.addColorStop(1, `rgba(${tint}, 0)`);
-      ctx.fillStyle = halo;
-      ctx.beginPath();
-      ctx.arc(x, y, radius * 3.4, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-
-  /**
-   * @param {Frame} frame
-   * @param {Uint8Array} mask
-   */
-  function drawRotors(frame, mask) {
-    const { ctx, width, height } = prepare(rotors);
-    ctx.fillStyle = '#080d14';
-    ctx.fillRect(0, 0, width, height);
-
-    const cx = width / 2;
-    const cy = height / 2;
-    const ring = Math.min(width, height) * 0.36;
-
-    ctx.strokeStyle = 'rgba(120, 150, 180, 0.22)';
+  ctx.clearRect(0, 0, w, h);
+  for (let r = 0; r < rows; r += 1) {
+    const y = r * rowHeight + rowHeight / 2;
+    ctx.fillStyle = ASPHALT;
+    ctx.fillRect(0, y - carHeight * 0.85, w, carHeight * 1.7);
+    ctx.strokeStyle = RULE;
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.arc(cx, cy, ring, 0, Math.PI * 2);
+    ctx.moveTo(0, y + carHeight * 0.85);
+    ctx.lineTo(w, y + carHeight * 0.85);
     ctx.stroke();
+  }
 
-    for (let i = 0; i < n; i++) {
-      const angle = frame.theta[i];
-      const wobble = ring + ((i % 7) - 3) * 2.1;
-      const x = cx + wobble * Math.cos(angle);
-      const y = cy + wobble * Math.sin(angle);
-      ctx.fillStyle = mask[i] ? LOCKED : DRIFTING;
-      ctx.globalAlpha = mask[i] ? 0.85 : 0.5;
-      ctx.beginPath();
-      ctx.arc(x, y, mask[i] ? 2.3 : 1.7, 0, Math.PI * 2);
-      ctx.fill();
-    }
+  for (const miss of misses) {
+    const row = Math.floor(miss.aim / perRow);
+    if (row < 0 || row >= rows) continue;
+    const x = (miss.aim - row * perRow) * unit;
+    const y = row * rowHeight + rowHeight / 2;
+    ctx.globalAlpha = Math.max(0, 1 - miss.age / 18) * 0.75;
+    ctx.strokeStyle = MISS;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x, y - carHeight / 2, Math.max(unit * 0.96, 2), carHeight);
     ctx.globalAlpha = 1;
+  }
 
-    const armX = cx + ring * frame.r * Math.cos(frame.psi);
-    const armY = cy + ring * frame.r * Math.sin(frame.psi);
-    ctx.strokeStyle = '#ffcf5c';
+  for (const car of kerb.cars) {
+    let remaining = 1;
+    let start = car;
+    while (remaining > 1e-9) {
+      const row = Math.floor(start / perRow + 1e-9);
+      if (row >= rows) break;
+      const withinRow = start - row * perRow;
+      const span = Math.min(remaining, perRow - withinRow);
+      const x = withinRow * unit;
+      const y = row * rowHeight + rowHeight / 2;
+      const width = Math.max(span * unit - 1.5, 1);
+      ctx.fillStyle = CAR_BODY;
+      ctx.fillRect(x + 0.75, y - carHeight / 2, width, carHeight);
+      ctx.fillStyle = CAR_TRIM;
+      ctx.fillRect(x + 0.75, y - carHeight / 2 + 3, width, Math.max(carHeight * 0.22, 2));
+      start += span;
+      remaining -= span;
+    }
+  }
+}
+
+/**
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {import('./rsa.js').Membrane} membrane
+ * @param {{ x: number, y: number, age: number }[]} misses
+ * @param {number} w
+ * @param {number} h
+ */
+export function drawMembrane(ctx, membrane, misses, w, h) {
+  const side = Math.min(w, h);
+  const scale = side / membrane.size;
+  const ox = (w - side) / 2;
+  const oy = (h - side) / 2;
+
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = ASPHALT;
+  ctx.fillRect(ox, oy, side, side);
+
+  for (const miss of misses) {
+    ctx.globalAlpha = Math.max(0, 1 - miss.age / 18) * 0.75;
+    ctx.strokeStyle = MISS;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(ox + miss.x * scale, oy + miss.y * scale, membrane.radius * scale, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
+  const r = membrane.radius * scale;
+  for (let i = 0; i < membrane.xs.length; i += 1) {
+    const cx = ox + membrane.xs[i] * scale;
+    const cy = oy + membrane.ys[i] * scale;
+    // Periodic edges: draw the wrapped copy so the pattern reads as seamless.
+    for (const dx of [0, -side, side]) {
+      for (const dy of [0, -side, side]) {
+        const px = cx + dx;
+        const py = cy + dy;
+        if (px < ox - r || px > ox + side + r || py < oy - r || py > oy + side + r) continue;
+        ctx.fillStyle = DISC_BODY;
+        ctx.beginPath();
+        ctx.arc(px, py, r * 0.94, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = DISC_TRIM;
+        ctx.beginPath();
+        ctx.arc(px - r * 0.28, py - r * 0.28, r * 0.24, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+  ctx.strokeStyle = RULE;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(ox + 0.5, oy + 0.5, side - 1, side - 1);
+}
+
+/**
+ * @typedef {Object} Series
+ * @property {string} label
+ * @property {string} colour
+ * @property {{ t: number, coverage: number }[]} points
+ */
+
+/**
+ * @typedef {Object} Marker
+ * @property {string} label
+ * @property {string} colour
+ * @property {number} value
+ * @property {boolean} [dashed]
+ */
+
+/**
+ * Coverage against RSA time, log horizontal axis, with the published limits
+ * drawn as horizontal reference lines.
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {Series[]} series
+ * @param {Marker[]} markers
+ * @param {number} w
+ * @param {number} h
+ */
+export function drawChart(ctx, series, markers, w, h) {
+  const pad = { left: 52, right: 122, top: 16, bottom: 34 };
+  const plotW = w - pad.left - pad.right;
+  const plotH = h - pad.top - pad.bottom;
+  const tMin = 0.5;
+  const tMax = 4000;
+  const yMax = 1;
+
+  ctx.clearRect(0, 0, w, h);
+  const xOf = (/** @type {number} */ t) =>
+    pad.left + (Math.log(Math.max(t, tMin)) - Math.log(tMin)) / (Math.log(tMax) - Math.log(tMin)) * plotW;
+  const yOf = (/** @type {number} */ c) => pad.top + plotH - (c / yMax) * plotH;
+
+  ctx.strokeStyle = RULE;
+  ctx.fillStyle = '#8a94a3';
+  ctx.lineWidth = 1;
+  ctx.font = '12px ui-monospace, SFMono-Regular, Menlo, monospace';
+  ctx.textAlign = 'right';
+  for (let c = 0; c <= 1.0001; c += 0.25) {
+    const y = yOf(c);
+    ctx.globalAlpha = 0.35;
+    ctx.beginPath();
+    ctx.moveTo(pad.left, y);
+    ctx.lineTo(pad.left + plotW, y);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.fillText(`${Math.round(c * 100)}%`, pad.left - 8, y + 4);
+  }
+  ctx.textAlign = 'center';
+  for (const t of [1, 10, 100, 1000]) {
+    const x = xOf(t);
+    ctx.globalAlpha = 0.35;
+    ctx.beginPath();
+    ctx.moveTo(x, pad.top);
+    ctx.lineTo(x, pad.top + plotH);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.fillText(String(t), x, pad.top + plotH + 20);
+  }
+  ctx.fillText('arrivals per unit of space  (log scale)', pad.left + plotW / 2, h - 4);
+
+  // Two of the reference lines sit barely a point apart, so their labels are
+  // nudged down the page even though the lines themselves stay where they are.
+  let lastLabelY = -Infinity;
+  for (const marker of [...markers].sort((a, b) => b.value - a.value)) {
+    const y = yOf(marker.value);
+    ctx.strokeStyle = marker.colour;
+    ctx.setLineDash(marker.dashed ? [3, 4] : [7, 5]);
+    ctx.lineWidth = marker.dashed ? 1 : 1.5;
+    ctx.beginPath();
+    ctx.moveTo(pad.left, y);
+    ctx.lineTo(pad.left + plotW, y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    const labelY = Math.max(y + 4, lastLabelY + 15);
+    lastLabelY = labelY;
+    if (Math.abs(labelY - (y + 4)) > 1) {
+      ctx.beginPath();
+      ctx.moveTo(pad.left + plotW, y);
+      ctx.lineTo(pad.left + plotW + 6, labelY - 4);
+      ctx.stroke();
+    }
+    ctx.fillStyle = marker.colour;
+    ctx.textAlign = 'left';
+    ctx.fillText(marker.label, pad.left + plotW + 8, labelY);
+  }
+
+  for (const s of series) {
+    if (s.points.length < 2) continue;
+    ctx.strokeStyle = s.colour;
     ctx.lineWidth = 2.5;
     ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(armX, armY);
+    s.points.forEach((p, i) => {
+      const x = xOf(p.t);
+      const y = yOf(p.coverage);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
     ctx.stroke();
-    ctx.fillStyle = '#ffcf5c';
-    ctx.beginPath();
-    ctx.arc(armX, armY, 4, 0, Math.PI * 2);
-    ctx.fill();
   }
 
-  /**
-   * @param {Frame} frame
-   * @param {number} critical
-   */
-  function drawTrace(frame, critical) {
-    const { ctx, width, height } = prepare(trace);
-    ctx.fillStyle = '#080d14';
-    ctx.fillRect(0, 0, width, height);
-
-    ctx.strokeStyle = 'rgba(120, 150, 180, 0.2)';
-    ctx.lineWidth = 1;
-    for (const level of [0.25, 0.5, 0.75]) {
-      const y = height - level * height;
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(width, y);
-      ctx.stroke();
-    }
-
-    const points = frame.history;
-    if (points.length > 1) {
-      ctx.strokeStyle = frame.K >= critical ? LOCKED : '#6f93b8';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      points.forEach((value, index) => {
-        const x = (index / (points.length - 1)) * width;
-        const y = height - value * height;
-        if (index === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-      });
-      ctx.stroke();
-    }
-  }
-
-  return {
-    /**
-     * @param {Frame} frame
-     * @param {number} critical
-     */
-    draw(frame, critical) {
-      const mask = lockedMask(frame);
-      drawFireflies(frame, mask);
-      drawRotors(frame, mask);
-      drawTrace(frame, critical);
-      return mask;
-    },
-  };
+  ctx.strokeStyle = RULE;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(pad.left + 0.5, pad.top + 0.5, plotW, plotH);
+  ctx.fillStyle = INK;
 }

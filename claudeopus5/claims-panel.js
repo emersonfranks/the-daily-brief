@@ -1,107 +1,108 @@
 // @ts-check
 
 /**
- * Browser side of the proof appendix. Imports the same `claims.js` that
- * `node --test` runs, so a reader clicking the button executes the assertions CI
- * executes rather than a replica that could drift away from them.
- *
- * Deliberately not named test-*.js: Node's test runner would pick that pattern up
- * and try to run this file, which dies on the first mention of `document`.
+ * The proof appendix. It imports the same `claims.js` that `node --test` runs,
+ * so a reader watching the results here is watching the checks continuous
+ * integration performs before this page is allowed to publish.
  */
 
 import { claims } from './claims.js';
 
-/** @returns {Promise<void>} Lets the browser paint between claims. */
-function yieldToPaint() {
-  return new Promise((resolve) => setTimeout(resolve, 0));
-}
+/** @param {number} ms */
+const yieldToPaint = (ms = 0) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
- * @param {object} options
- * @param {HTMLElement} options.list
- * @param {HTMLButtonElement} options.button
- * @param {HTMLElement} options.summary
+ * @param {HTMLElement} root
  */
-export function mountClaimsPanel({ list, button, summary }) {
-  /** @type {Map<string, HTMLElement>} */
-  const bodies = new Map();
+export function mountClaimsPanel(root) {
+  const button = document.createElement('button');
+  button.className = 'run-claims';
+  button.textContent = `Run all ${claims.length} checks`;
 
+  const summary = document.createElement('p');
+  summary.className = 'claims-summary';
+  summary.textContent = 'Not yet run. Each check re-runs the simulation in your browser and prints what it measured.';
+
+  const list = document.createElement('ol');
+  list.className = 'claims-list';
+
+  /** @type {Map<string, HTMLLIElement>} */
+  const rows = new Map();
   for (const claim of claims) {
     const item = document.createElement('li');
-    item.className = 'claim';
-    item.dataset.state = 'idle';
-
-    const title = document.createElement('h3');
-    title.textContent = claim.title;
-
-    const catches = document.createElement('p');
-    catches.className = 'catches';
-    catches.innerHTML = `<b>What a failure would mean.</b> ${claim.catches}`;
-
-    const bound = document.createElement('p');
-    bound.className = 'bound';
-    bound.innerHTML = `<b>Threshold.</b> ${claim.bound}`;
-
-    const body = document.createElement('div');
-    body.className = 'claim-evidence';
-    body.textContent = 'not run yet';
-
-    item.append(title, catches, bound, body);
+    item.className = 'claim pending';
+    item.innerHTML = `
+      <div class="claim-head"><span class="claim-state">waiting</span><span class="claim-title"></span></div>
+      <p class="claim-catches"></p>
+      <div class="claim-evidence"></div>`;
+    const title = item.querySelector('.claim-title');
+    const catches = item.querySelector('.claim-catches');
+    if (title) title.textContent = claim.title;
+    if (catches) catches.textContent = `Catches: ${claim.catches}`;
+    rows.set(claim.id, item);
     list.append(item);
-    bodies.set(claim.id, item);
   }
 
   button.addEventListener('click', async () => {
     button.disabled = true;
     let passed = 0;
     let failed = 0;
-
+    const started = performance.now();
     for (const claim of claims) {
-      const item = /** @type {HTMLElement} */ (bodies.get(claim.id));
-      const body = /** @type {HTMLElement} */ (item.querySelector('.claim-evidence'));
-      item.dataset.state = 'running';
-      body.textContent = 'measuring\u2026';
-      summary.textContent = `running ${claim.title.toLowerCase()}\u2026`;
-      await yieldToPaint();
+      const row = rows.get(claim.id);
+      if (!row) continue;
+      row.className = 'claim running';
+      const state = row.querySelector('.claim-state');
+      const evidence = row.querySelector('.claim-evidence');
+      if (state) state.textContent = 'running';
+      if (evidence) evidence.textContent = '';
+      summary.textContent = `Running "${claim.title}"…`;
+      await yieldToPaint(16);
 
       try {
-        const evidence = claim.verify();
-        item.dataset.state = 'pass';
-        body.replaceChildren(...evidence.map(renderRow));
-        passed++;
+        const result = claim.verify();
+        passed += 1;
+        row.className = 'claim passed';
+        if (state) state.textContent = 'passed';
+        if (evidence) evidence.append(evidenceTable(result));
       } catch (error) {
-        item.dataset.state = 'fail';
-        const message = document.createElement('p');
-        message.className = 'evidence-fail';
-        message.textContent = error instanceof Error ? error.message : String(error);
-        body.replaceChildren(message);
-        failed++;
+        failed += 1;
+        row.className = 'claim failed';
+        if (state) state.textContent = 'failed';
+        if (evidence) {
+          const message = document.createElement('p');
+          message.className = 'claim-error';
+          message.textContent = error instanceof Error ? error.message : String(error);
+          evidence.append(message);
+        }
       }
-      await yieldToPaint();
+      await yieldToPaint(16);
     }
-
+    const seconds = ((performance.now() - started) / 1000).toFixed(1);
     summary.textContent = failed === 0
-      ? `${passed} of ${claims.length} claims verified against a live run`
-      : `${failed} of ${claims.length} claims FAILED on this run`;
-    summary.dataset.state = failed === 0 ? 'pass' : 'fail';
+      ? `All ${passed} checks passed in ${seconds}s, measured just now on this machine.`
+      : `${passed} passed, ${failed} failed in ${seconds}s. A failure here means a claim on this page is wrong.`;
+    summary.className = failed === 0 ? 'claims-summary ok' : 'claims-summary bad';
     button.disabled = false;
-    button.textContent = 'run all claims again';
+    button.textContent = `Run all ${claims.length} checks again`;
   });
+
+  root.append(button, summary, list);
 }
 
 /**
- * @param {{ label: string, value: string, ok?: boolean }} row
+ * @param {Record<string, unknown>} result
  * @returns {HTMLElement}
  */
-function renderRow(row) {
-  const line = document.createElement('p');
-  line.className = 'evidence-row';
-  const label = document.createElement('span');
-  label.className = 'evidence-label';
-  label.textContent = row.label;
-  const value = document.createElement('span');
-  value.className = 'evidence-value';
-  value.textContent = row.value;
-  line.append(label, value);
-  return line;
+function evidenceTable(result) {
+  const table = document.createElement('dl');
+  table.className = 'evidence';
+  for (const [key, value] of Object.entries(result)) {
+    const dt = document.createElement('dt');
+    dt.textContent = key;
+    const dd = document.createElement('dd');
+    dd.textContent = String(value);
+    table.append(dt, dd);
+  }
+  return table;
 }

@@ -1,152 +1,211 @@
 // @ts-check
 
 /**
- * Wires the simulation to the page. Holds no physics of its own: everything
- * numeric comes from `kuramoto.js`, so what the reader watches and what the
- * tests check are the same code.
+ * Wires the two simulations to the canvases and the controls. This file owns the
+ * animation loop and the DOM; the simulations themselves live in `rsa.js` and
+ * know nothing about either.
  */
 
-import { createSwarm, step, coherence, criticalCoupling, lorentzianFrequencies, makeRandom } from './kuramoto.js';
-import { createRenderer } from './renderer.js';
+import {
+  createKerb,
+  createMembrane,
+  attemptPark,
+  attemptPolitePark,
+  attemptAdsorb,
+  kerbCoverage,
+  membraneCoverage,
+  kerbTime,
+  membraneTime,
+  makeRandom,
+  RENYI_CONSTANT,
+  DISK_JAMMING_COVERAGE,
+  PALASTI_CONJECTURE,
+} from './rsa.js';
+import { fitCanvas, drawKerb, drawMembrane, drawChart } from './renderer.js';
 import { mountClaimsPanel } from './claims-panel.js';
 
-const POPULATION = 320;
-const DT = 0.02;
-// Five steps a frame puts a settle at roughly three seconds of watching. Two was
-// faithful and unusable: dragging the slider meant waiting twelve seconds to find
-// out whether anything had happened.
-const STEPS_PER_FRAME = 5;
-// 300 frames x 5 steps x dt = 30 seconds of simulated time, matching the caption.
-const HISTORY_LENGTH = 300;
+const KERB_LENGTH = 144;
+const KERB_ROWS = 6;
+const MEMBRANE_SIZE = 24;
+const TIME_PER_FRAME = 0.35;
+const STALL_TIME = 2000;
 
-/**
- * @param {string} id
- * @returns {HTMLElement}
- */
-function need(id) {
-  const element = document.getElementById(id);
-  if (!element) throw new Error(`missing element #${id}`);
-  return element;
-}
-
-const couplingInput = /** @type {HTMLInputElement} */ (need('coupling'));
-const spreadInput = /** @type {HTMLInputElement} */ (need('spread'));
-const freezeInput = /** @type {HTMLInputElement} */ (need('freeze'));
-const marker = need('coupling-marker');
-
-const outputs = {
-  coupling: need('coupling-out'),
-  spread: need('spread-out'),
-  r: need('r-value'),
-  k: need('k-value'),
-  kc: need('kc-value'),
-  locked: need('locked-value'),
-  status: need('status'),
+/** @param {string} id */
+const el = (id) => {
+  const node = document.getElementById(id);
+  if (!node) throw new Error(`missing element #${id}`);
+  return node;
 };
 
-const renderer = createRenderer({
-  fireflies: /** @type {HTMLCanvasElement} */ (need('fireflies')),
-  rotors: /** @type {HTMLCanvasElement} */ (need('rotors')),
-  trace: /** @type {HTMLCanvasElement} */ (need('trace')),
-  n: POPULATION,
-});
+const kerbCanvas = /** @type {HTMLCanvasElement} */ (el('kerb-canvas'));
+const membraneCanvas = /** @type {HTMLCanvasElement} */ (el('membrane-canvas'));
+const chartCanvas = /** @type {HTMLCanvasElement} */ (el('chart-canvas'));
+const playButton = /** @type {HTMLButtonElement} */ (el('play'));
+const stallButton = /** @type {HTMLButtonElement} */ (el('to-stall'));
+const resetButton = /** @type {HTMLButtonElement} */ (el('reset'));
+const speedInput = /** @type {HTMLInputElement} */ (el('speed'));
+const politeInput = /** @type {HTMLInputElement} */ (el('polite'));
 
-let gamma = Number(spreadInput.value);
-let coupling = Number(couplingInput.value);
-let swarm = createSwarm({ n: POPULATION, gamma, seed: 11 });
-/** @type {number[]} */
-let history = [];
-const scatterPhases = makeRandom(99);
+const world = {
+  kerb: createKerb(KERB_LENGTH),
+  membrane: createMembrane(MEMBRANE_SIZE),
+  kerbRandom: makeRandom(11),
+  membraneRandom: makeRandom(11),
+  /** @type {{ aim: number, age: number }[]} */ kerbMisses: [],
+  /** @type {{ x: number, y: number, age: number }[]} */ membraneMisses: [],
+  /** @type {{ t: number, coverage: number }[]} */ kerbTrace: [],
+  /** @type {{ t: number, coverage: number }[]} */ membraneTrace: [],
+  time: 0,
+  running: true,
+  polite: false,
+};
 
-function syncMarker() {
-  const critical = criticalCoupling(gamma);
-  const max = Number(couplingInput.max);
-  marker.style.left = `${Math.min(100, (critical / max) * 100)}%`;
-  outputs.kc.textContent = critical.toFixed(2);
+function reset() {
+  const seed = 11 + Math.floor(Math.random() * 1000);
+  world.kerb = createKerb(KERB_LENGTH);
+  world.membrane = createMembrane(MEMBRANE_SIZE);
+  world.kerbRandom = makeRandom(seed);
+  world.membraneRandom = makeRandom(seed + 1);
+  world.kerbMisses = [];
+  world.membraneMisses = [];
+  world.kerbTrace = [];
+  world.membraneTrace = [];
+  world.time = 0;
 }
 
-/**
- * Replace the natural frequencies in place, keeping the phases the swarm has
- * already reached so the reader sees the threshold move rather than the whole
- * picture restarting.
- */
-function applySpread() {
-  const omega = lorentzianFrequencies(POPULATION, gamma);
-  swarm.omega.set(omega);
-  Object.assign(swarm, { gamma });
-  syncMarker();
+/** @param {number} dt advance in dimensionless RSA time */
+function advance(dt) {
+  world.time += dt;
+  const kerb = world.kerb;
+  const kerbTarget = world.time * kerb.length;
+  let guard = 0;
+  while (kerb.attempts < kerbTarget && !kerb.jammed && guard < 40000) {
+    guard += 1;
+    const parked = world.polite
+      ? attemptPolitePark(kerb, world.kerbRandom)
+      : attemptPark(kerb, world.kerbRandom);
+    if (!parked) world.kerbMisses.push({ aim: kerb.lastAim, age: 0 });
+  }
+
+  const membrane = world.membrane;
+  const perTime = (membrane.size * membrane.size) / (Math.PI * membrane.radius * membrane.radius);
+  const membraneTarget = world.time * perTime;
+  guard = 0;
+  while (membrane.attempts < membraneTarget && guard < 60000) {
+    guard += 1;
+    if (!attemptAdsorb(membrane, world.membraneRandom)) {
+      world.membraneMisses.push({ x: membrane.lastAimX, y: membrane.lastAimY, age: 0 });
+    }
+  }
+
+  world.kerbMisses = world.kerbMisses.slice(-14).map((m) => ({ ...m, age: m.age + 1 })).filter((m) => m.age < 18);
+  world.membraneMisses = world.membraneMisses.slice(-18).map((m) => ({ ...m, age: m.age + 1 })).filter((m) => m.age < 18);
+
+  if (world.time > 0) {
+    world.kerbTrace.push({ t: kerbTime(kerb), coverage: kerbCoverage(kerb) });
+    world.membraneTrace.push({ t: membraneTime(membrane), coverage: membraneCoverage(membrane) });
+    if (world.kerbTrace.length > 4000) world.kerbTrace = world.kerbTrace.filter((_, i) => i % 2 === 0);
+    if (world.membraneTrace.length > 4000) world.membraneTrace = world.membraneTrace.filter((_, i) => i % 2 === 0);
+  }
 }
 
-/**
- * @param {number} r
- * @returns {{ text: string, state: string }}
- */
-function describeGrid(r) {
-  if (r >= 0.55) return { text: 'grid synchronised \u00b7 swarm in unison', state: 'locked' };
-  if (r >= 0.2) return { text: 'grid straining \u00b7 partial rhythm', state: 'strained' };
-  return { text: 'grid dark \u00b7 every clock its own way', state: 'dark' };
-}
+/** @param {number} value @param {number} [dp] */
+const pct = (value, dp = 1) => `${(value * 100).toFixed(dp)}%`;
 
-function render() {
-  const field = coherence(swarm.theta);
-  history.push(field.r);
-  if (history.length > HISTORY_LENGTH) history.shift();
-
-  const mask = renderer.draw(
-    { theta: swarm.theta, omega: swarm.omega, K: coupling, r: field.r, psi: field.psi, history },
-    criticalCoupling(gamma),
+function paint() {
+  const kerbCtx = fitCanvas(kerbCanvas);
+  drawKerb(
+    kerbCtx,
+    world.kerb,
+    KERB_ROWS,
+    world.kerbMisses,
+    kerbCanvas.getBoundingClientRect().width,
+    kerbCanvas.getBoundingClientRect().height,
   );
 
-  let locked = 0;
-  for (let i = 0; i < mask.length; i++) locked += mask[i];
+  const membraneCtx = fitCanvas(membraneCanvas);
+  drawMembrane(
+    membraneCtx,
+    world.membrane,
+    world.membraneMisses,
+    membraneCanvas.getBoundingClientRect().width,
+    membraneCanvas.getBoundingClientRect().height,
+  );
 
-  outputs.r.textContent = field.r.toFixed(2);
-  outputs.k.textContent = coupling.toFixed(2);
-  outputs.locked.textContent = `${Math.round((locked / POPULATION) * 100)}%`;
+  const chartCtx = fitCanvas(chartCanvas);
+  drawChart(
+    chartCtx,
+    [
+      { label: 'kerb', colour: '#e8743b', points: world.kerbTrace },
+      { label: 'membrane', colour: '#3d8fd1', points: world.membraneTrace },
+    ],
+    [
+      { label: `74.76% kerb`, colour: '#e8743b', value: RENYI_CONSTANT },
+      { label: `55.89% Palásti`, colour: '#9d8cd4', value: PALASTI_CONJECTURE, dashed: true },
+      { label: `54.71% discs`, colour: '#3d8fd1', value: DISK_JAMMING_COVERAGE },
+    ],
+    chartCanvas.getBoundingClientRect().width,
+    chartCanvas.getBoundingClientRect().height,
+  );
 
-  const status = describeGrid(field.r);
-  outputs.status.textContent = status.text;
-  outputs.status.dataset.state = status.state;
+  el('kerb-coverage').textContent = pct(kerbCoverage(world.kerb));
+  el('kerb-cars').textContent = String(world.kerb.cars.length);
+  el('kerb-attempts').textContent = world.kerb.attempts.toLocaleString();
+  el('kerb-waste').textContent = pct(1 - kerbCoverage(world.kerb));
+  el('membrane-coverage').textContent = pct(membraneCoverage(world.membrane));
+  el('membrane-discs').textContent = String(world.membrane.xs.length);
+  el('membrane-attempts').textContent = world.membrane.attempts.toLocaleString();
+  el('membrane-waste').textContent = pct(1 - membraneCoverage(world.membrane));
+  el('clock').textContent = world.time.toFixed(1);
 }
 
 function frame() {
-  if (!freezeInput.checked) {
-    for (let i = 0; i < STEPS_PER_FRAME; i++) step(swarm, coupling, DT);
-  }
-  render();
+  if (world.running) advance(TIME_PER_FRAME * Number(speedInput.value));
+  paint();
   requestAnimationFrame(frame);
 }
 
-couplingInput.addEventListener('input', () => {
-  coupling = Number(couplingInput.value);
-  outputs.coupling.textContent = coupling.toFixed(2);
+playButton.addEventListener('click', () => {
+  world.running = !world.running;
+  playButton.textContent = world.running ? 'Pause' : 'Resume';
 });
 
-spreadInput.addEventListener('input', () => {
-  gamma = Number(spreadInput.value);
-  outputs.spread.textContent = gamma.toFixed(2);
-  applySpread();
+resetButton.addEventListener('click', () => {
+  reset();
+  paint();
 });
 
-need('knock').addEventListener('click', () => {
-  for (let i = 0; i < swarm.n; i++) swarm.theta[i] = scatterPhases() * 2 * Math.PI;
+stallButton.addEventListener('click', () => {
+  const wasRunning = world.running;
+  world.running = false;
+  stallButton.disabled = true;
+  stallButton.textContent = 'Running…';
+  const tick = () => {
+    for (let i = 0; i < 30 && world.time < STALL_TIME; i += 1) advance(4);
+    paint();
+    if (world.time < STALL_TIME) {
+      requestAnimationFrame(tick);
+      return;
+    }
+    stallButton.disabled = false;
+    stallButton.textContent = 'Fast-forward to the stall';
+    world.running = wasRunning;
+  };
+  requestAnimationFrame(tick);
 });
 
-need('reset').addEventListener('click', () => {
-  swarm = createSwarm({ n: POPULATION, gamma, seed: 11 });
-  history = [];
+politeInput.addEventListener('change', () => {
+  world.polite = politeInput.checked;
+  // The two rules are different processes, so the street starts again rather
+  // than carrying over a layout that the other rule produced.
+  reset();
+  paint();
 });
 
-outputs.coupling.textContent = coupling.toFixed(2);
-outputs.spread.textContent = gamma.toFixed(2);
-syncMarker();
-mountClaimsPanel({
-  list: need('claims-list'),
-  button: /** @type {HTMLButtonElement} */ (need('run-claims')),
-  summary: need('claims-summary'),
-});
-// Paint once before the loop starts, so a page opened in a background tab shows a
-// composed frame rather than an empty canvas until it is focused.
-render();
-window.addEventListener('resize', render);
+window.addEventListener('resize', paint);
+
+mountClaimsPanel(el('claims-root'));
+// A fresh street on every load: the ceiling should not depend on which one.
+reset();
+paint();
 requestAnimationFrame(frame);

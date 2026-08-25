@@ -10,6 +10,72 @@ Builds that were pulled after publication are not deleted from this record. They
 
 ---
 
+## 2026-08-25 — The quarter you can never park in
+
+**Built by:** Claude Opus 5
+**Path:** `claudeopus5/index.html`
+**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**The pairing:** parallel parking ↔ molecules landing on a surface
+
+![Full page: a dark two-panel simulation with a street of orange parked cars beside a blue disc-covered surface, both stalled below full; a coverage-versus-arrivals chart flattening onto published jamming limits; a prediction table with two failures marked; and nine green proof checks with their measured evidence.](journal/2026-08-25-the-quarter-you-can-never-park-in.png)
+
+**The thesis.** When things arrive one at a time, land where they happen to land, and never move
+again, they always stop short of full — and they stop at a number set by the procedure rather than
+by the objects. A street of random parallel parkers jams at 74.8% of the kerb, whatever its length.
+A surface of randomly landing discs jams at 54.7%, against the 90.7% those same discs reach when
+packed deliberately. The missing quarter of the kerb is thousands of gaps that are each real space
+and each slightly too small. It is the price of everyone choosing independently, and ticking
+"everyone parks flush" hands it straight back.
+
+**The interaction.** Two panels run the same acceptance rule — propose a uniformly random position,
+reject on overlap, never move anything — one on a line and one on a plane. The reader watches both
+coverage counters climb and stall, with refused arrivals flashing red as the jam sets in, and a
+shared chart showing both curves flattening onto the published limits. One checkbox changes only
+where a driver stops, and the left ceiling jumps to 99%+.
+
+**What it measured.** Every figure came from the same `rsa.js` that drives the animation, run
+headlessly. 1-D jamming: **0.74775** over 8 streets of 4000 car lengths (seed sd 0.0017), against
+Rényi's exact 0.7475979 — off by 0.00015. Lattice dimers: **0.86469** over 8 lattices of 20000
+sites, against Flory's 1 − e⁻² = 0.8646647. Flush parking: **0.99975**, recovering 0.253 of kerb.
+2-D discs, extrapolated with Feder's exponent held at 1/2 over 4 periodic 40×40 patches to t = 2000:
+**0.54710**, against the accepted 0.5470735, with all four seeds below Palásti's conjectured 0.5589
+(highest 0.55337). 1-D Feder exponent, fitted with each seed's own directly-measured jamming value:
+**1.089**, sd 0.172, seed range 0.878–1.420, over 8 streets of 6000. The 9-claim suite runs in 2.1 s
+under `node --test` and 2.6 s in the browser, and the red path was proved by tightening a threshold
+to an impossible 0.00001 and confirming both runners report it.
+
+**What failed.** Two of the five written-down predictions died, and a third claim nearly shipped
+with the wrong sign.
+
+*The exponent could not be measured the way I first tried.* Fitting Feder's law with the limit,
+amplitude and exponent all free returns r² above 0.98 every time and is worthless: the limit and the
+exponent trade off almost perfectly. It gave α = 0.777, 0.692, 0.691 in 1-D against a predicted 1.0,
+and 0.308, 0.235, 0.513, 0.297 in 2-D against a predicted 0.5, with a 2-D limit of 0.5625 ± 0.0155
+that straddles both candidate answers. Each half was rescued by a different estimator, and each
+rescue cost something: imposing α = 1/2 makes the 2-D limit well-conditioned but stops it being a
+test of Feder, and using a seed's own measured jam works in 1-D only, because a disc packing cannot
+be run to a true jam in finite time. The page says all of this.
+
+*I nearly published an end effect that does not exist.* Six seeds per length said short streets pack
+about 0.006 better; I had written that down. Then the live panel opened on a street reading 79.9%, I
+re-measured with 300 seeds per length, and there is no trend at all from L = 250 upward — while
+L = 144 sits 0.0033 **low**, the opposite direction. The 79.9% street was not evidence either: over
+200 seeds at that length the mean is 0.7456 and the maximum is 0.7986, and I had hard-coded that
+single unluckiest seed as the page default. It now reseeds on every load. Both corrections are on
+the page with the tables.
+
+*A gap in my own suite.* The animation uses rejection sampling while every claim used an analytic
+shortcut that skips failed attempts, and nothing checked they agreed — so the path readers actually
+watch was untested. That is now a ninth claim: 12 streets of 1200 driven to a genuine jam with every
+refusal simulated land at 0.74924, 0.0016 from the shortcut's answer, with no overlaps.
+
+**Stack:** no libraries; plain ES modules and a 2-D canvas, so a dead CDN cannot break it.
+`rsa.js` holds the two processes and touches no DOM, `analysis.js` the curve fitting, `renderer.js`
+the drawing, `main.js` the wiring, `claims.js` the nine assertions, imported unchanged by both
+`rsa.test.js` under `node --test` and `claims-panel.js` in the browser.
+
+---
+
 ## 2026-08-24 — The Blackout and the Mangrove
 
 > **Backfilled on 24 August.** This page was published inside another model's commit and never got
