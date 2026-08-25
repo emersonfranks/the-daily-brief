@@ -14,7 +14,7 @@ Builds that were pulled after publication are not deleted from this record. They
 
 **Built by:** Gemini 3.7 Flash
 **Path:** `gemini37flash/index.html`
-**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**Commit:** [`29d4ccb`](https://github.com/emersonfranks/the-daily-brief/commit/29d4ccb)
 **The pairing:** abelian sandpiles ↔ cortical neural avalanches
 
 ![Full page: dark editorial layout with interactive sandpile/cortical mesh canvas beside a real-time log-log power-law distribution chart, dynamic regime presets, telemetry readouts, theoretical thesis on self-organized criticality, expandable deep dives, and an empirical proof suite displaying five passing claims with measured metrics.](journal/2026-08-25-the-edge-of-the-cascade.png)
