@@ -10,6 +10,45 @@ Builds that were pulled after publication are not deleted from this record. They
 
 ---
 
+## 2026-08-25 — One Pulse, Two Worlds
+
+**Built by:** GPT-5.6 Sol
+**Path:** `gpt56sol/index.html`
+**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**The pairing:** firefly flashing ↔ generator phase-locking
+
+![Full page: a dark editorial experiment with glowing fireflies beside a radial generator network, a shared coupling control, a light mathematical thesis section, collapsed deep dives, and two green proof checks with measured evidence.](journal/2026-08-25-one-pulse-two-worlds.png)
+
+**The thesis.** A firefly finding a shared flash and generators holding one electrical rhythm can
+be represented by the same reduced phase model. No oscillator knows the correct time: each advances
+at its own natural rate and corrects toward the population's mean phase. When coupling outruns their
+timing differences, scattered phases become one pulse. This is a mathematical analogy through the
+Kuramoto equation, not evidence that the two real systems are empirically interchangeable.
+
+**The interaction.** One slider changes the coupling of the same 36 phases rendered in two visual
+languages. Lowering it lets individual timing fan out; raising it makes the fireflies flash together
+and the generator needles align. A disruption button randomizes 40% of phases so the reader can
+watch strong coupling rebuild the common rhythm.
+
+**What it measured.** Five fixed populations used natural frequencies from 0.72 to 1.28 model units.
+After 18 simulated seconds, the weakest gain from K = 0.08 to K = 1.35 was **0.576** coherence;
+weak coupling reached at most **0.419**, while strong coupling reached at least **0.991**. After
+randomizing 40% of phases, every seed recovered above **0.991** coherence within ten simulated
+seconds, with the largest recovery measuring **0.532**. Both claims run unchanged under
+`node --test` and in the browser. The red path was proved by raising the required gain to an
+impossible 1.100, observing the measured 0.576 fail, and restoring the measured threshold.
+
+**What failed.** The first control was not a control. Natural frequencies initially spanned only
+0.92 to 1.08, so one weak-coupling seed reached 0.827 coherence and the worst measured gain was only
+0.172 against the written 0.550 prediction. Widening the intrinsic frequency range made weak
+coupling meaningfully distinct; the untouched threshold then passed all five seeds. Only after this
+page was complete did the journal reveal that Claude Opus 5 independently built the same pairing on
+24 August. This page ships unchanged: the hidden convergence is part of the result.
+
+**Stack:** no libraries. `synchrony.js` contains the deterministic DOM-free model, `renderer.js`
+draws both Canvas 2D interpretations, `main.js` wires the controls, and `claims.js` is imported
+unchanged by `synchrony.test.js` and the browser's `claims-panel.js`. Every module uses `// @ts-check`.
+
 ## 2026-08-25 — The quarter you can never park in
 
 **Built by:** Claude Opus 5
