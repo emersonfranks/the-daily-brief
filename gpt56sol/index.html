@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f3f0e8">
+    <title>One More Reply — The Daily Brief</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="masthead">
+      <a class="edition" href="../index.html">THE DAILY BRIEF · 26 AUG 2026</a>
+      <span class="issue">FIELD NOTE 056</span>
+    </header>
+
+    <main>
+      <section class="hero">
+        <p class="kicker">EMAIL THREADS <span>MEET</span> NUCLEAR PHYSICS</p>
+        <h1>One more<br><em>reply.</em></h1>
+        <p class="deck">An inbox pile-on and a fission chain share one dangerous question: does each event make, on average, less than one successor — or more?</p>
+        <div class="thesis-mark" aria-hidden="true">1</div>
+      </section>
+
+      <section class="experiment" aria-labelledby="experiment-title">
+        <div class="experiment-heading">
+          <div>
+            <p class="section-number">01 / THE EXPERIMENT</p>
+            <h2 id="experiment-title">Drag through one.</h2>
+          </div>
+          <p>Move the reproduction control across the threshold. Watch the same branching event become an email thread on the left and a fission chain on the right.</p>
+        </div>
+
+        <div class="control-band">
+          <label for="mean-input">
+            <span>SUCCESSORS PER EVENT</span>
+            <strong id="mean-value">1.28</strong>
+          </label>
+          <input id="mean-input" type="range" min="0.45" max="1.55" step="0.01" value="1.28">
+          <output id="regime-label">ABLE TO RUN AWAY</output>
+          <div class="button-group">
+            <button id="replay-button" type="button" title="Replay this cascade" aria-label="Replay this cascade">↻</button>
+            <button id="reseed-button" type="button">NEW SPARK</button>
+          </div>
+        </div>
+
+        <div class="canvas-frame">
+          <canvas id="cascade-canvas" aria-label="Synchronized branching diagrams for an email reply chain and a nuclear fission chain"></canvas>
+          <div class="live-stats" aria-live="polite">
+            <span><b id="event-count">1</b> events visible</span>
+            <span><b id="generation-count">0</b> generations deep</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="thesis" aria-labelledby="thesis-title">
+        <p class="section-number">02 / THE CONNECTION</p>
+        <div class="thesis-grid">
+          <h2 id="thesis-title">The subject changes.<br>The branching rule does not.</h2>
+          <div>
+            <p class="lead">In this model, a reply invites replies exactly as a fission event releases neutrons that may trigger more fissions. Below one successor per event, the chain almost surely runs out. Above one, survival becomes possible.</p>
+            <p>This is a <strong>mathematical analogy</strong>, not evidence that office email is nuclear physics. Both panels reinterpret the same Galton–Watson branching process; they are identical because the page makes them identical.</p>
+          </div>
+        </div>
+        <div class="measured-strip">
+          <div><strong>100.0%</strong><span>extinct by generation 14 at 0.72</span></div>
+          <div><strong>36.5%</strong><span>still alive at generation 14 at 1.28</span></div>
+          <div><strong>37.2×</strong><span>larger mean cascade above the threshold</span></div>
+        </div>
+      </section>
+
+      <section class="depth">
+        <p class="section-number">03 / BENEATH THE METAPHOR</p>
+        <details>
+          <summary><span>The mechanics and their limits</span><b>+</b></summary>
+          <div class="details-grid">
+            <p>The Galton–Watson process, associated with Francis Galton and Henry William Watson, tracks independent offspring from one generation to the next. Here offspring counts are sampled from a Poisson distribution with the slider as its mean.</p>
+            <p>A real reactor depends on neutron energy, geometry, delayed neutrons, leakage, and control systems. A real email thread depends on people, hierarchy, time, and context. This small model tests only the shared threshold logic, not either system in full.</p>
+            <p>The prediction would fail here if increasing the mean did not raise fixed-seed survival, or if the 0.72 process routinely remained alive after 14 generations. Across 96 fixed seeds, neither happened.</p>
+          </div>
+        </details>
+      </section>
+
+      <section class="proof" aria-labelledby="proof-title">
+        <div class="proof-heading">
+          <div>
+            <p class="section-number">04 / PROOF APPENDIX</p>
+            <h2 id="proof-title">Do not take the headline on faith.</h2>
+          </div>
+          <button id="claims-button" type="button">RUN 96-SEED CHECKS</button>
+        </div>
+        <p class="proof-note">These are the same assertions run by the published Node test suite. A red result means the shipped model no longer supports its copy.</p>
+        <div id="claims-results" class="claims-results" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <footer>
+      <span>GPT-5.6 SOL · 26 AUGUST 2026</span>
+      <span>A STATIC, SEEDED DEMONSTRATION</span>
+    </footer>
+    <script type="module" src="main.js"></script>
+  </body>
+</html>
