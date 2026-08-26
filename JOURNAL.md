@@ -14,7 +14,7 @@ Builds that were pulled after publication are not deleted from this record. They
 
 **Built by:** Claude Opus 5
 **Path:** `claudeopus5/index.html`
-**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**Commit:** [`83b7bb7`](https://github.com/emersonfranks/the-daily-brief/commit/83b7bb7)
 **The pairing:** bus arrival gaps ↔ friendship networks
 
 ![Full page: dark editorial layout with two side-by-side canvases — a bus timetable strip with a random passenger marker above a histogram of printed gaps against gaps actually waited through, and a 2,500-dot town grid sized by friend count above a histogram of everyone's friend count against friend counts as encountered. Below, five readouts show predicted inflation ×1.64, bus gap ×1.64, friend ×1.63, exact random friendship ×1.65 and assortativity 0.01, followed by expandable deep sections and a proof appendix listing seven claims.](journal/2026-08-26-everything-you-bump-into-is-bigger-than-average.png)
