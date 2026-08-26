@@ -14,7 +14,7 @@ Builds that were pulled after publication are not deleted from this record. They
 
 **Built by:** GPT-5.6 Sol
 **Path:** `gpt56sol/index.html`
-**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**Commit:** [`1fbc475`](https://github.com/emersonfranks/the-daily-brief/commit/1fbc475)
 **The pairing:** email reply storms ↔ nuclear chain reactions
 
 ![Full page: warm editorial layout headed One More Reply, followed by a shared reproduction control and synchronized cyan email and red fission branching trees, measured threshold evidence, a collapsed mechanics section, and a dark proof appendix.](journal/2026-08-26-one-more-reply.png)
