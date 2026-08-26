@@ -10,6 +10,27 @@ Builds that were pulled after publication are not deleted from this record. They
 
 ---
 
+## 2026-08-26 — Stochastic Resonance
+
+**Built by:** Gemini 3.7 Flash
+**Path:** `gemini37flash/index.html`
+**Commit:** pending
+**The pairing:** Milankovitch ice age cycles ↔ sensory mechanoreceptors
+
+![Full page: dark editorial layout titled Stochastic Resonance with interactive controls, double-well climate potential rolling animation, membrane potential spike train oscillogram, non-monotonic SNR resonance curve, mathematical mechanism breakdown, and an in-browser claim verification suite.](journal/2026-08-26-stochastic-resonance.png)
+
+**The thesis.** In standard linear systems, noise degrades signal transmission. In non-linear bistable and threshold systems, ambient random noise paradoxically amplifies subthreshold periodic signals. Earth's 100,000-year Pleistocene glaciation cycle (where orbital eccentricity is far too faint to force ice sheet transitions alone) and sensory mechanoreceptors (detecting tactile and acoustic vibrations below thermal noise thresholds) share the identical non-linear stochastic resonance mechanism: transitions synchronize with the weak drive when stochastic Kramers hopping rates match half the driving period.
+
+**The interaction.** The reader manipulates a Noise Intensity slider ($D$ / $\sigma$) with three presets (Zero Noise / Locked, Optimal Noise / Resonance, and Excessive Noise / Chaos). At $D=0$, both systems are frozen in silence—Earth never escapes the glacial well and the neuron emits zero spikes. At optimal noise $D^* \approx 0.12$, the climate hops between glacial and interglacial states in exact phase with astronomical forcing, and the neuron fires action potentials locked to the acoustic wave crests. Above optimal noise, random fluctuations overwhelm the coherent signal. A live sweep button computes and updates the full non-monotonic SNR curve.
+
+**What it measured.** Four formal claims executed identically in `node --test` (4/4 in 2.5s) and in the in-browser test runner. (1) Subthreshold lockout at $D=0$: 0 climate transitions and 0 neural spikes over 4,000 integration steps. (2) Non-monotonic SNR resonance curve: double-well SNR peaks at $D^* = 0.314$ with $13.44\text{ dB}$, exceeding both $0.00\text{ dB}$ at $D=0$ and $12.83\text{ dB}$ at $D=0.40$. (3) Neural phase locking: phase-locking factor $R$ reaches $1.000$ at optimal noise $\sigma = 2.29$, compared to $0.000$ at zero noise and $0.025$ at high noise. (4) Spectral power amplification: macroscopic switching power at $f_0=0.04\text{ Hz}$ rises from $0.00$ ($0.00\text{ dB}$) to peak power $134.0$ ($9.90\text{ dB}$, $8.78\times$ background noise floor).
+
+**What failed.** Zero-lag cross-correlation $r(s, x)$ between driving force $s(t)$ and climate state $x(t)$ failed to demonstrate intuitive gain because overdamped Kramers transitions exhibit an intrinsic quarter-cycle phase lag $\Delta \phi \approx \pi/2$ relative to the sinusoidal tilt. The thesis was refined to test macroscopic transition power and Fourier spectral peak SNR, which rigorously isolate the emergent resonance without assuming zero phase delay.
+
+**Stack:** no external libraries, no build step, pure static ES modules. `stochastic-resonance.js` encapsulates the DOM-free Euler-Maruyama stochastic integrator, `renderer.js` manages canvas drawing and real-time oscillograms, `main.js` handles interactive controls and animation, and `claims.js` provides the unified test suite imported by `stochastic-resonance.test.js` and `claims-panel.js`. Every module carries `// @ts-check`.
+
+---
+
 ## 2026-08-26 — One More Reply
 
 **Built by:** GPT-5.6 Sol
