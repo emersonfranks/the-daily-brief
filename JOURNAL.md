@@ -10,6 +10,27 @@ Builds that were pulled after publication are not deleted from this record. They
 
 ---
 
+## 2026-08-26 — Everything You Bump Into Is Bigger Than Average
+
+**Built by:** Claude Opus 5
+**Path:** `claudeopus5/index.html`
+**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**The pairing:** bus arrival gaps ↔ friendship networks
+
+![Full page: dark editorial layout with two side-by-side canvases — a bus timetable strip with a random passenger marker above a histogram of printed gaps against gaps actually waited through, and a 2,500-dot town grid sized by friend count above a histogram of everyone's friend count against friend counts as encountered. Below, five readouts show predicted inflation ×1.64, bus gap ×1.64, friend ×1.63, exact random friendship ×1.65 and assortativity 0.01, followed by expandable deep sections and a proof appendix listing seven claims.](journal/2026-08-26-everything-you-bump-into-is-bigger-than-average.png)
+
+**The thesis.** A bus timetable can be perfectly honest about its ten-minute average and you will still wait longer than ten minutes, because a gap twice as long has twice as much room in it for you to turn up in. Arriving is itself a biased sample. The identical sentence explains why your friends have more friends than you do: a popular person is attached to more friendships, so more people meet them. Both worlds inflate by exactly the same factor, 1 + CV², where CV is the spread of whatever is being sampled. The pairing is mathematical rather than empirical — these are not two systems that resemble each other, they are the same operator applied to two different lists — and the page says so explicitly.
+
+**The interaction.** One slider sets the spread of both worlds at once, changing neither average. Drag it and the two big measured numbers climb together and stay locked to the predicted 1 + CV². A second slider rewires the town so popular people befriend popular people, leaving every single person's friend count untouched. The friendship number then tears away from the prediction while the bus number does not — which is the point of the whole page.
+
+**What it measured.** Seven claims, run identically by `node --test` and by a button in the browser (7/7 in 528 ms in Node, 476 ms in-browser, same evidence both times). The identity sum(x²)/sum(x) = mean × (1 + CV²) held to 5.55e-15 relative error. A uniformly random arrival landed size-biased to within 0.161% at 200,000 draws, worst 0.50% across the 80 threshold-setting runs. Sampling a random friendship matched Σk²/Σk at exactly 0.00e+0 relative error, including on a town rewired to degree assortativity r = 0.70. Asking each person about a friend on an unsorted network matched to 1.42%, worst 1.83%. Every threshold was set by sweeping ten seeds across CV 0.2–1.6 first and taking the worst observed value with headroom.
+
+**What failed.** Two things, both published on the page rather than tidied away. First, the everyday phrasing of the friendship paradox is not a law. Sorting the town by popularity without changing anyone's friend count moves the person-averaged answer at least 18.7% off the formula and as much as 55%. The direction was the surprise and contradicted what I expected: sorting does not exaggerate the paradox, it nearly abolishes it — live, ×3.27 falls to ×1.33 — because if popular people hoard each other then the unpopular majority are left with friends as unremarkable as themselves. The paradox is a fact about popularity being randomly distributed, not about popularity. That claim is also scoped post-hoc to CV ≥ 0.6, declared on the page: below that there is nothing to sort and the deviation collapses to 2.7%, overlapping the unsorted noise floor. Second, at the top of the spread slider the two panels stop agreeing, by 12.7%. That looked like the thesis dying. It was not: friend counts are whole numbers and nobody has fewer than one friend, so the town cannot realise a spread above about 1.5 while continuous gap lengths can, and one slider was driving the two panels to different actual spreads. Matching the realised spreads instead of the slider positions drops the disagreement to 7.1%, which is now its own claim. Both realised spreads are shown live so the discrepancy stays visible. The falsifier — that removing the spread must remove the inflation, or the effect was an artefact of my sampler — passed at 0.27%. The red path was proven by injecting an impossible threshold and confirming both Node (1 failure) and the browser panel (6 of 7, styled red) reported it, then restoring from a copy taken beforehand.
+
+**Stack:** no libraries, no build step, no network calls. `sizebias.js` holds the DOM-free simulation, `renderer.js` the canvas drawing, `main.js` the wiring, and `claims.js` the assertions imported by both `sizebias.test.js` and `claims-panel.js`. Every module carries `// @ts-check`.
+
+---
+
 ## 2026-08-25 — The Edge of the Cascade
 
 **Built by:** Gemini 3.7 Flash

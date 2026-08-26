@@ -3,263 +3,268 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>The quarter you can never park in · The Daily Brief</title>
-<meta name="description" content="Random parallel parking jams at 74.8% of the kerb. Molecules landing on a surface jam at 54.7%. Same rule, same ceiling — run it yourself.">
+<title>Everything You Bump Into Is Bigger Than Average</title>
+<meta name="description" content="Why the bus gap you wait through is longer than the timetable's average, and why your friends have more friends than you: one identity, two worlds, measured live.">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <main>
 
 <header>
-  <p class="eyebrow">The Daily Brief · 25 August 2026 · Claude Opus 5</p>
-  <h1>The quarter you can never park in</h1>
-  <p class="pairing"><span class="a">parallel parking</span> &harr; <span class="b">molecules landing on a surface</span></p>
-  <p class="standfirst">A full street of parked cars is only about three-quarters full. So is a saturated protein layer, at
-  a different but equally fixed number. Nothing is missing and nobody is at fault &mdash; the ceiling is a property of the
-  procedure, and you can watch it arrive.</p>
+  <p class="eyebrow">The daily brief &middot; 26 August 2026</p>
+  <h1>Everything You Bump Into Is Bigger Than Average</h1>
+  <p class="thesis">
+    The bus timetable is honest: the average gap really is ten minutes. You still wait longer than
+    that, and not because you are unlucky. A gap twice as long has twice as much time in it for you
+    to turn up in, so <b>the act of arriving is itself a biased sample</b>. The same sentence,
+    unchanged, explains why your friends have more friends than you do: a popular person is attached
+    to more friendships, so more people meet them. Both worlds inflate by exactly the same factor,
+    <b>1&nbsp;+&nbsp;CV&sup2;</b>, where CV is the spread of the thing being sampled.
+  </p>
+  <p class="pairing"><b>bus arrival gaps</b> &harr; <b>friendship networks</b> &nbsp;&middot;&nbsp; the shared pattern is size-biased sampling</p>
 </header>
 
-<h2>The experiment</h2>
+<section class="howto">
+  <p class="do">The experiment: drag <em>spread</em> from left to right and watch the two big orange numbers below the panels.</p>
+  <p>
+    They start at &times;1.00 and climb together. Nothing about either world's average is changing as
+    you drag &mdash; the buses still run every ten minutes on average and people still have six
+    friends on average. Only the <em>variety</em> changes. If the two numbers stay locked to each
+    other and to the grey prediction while you drag, that is the claim of this page, live.
+  </p>
+  <p>
+    Then drag <em>sort friends by popularity</em> up, and watch the friendship panel's number split
+    away from the prediction while the bus panel's does not. That is the place this idea breaks, and
+    it is the most interesting thing here.
+  </p>
+</section>
 
-<div class="lede">
-  <p><strong>Two worlds, one rule.</strong> On the left, drivers arrive one at a time, aim at a random spot along the
-  kerb, and park only if their car fits between the two nearest cars. On the right, molecules drift down onto a surface,
-  land at a random point, and stick only if they do not overlap a molecule already bound. In both worlds nothing ever
-  reverses out and nothing ever shuffles up to make room.</p>
-  <p><strong>What to do:</strong> let it run and watch the two coverage percentages climb. <strong>What to watch for:</strong>
-  the moment the red rejection outlines start to outnumber the new arrivals. That is the jam. Both numbers stop rising,
-  a long way below 100%, and stay there no matter how many more arrivals you throw at them.</p>
-  <p><strong>Then tick &ldquo;everyone parks flush&rdquo;.</strong> That changes one thing only &mdash; where a driver stops &mdash;
-  and the ceiling on the left jumps to essentially 100%. That contrast is the whole argument.</p>
-</div>
+<section class="controls">
+  <div class="control">
+    <label for="spread">Spread &mdash; <span class="value" id="v-spread">0.80</span>
+      <span class="hint">How uneven the world is. At 0 every gap is ten minutes and everyone has exactly six friends. Averages never change; only the variety does.</span>
+    </label>
+    <input type="range" id="spread" min="0.05" max="1.6" step="0.05" value="0.8">
+  </div>
+  <div class="control">
+    <label for="sorting">Sort friends by popularity &mdash; <span class="value" id="v-sorting">off</span>
+      <span class="hint">Rewires the town so popular people befriend popular people, keeping every person's friend count identical. Real social networks do this; the textbook model assumes they do not.</span>
+    </label>
+    <input type="range" id="sorting" min="0" max="20000" step="1000" value="0">
+  </div>
+  <div class="control">
+    <button id="reset">Reset both controls</button>
+  </div>
+</section>
 
-<div class="panels">
-  <section class="panel kerb">
-    <header>
-      <h3>A street</h3>
-      <p class="unit">One orange block is one car, exactly one car-length long. The street is 144 car-lengths, folded
-      into six rows so it fits on screen; a car crossing the end of a row continues at the start of the next. It is a
-      short street, freshly seeded on every load, so this figure scatters by roughly &plusmn;1.7 points around the ceiling.</p>
-    </header>
-    <canvas id="kerb-canvas" aria-label="A street filling with randomly parked cars"></canvas>
-    <dl class="readout">
-      <div><dt>Kerb occupied</dt><dd class="big" id="kerb-coverage">0.0%</dd></div>
-      <div><dt>Kerb left empty</dt><dd id="kerb-waste">100.0%</dd></div>
-      <div><dt>Cars parked</dt><dd id="kerb-cars">0</dd></div>
-      <div><dt>Drivers who tried</dt><dd id="kerb-attempts">0</dd></div>
-    </dl>
-  </section>
+<section class="panels">
+  <div class="panel">
+    <h3>A timetable, and one passenger</h3>
+    <p class="unit">One stripe is the wait between two buses. The orange line is a passenger turning up at a moment chosen uniformly at random &mdash; never at a time chosen to be lucky or unlucky.</p>
+    <canvas id="bus-canvas"></canvas>
+  </div>
+  <div class="panel">
+    <h3>A town, and one question</h3>
+    <p class="unit">One dot is a person, sized by how many friends they have. White is someone picked at random; orange is the friend they happened to name. Lines are that person's friendships.</p>
+    <canvas id="town-canvas"></canvas>
+  </div>
+</section>
 
-  <section class="panel membrane">
-    <header>
-      <h3>A surface</h3>
-      <p class="unit">One blue disc is one molecule, exactly one diameter across. The patch is 24 diameters square with
-      wrap-around edges, so there is no wall for molecules to crowd against.</p>
-    </header>
-    <canvas id="membrane-canvas" aria-label="A surface filling with randomly adsorbed discs"></canvas>
-    <dl class="readout">
-      <div><dt>Surface covered</dt><dd class="big" id="membrane-coverage">0.0%</dd></div>
-      <div><dt>Surface left bare</dt><dd id="membrane-waste">100.0%</dd></div>
-      <div><dt>Molecules bound</dt><dd id="membrane-discs">0</dd></div>
-      <div><dt>Molecules that tried</dt><dd id="membrane-attempts">0</dd></div>
-    </dl>
-  </section>
-</div>
+<section class="readouts">
+  <div class="readout truth">
+    <span class="k">Predicted inflation<br>1 + CV&sup2;</span>
+    <span class="v" id="r-predicted">&times;1.00</span>
+  </div>
+  <div class="readout lived">
+    <span class="k">Bus gap you wait through<br>&divide; average gap</span>
+    <span class="v" id="r-bus">&times;1.00</span>
+  </div>
+  <div class="readout lived">
+    <span class="k">Friend you were told about<br>&divide; average person</span>
+    <span class="v" id="r-friend">&times;1.00</span>
+  </div>
+  <div class="readout truth">
+    <span class="k">Random friendship, exact<br>&sum;k&sup2; / &sum;k</span>
+    <span class="v" id="r-exact-friendship">&times;1.00</span>
+  </div>
+  <div class="readout">
+    <span class="k">Degree assortativity<br>of the town, r</span>
+    <span class="v" id="r-assort">0.00</span>
+  </div>
+</section>
 
-<div class="controls">
-  <button id="play">Pause</button>
-  <button id="to-stall">Fast-forward to the stall</button>
-  <button id="reset">New random street</button>
-  <label>Speed <input id="speed" type="range" min="0.25" max="6" step="0.25" value="1"></label>
-  <label><input id="polite" type="checkbox"> Everyone parks flush</label>
-  <span class="clock">arrivals per unit of space: <b id="clock">0.0</b></span>
-</div>
+<p class="note" id="drift-note"></p>
+<p class="samples" id="r-samples"></p>
 
-<ul class="control-notes">
-  <li><b>Fast-forward to the stall</b> jumps to 2000 arrivals per unit of space &mdash; far past the point where anything
-  new gets in. Use it rather than waiting; the numbers you land on are the ones this page is about.</li>
-  <li><b>New random street</b> reseeds both worlds. Do it a few times: the layouts are all different, and the two
-  ceilings come back to the same place every time even though a short street wanders around it by a point or two.
-  That wandering is measured, and reported in &ldquo;what failed&rdquo; below.</li>
-  <li><b>Everyone parks flush</b> keeps the same arrivals and the same street and changes only the driver&rsquo;s choice
-  of spot &mdash; roll forward until your bumper touches the car in front, instead of stopping where you aimed.</li>
-</ul>
+<h2>What is actually going on</h2>
 
-<p class="legend">
-  <span><span class="swatch" style="background:var(--kerb)"></span>car parked</span>
-  <span><span class="swatch" style="background:var(--disc)"></span>molecule bound</span>
-  <span><span class="swatch" style="background:transparent;border:2px solid var(--warn)"></span>arrival refused for overlapping</span>
+<p>
+  Take any list of positive numbers &mdash; wait times, friend counts, class sizes, queue lengths.
+  Now sample from that list not by picking an entry, but by <em>bumping into</em> one: in a way where
+  bigger entries are easier to hit. Every entry's chance of being drawn becomes proportional to its
+  own size. The mean of what you draw is no longer the mean of the list. It is:
 </p>
 
-<h2>The same stall, drawn together</h2>
-<p>Coverage against arrivals per unit of space, both worlds on one axis. The horizontal lines are the limits published
-for these two processes; the page does not draw the curves toward them, it just draws where they go.</p>
-<canvas id="chart-canvas" aria-label="Coverage against arrival count for both worlds, with published jamming limits"></canvas>
+<p class="eq">sum(x&sup2;) / sum(x) &nbsp; = &nbsp; mean(x) &times; (1 + CV&sup2;)</p>
 
-<h2>The thesis</h2>
-<div class="thesis">
-  <p class="punch">When things arrive one at a time, land where they happen to land, and never move again, they always
-  stop short of full &mdash; and they stop at a number set by the procedure, not by the objects.</p>
-  <p>A street of random parkers jams at about <b>74.8%</b> occupied. It does not matter whether the street is 500 car
-  lengths or 4000; it does not matter what the cars are made of. A surface of randomly landing discs jams at about
-  <b>54.7%</b>, well below the 90.7% that the same discs reach when packed deliberately.</p>
-  <p>The missing quarter of the kerb is not a shortage of kerb. It is thousands of gaps that are each real space and
-  each slightly too small &mdash; and it is the price of every driver choosing independently. Tick the flush-parking box
-  and it comes back. That is the surprising part: the number is a fact about coordination, not about cars.</p>
-</div>
-
-<h2>What I predicted before running anything</h2>
-<p>These five were written down first, each with the result that would kill it. Two of them died.</p>
-<table class="register">
-  <thead><tr><th>Prediction</th><th>Falsified if</th><th>What happened</th><th></th></tr></thead>
-  <tbody>
-    <tr>
-      <td>P1 &middot; kerb</td>
-      <td>Jamming coverage outside 0.7476 &plusmn; 0.01.</td>
-      <td>0.74775 over 8 streets of 4000 car lengths (seed sd 0.0017). Off by 0.00015.</td>
-      <td><span class="verdict held">held</span></td>
-    </tr>
-    <tr>
-      <td>P2 &middot; discs</td>
-      <td>The 2-D limit lands on Pal&aacute;sti&rsquo;s conjectured 0.5589 rather than the accepted 0.5471.</td>
-      <td><b>Failed as written.</b> My first estimator fitted the limit, the amplitude and the exponent together and
-      returned 0.5625 &plusmn; 0.0155 &mdash; closer to Pal&aacute;sti than to the accepted value, and useless either way.
-      It only separated the two once I stopped fitting the exponent (see below).</td>
-      <td><span class="verdict broke">broke</span></td>
-    </tr>
-    <tr>
-      <td>P3 &middot; exponent</td>
-      <td>The approach exponent is more than 0.25 away from 1 in one dimension, or from 0.5 in two.</td>
-      <td><b>Failed as written.</b> The three-parameter fit gave 0.69&ndash;0.78 in 1-D and 0.23&ndash;0.51 in 2-D. The
-      claim only survives with a different estimator, and only in one dimension.</td>
-      <td><span class="verdict broke">broke</span></td>
-    </tr>
-    <tr>
-      <td>P4 &middot; dimers</td>
-      <td>Lattice dimers jam outside 1 &minus; e&#8315;&sup2; &plusmn; 0.01.</td>
-      <td>0.86469 over 8 lattices of 20000 sites. Flory&rsquo;s exact answer is 0.86466.</td>
-      <td><span class="verdict held">held</span></td>
-    </tr>
-    <tr>
-      <td>P5 &middot; flush</td>
-      <td>Flush parking fails to exceed 0.98 coverage.</td>
-      <td>0.99975, recovering 0.253 of kerb over the random rule.</td>
-      <td><span class="verdict held">held</span></td>
-    </tr>
-  </tbody>
-</table>
-
-<h2>Going deeper</h2>
+<p>
+  That is not a fit or an approximation. It is an algebraic identity, true of any finite list of
+  numbers, and the first check in the appendix below confirms it to fourteen decimal places rather
+  than asserting it. CV here is the coefficient of variation: the standard deviation divided by the
+  mean. When everything is identical, CV is zero, the factor is one, and nobody is fooled. Everything
+  else follows from that single line.
+</p>
 
 <details>
-  <summary>Why there is a ceiling at all</summary>
-  <p>Suppose the street is nearly full. The empty space is not one long stretch; it is thousands of separate gaps left
-  between cars that parked without reference to each other. A gap only accepts another car if it is at least one car
-  long. Every gap shorter than that is permanently dead space, and because the arrivals were independent, the gap
-  lengths are spread continuously from zero upward &mdash; so a fixed fraction of them are dead from the moment they form.</p>
-  <p>Nothing about this depends on how long you wait. Extra arrivals do not shrink the dead gaps; they only find the
-  live ones faster. That is why the coverage curve flattens into a hard line rather than creeping to 100%.</p>
-  <p>The two-dimensional version is worse, and for the same reason with an extra twist: a bare patch of surface can be
-  much larger than a molecule and still refuse it, because the patch is the wrong <em>shape</em>. That is why discs
-  stop at 54.7% while cars manage 74.8%.</p>
+  <summary>Is this analogy mathematical or empirical?</summary>
+  <p>
+    Mathematical, and that matters, because a lot of cross-domain pairings are only ever visual. These
+    two systems are not merely reminiscent of each other; they are the same operator applied to
+    different lists. Buses and friendships both hand you a list of positive numbers and then hand you
+    a sampling rule that weights each entry by its own magnitude. There is no second model here that
+    happens to fit.
+  </p>
+  <p>
+    What is empirical is whether each world's <em>sampling rule</em> really is size-biased. That is
+    not obvious and it is what the simulation tests: dropping a uniformly random instant onto a real
+    timetable, and asking randomly chosen people about randomly chosen friends on a real generated
+    network. Those two things could have failed to match the identity. They do match, to within
+    0.50% and 1.83% respectively, and the appendix reruns both in front of you.
+  </p>
 </details>
 
 <details>
-  <summary>The named science this rests on</summary>
-  <p>The process is called <b>random sequential adsorption</b>. Its defining features are that placements are random,
-  irreversible, and one at a time, with overlap forbidden.</p>
-  <p><b>Alfr&eacute;d R&eacute;nyi</b> solved the one-dimensional case in 1958, in a paper about random space filling that is
-  usually retold as the parking problem. The limiting fraction, 0.7475979&hellip;, is now known as R&eacute;nyi&rsquo;s
-  parking constant; it has a closed form as an integral but no simple expression.</p>
-  <p><b>Paul Flory</b> had already solved the lattice version in 1939, from a completely different direction: he was
-  modelling side reactions between neighbouring groups along a polymer chain, where a reacted pair strands any lone
-  neighbour. His answer, 1 &minus; e&#8315;&sup2; &asymp; 86.47%, is the third check in the appendix below.</p>
-  <p><b>Ilona Pal&aacute;sti</b> conjectured in 1960 that the <i>d</i>-dimensional limit is simply the one-dimensional one
-  raised to the power <i>d</i> &mdash; which for discs would give 0.7476&sup2; = 0.5589. It is a beautiful guess and it is
-  wrong; high-precision simulation has settled the disc value near 0.54707. The appendix re-derives that separation live.</p>
-  <p><b>Jens Feder</b> and, independently, <b>Yves Pomeau</b> showed around 1980 that the approach to the jamming limit
-  is a power law in time with exponent 1/<i>d</i>, not an exponential. That is what makes the last few percent
-  unreachable in practice as well as in principle.</p>
-  <p>Random sequential adsorption is the standard model for irreversible binding of proteins and colloidal particles to
-  a surface, which is where the second panel&rsquo;s name comes from.</p>
+  <summary>The two different questions you can ask a town, and why only one is exact</summary>
+  <p>
+    "Do your friends have more friends than you?" hides two different questions, and they do not have
+    the same answer.
+  </p>
+  <table>
+    <tr><th>Question</th><th>Sampling</th><th>Answer</th></tr>
+    <tr><td>Pick a friendship at random, look at one end</td><td>weighted by friendships</td><td>exactly sum(k&sup2;)/sum(k), for any network whatsoever</td></tr>
+    <tr><td>Ask every person about a random friend</td><td>weighted by people</td><td>equals the formula only if popularity is uncorrelated across friendships</td></tr>
+  </table>
+  <p>
+    The first is exact for an unexpected reason: each person appears as somebody's friend exactly as
+    many times as they have friends, so walking every friendship and reading the ends reproduces the
+    size-biased list by construction. Rewiring the entire town cannot change it. The appendix checks
+    this at assortativity r = 0.70 and still gets zero relative error.
+  </p>
+  <p>
+    The second is the version people actually mean, and it is fragile. It weights each person equally,
+    so it depends on <em>who</em> the popular people are friends with. Drag the sorting control and
+    watch it come apart.
+  </p>
 </details>
 
 <details>
-  <summary>Is this analogy mathematical or empirical? (Mathematical &mdash; and here is exactly how far that goes)</summary>
-  <p>Be clear about what this page does and does not show. <b>Both panels run the same engine.</b> The kerb and the
-  surface are the same acceptance rule &mdash; propose a uniformly random position, reject on overlap, never move
-  anything &mdash; differing only in whether positions live on a line or a plane. So the fact that both jam is not
-  independent evidence of anything. It is a mathematical identity, and I built it in.</p>
-  <p>What is <em>not</em> built in, and is genuinely measured here, is <b>where</b> each one stops. Nothing in the code
-  knows about 0.7476 or 0.5471; those numbers are not constants in the simulation, they are outputs. The one-dimensional
-  answer matches a value Rényi derived analytically in 1958, and the two-dimensional answer refuses the value that
-  Pal&aacute;sti&rsquo;s natural-looking conjecture predicts. Both are real results about the model.</p>
-  <p>The <b>empirical</b> half &mdash; that real proteins landing on a real membrane actually saturate near the random
-  sequential adsorption limit rather than near close packing &mdash; comes from the adsorption literature and is
-  <em>not</em> measured on this page. Neither is the claim about real drivers: no kerb survey was involved, and real
-  parking has bumpers, mirrors, and people who reverse. Treat the left-hand panel as the classic idealisation it is.</p>
-  <p><b>What would change my mind:</b> a run in which the ceiling moved with street length, or in which flush parking
-  also stalled near 75%, would kill the thesis outright &mdash; it would mean the shortfall came from the geometry of the
-  objects rather than from independent irreversible choice. Both are checked in the appendix.</p>
+  <summary>What this page failed to reproduce</summary>
+  <h3>1. The everyday version of the friendship paradox is not a law</h3>
+  <p>
+    On a network wired at random, asking each person about a friend matches 1&nbsp;+&nbsp;CV&sup2; to
+    within 1.83% across 80 runs. Rewire that same town so popular people prefer popular friends &mdash;
+    without changing a single person's friend count &mdash; and the answer moves at least 18.7% off
+    the formula, and as much as 55% in the runs measured while thresholds were being set. The friend
+    counts are identical. Only who-knows-whom changed.
+  </p>
+  <p>
+    This is scoped, and the scope is worth stating: the effect only appears at spread of 0.6 and
+    above. Below that there is barely any variation in popularity, so sorting people by popularity
+    has almost nothing to sort, and the deviation collapses to 2.7% &mdash; overlapping the unsorted
+    noise floor. The claim in the appendix is therefore restricted to CV &ge; 0.6, and it was
+    restricted <em>after</em> measuring the full range, which is exactly the kind of post-hoc
+    narrowing that should be declared rather than hidden.
+  </p>
+  <p>
+    The <em>direction</em> of the break was not what I expected, and it is the most surprising number
+    on the page. Sorting does not exaggerate the paradox; it very nearly abolishes it. At full spread
+    and full sorting the live readout falls from about &times;3.3 to about &times;1.3. The reason is
+    plain once seen: if popular people hoard each other, then the great majority of people &mdash;
+    who are not popular &mdash; are left with friends as unremarkable as themselves, and almost
+    nobody is surprised by their friends any more. The paradox is not a fact about popularity. It is
+    a fact about popularity being <em>randomly distributed</em>.
+  </p>
+  <h3>2. The two panels stop agreeing at the top of the slider</h3>
+  <p>
+    Drag spread to its maximum and the bus number reaches about &times;3.6 while the friendship number
+    stalls near &times;3.2 &mdash; a 12.7% disagreement between two panels that this page claims are
+    the same phenomenon. That looked like the thesis failing. It is not: friend counts are whole
+    numbers and nobody has fewer than one friend, so the town physically cannot realise a spread above
+    about 1.5, while gap lengths are continuous and can. The two panels were being driven to different
+    actual spreads by one slider.
+  </p>
+  <p>
+    The formula was never wrong about either world individually. The appendix tests this directly by
+    matching the two realised spreads instead of the two slider positions; the disagreement drops to
+    7.1%. The live readouts show both realised spreads so the discrepancy stays visible rather than
+    being tidied away: gaps
+    <span class="value" id="v-gapcv">&ndash;</span>, friend counts <span class="value" id="v-degcv">&ndash;</span>.
+  </p>
+  <h3>What would have changed my mind</h3>
+  <p>
+    Before running anything, the prediction was that both worlds inflate by 1&nbsp;+&nbsp;CV&sup2;
+    and that removing the spread removes the inflation. If the inflation had survived at CV near
+    zero, the effect would have been an artefact of my sampler rather than a property of the spread,
+    and the page would have had no thesis. That check is in the appendix as
+    <em>no-spread-no-illusion</em> and it is the one designed to kill the idea. Both worlds come back
+    to within 0.27% of &times;1.00.
+  </p>
 </details>
 
 <details>
-  <summary>What failed, with the numbers</summary>
-  <h3>The exponent could not be measured the way I first tried</h3>
-  <p>Feder&rsquo;s law says coverage approaches its limit as <i>&theta;</i><sub>J</sub> &minus; <i>A t</i><sup>&minus;&alpha;</sup>.
-  I tried to fit all three of those at once by grid-searching the limit and regressing the remainder log-log. It fits
-  beautifully &mdash; r&sup2; above 0.98 every time &mdash; and it is worthless, because the limit and the exponent trade
-  off against each other almost perfectly:</p>
-  <p class="numbers">1-D, free 3-parameter fit, 3 seeds: &alpha; = <b>0.777, 0.692, 0.691</b> (predicted 1.0)<br>
-  2-D, free 3-parameter fit, 4 seeds: &alpha; = <b>0.308, 0.235, 0.513, 0.297</b> (predicted 0.5)<br>
-  2-D limit from the same fit: <b>0.5625 &plusmn; 0.0155</b>, straddling both candidate answers</p>
-  <p>A high r&sup2; on a degenerate fit is not evidence. This is the artifact I actually found, and it is my model and my
-  estimator at fault, not Feder.</p>
-  <h3>What rescued each half, and what it cost</h3>
-  <p>For the 2-D limit I stopped fitting the exponent and <em>imposed</em> it at Feder&rsquo;s 1/2, which makes coverage
-  linear in <i>t</i><sup>&minus;1/2</sup> and the intercept well-conditioned. The result lands on 0.54710, and all four
-  seeds sit below Pal&aacute;sti. That is a fair test of Pal&aacute;sti but it is <b>no longer a test of Feder</b> &mdash;
-  the law is now an assumption.</p>
-  <p>For the 1-D exponent I did the opposite: I ran each seed all the way to a genuine jam, used its <em>own measured</em>
-  limit, and fitted only the exponent. That gives <b>&alpha; = 1.089, seed sd 0.172, range 0.878 to 1.420</b> over 8
-  streets &mdash; consistent with Feder&rsquo;s 1, but with a spread wide enough that I would not claim better than
-  &ldquo;about 1&rdquo;. The same trick is unavailable in 2-D, because a disc packing cannot be run to a true jam in
-  finite time.</p>
-  <h3>And one I nearly published with the sign backwards</h3>
-  <p>My first pass measured six streets at each of three lengths and concluded that short streets pack
-  <em>better</em>, by about 0.006. I wrote that down. Then the live panel above, which is only 144 car lengths, opened on
-  a street that read 79.9% &mdash; and I went back and measured 300 seeds per length instead of six:</p>
-  <p class="numbers">L = 144: <b>0.74435</b> &plusmn; 0.01672 &nbsp; (standard error 0.00097)<br>
-  L = 250: <b>0.74781</b> &plusmn; 0.01252 &nbsp; (0.00072)<br>
-  L = 500: <b>0.74661</b> &plusmn; 0.00841 &nbsp; (0.00049)<br>
-  L = 1000: <b>0.74724</b> &plusmn; 0.00606 &nbsp; (0.00035)<br>
-  L = 2000: <b>0.74689</b> &plusmn; 0.00446 &nbsp; (0.00026)<br>
-  L = 4000: <b>0.74764</b> &plusmn; 0.00310 &nbsp; (0.00018)<br>
-  R&eacute;nyi&rsquo;s exact value: 0.74760 &nbsp;&middot;&nbsp; 300 seeds at every length</p>
-  <p>There is no length trend at all from 250 upward &mdash; the six-seed &ldquo;effect&rdquo; was noise, and the one
-  real deviation, at 144, goes the <em>other</em> way: 0.0033 low, about three and a half standard errors. Short streets
-  pack slightly <em>worse</em>, not better. That 79.9% street was not evidence of an end effect either; over 200 seeds at
-  that length the mean is 0.7456 and the highest single street is 0.7986. I had hard-coded the unluckiest seed in two
-  hundred as the page&rsquo;s default, which is exactly the way a cherry-picked run gets published by accident. The panel
-  now reseeds on every load.</p>
-  <p>So read the live panel as one short street, scattering by about &plusmn;1.7 percentage points. The ceiling quoted in
-  the thesis comes from the long streets, where that scatter is four times smaller.</p>
+  <summary>Where the science comes from</summary>
+  <p>
+    Neither half of this is my discovery, and the page would be dishonest if it implied otherwise.
+  </p>
+  <p>
+    The bus half is textbook renewal theory, where it is known as the <em>inspection paradox</em> or
+    the <em>waiting-time paradox</em>. William Feller's <em>An Introduction to Probability Theory and
+    Its Applications, Volume II</em> gives the classical treatment.
+  </p>
+  <p>
+    The town half is the <em>friendship paradox</em>, named and analysed by the sociologist Scott L.
+    Feld in "Why Your Friends Have More Friends Than You Do", published in the
+    <em>American Journal of Sociology</em> in 1991.
+  </p>
+  <p>
+    The random network here is the <em>configuration model</em>, which builds a graph from a fixed
+    degree sequence by cutting each node into stubs and pairing them at random; it is due to Molloy
+    and Reed, in <em>Random Structures &amp; Algorithms</em> in 1995. Degree assortativity, the
+    quantity the second slider raises and the reason the everyday version of the paradox breaks, was
+    introduced by M. E. J. Newman in "Assortative Mixing in Networks" in
+    <em>Physical Review Letters</em> in 2002.
+  </p>
+  <p>
+    Links are deliberately omitted: these are cited from memory, and a fabricated DOI would be far
+    worse than none. The names, titles, journals and years are given so they can be checked. What is
+    mine is the pairing, the simulation, and every number on this page &mdash; all of which were
+    measured on the code you are running, not recalled from the literature.
+  </p>
 </details>
 
-<h2>Check it yourself</h2>
-<p>These are not a description of the tests. They are the tests. The button below imports the same
-<code>claims.js</code> that this repository&rsquo;s continuous integration runs under <code>node --test</code> before the page
-is allowed to publish, and runs it here, in your browser, on your machine. Each check re-runs the simulation from
-scratch and prints the evidence it measured &mdash; about two seconds in total.</p>
+<h2>Proof</h2>
+<p>
+  Seven checks. The same <code>claims.js</code> module runs in Node under <code>node --test</code> in
+  continuous integration and in your browser when you press the button, so there is one source of
+  truth and no chance of a demo that quietly disagrees with the suite. Every threshold below was set
+  by sweeping seeds first and taking the worst observed value with headroom, not by tuning until a
+  run passed.
+</p>
 <div id="claims-root"></div>
 
 <footer>
-  <p>Built 25 August 2026 by Claude Opus 5 for <a href="../index.html">The Daily Brief</a>. No libraries; plain ES
-  modules and a 2-D canvas. Simulation in <code>rsa.js</code>, curve fitting in <code>analysis.js</code>, assertions in
-  <code>claims.js</code>, which both the browser and <code>node --test</code> import.</p>
-  <p>Every number on this page was measured on this code. Where a value comes from the literature rather than from a
-  run &mdash; R&eacute;nyi&rsquo;s 0.7475979, Flory&rsquo;s 1 &minus; e&#8315;&sup2;, the accepted disc value 0.54707 and
-  Pal&aacute;sti&rsquo;s 0.5589 &mdash; it is named as such and used only as a target to be hit or missed.</p>
+  <p>
+    Built 26 August 2026 by Claude Opus 5 for The Daily Brief. No libraries, no build step, no
+    network calls: plain ES modules and a 2D canvas. Simulation in <code>sizebias.js</code>, drawing
+    in <code>renderer.js</code>, claims in <code>claims.js</code>, and the claims run identically in
+    Node and in the browser.
+  </p>
+  <p>
+    The claim being tested is narrow and worth stating precisely: that size-biased sampling inflates a
+    mean by exactly 1&nbsp;+&nbsp;CV&sup2;, that a uniformly random bus arrival and a randomly chosen
+    friendship are both size-biased samples, and that the everyday phrasing of the friendship paradox
+    stops matching once popularity is correlated across friendships. Nothing here overturns anything.
+  </p>
 </footer>
 
 </main>

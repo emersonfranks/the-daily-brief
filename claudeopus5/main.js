@@ -1,211 +1,230 @@
 // @ts-check
-
-/**
- * Wires the two simulations to the canvases and the controls. This file owns the
- * animation loop and the DOM; the simulations themselves live in `rsa.js` and
- * know nothing about either.
- */
-
 import {
-  createKerb,
-  createMembrane,
-  attemptPark,
-  attemptPolitePark,
-  attemptAdsorb,
-  kerbCoverage,
-  membraneCoverage,
-  kerbTime,
-  membraneTime,
-  makeRandom,
-  RENYI_CONSTANT,
-  DISK_JAMMING_COVERAGE,
-  PALASTI_CONJECTURE,
-} from './rsa.js';
-import { fitCanvas, drawKerb, drawMembrane, drawChart } from './renderer.js';
+  makeRng,
+  sampleGaps,
+  degreeSequence,
+  configurationModel,
+  adjacency,
+  rewireAssortative,
+  meanOf,
+  cvOf,
+  sizeBiasedMean,
+  predictedInflation,
+  edgeEndpointMeanDegree,
+  personAveragedFriendDegree,
+  degreeAssortativity,
+} from './sizebias.js';
+import { fitCanvas, histogramOf, makeHistogram, addToHistogram, drawTimetable, drawTown } from './renderer.js';
 import { mountClaimsPanel } from './claims-panel.js';
 
-const KERB_LENGTH = 144;
-const KERB_ROWS = 6;
-const MEMBRANE_SIZE = 24;
-const TIME_PER_FRAME = 0.35;
-const STALL_TIME = 2000;
+const PEOPLE = 2500;
+const GAPS = 4000;
+const MEAN_GAP = 10;
+const MEAN_FRIENDS = 6;
+const SHOWN_GAPS = 36;
+const BINS = 46;
 
 /** @param {string} id */
-const el = (id) => {
-  const node = document.getElementById(id);
-  if (!node) throw new Error(`missing element #${id}`);
-  return node;
-};
-
-const kerbCanvas = /** @type {HTMLCanvasElement} */ (el('kerb-canvas'));
-const membraneCanvas = /** @type {HTMLCanvasElement} */ (el('membrane-canvas'));
-const chartCanvas = /** @type {HTMLCanvasElement} */ (el('chart-canvas'));
-const playButton = /** @type {HTMLButtonElement} */ (el('play'));
-const stallButton = /** @type {HTMLButtonElement} */ (el('to-stall'));
-const resetButton = /** @type {HTMLButtonElement} */ (el('reset'));
-const speedInput = /** @type {HTMLInputElement} */ (el('speed'));
-const politeInput = /** @type {HTMLInputElement} */ (el('polite'));
-
-const world = {
-  kerb: createKerb(KERB_LENGTH),
-  membrane: createMembrane(MEMBRANE_SIZE),
-  kerbRandom: makeRandom(11),
-  membraneRandom: makeRandom(11),
-  /** @type {{ aim: number, age: number }[]} */ kerbMisses: [],
-  /** @type {{ x: number, y: number, age: number }[]} */ membraneMisses: [],
-  /** @type {{ t: number, coverage: number }[]} */ kerbTrace: [],
-  /** @type {{ t: number, coverage: number }[]} */ membraneTrace: [],
-  time: 0,
-  running: true,
-  polite: false,
-};
-
-function reset() {
-  const seed = 11 + Math.floor(Math.random() * 1000);
-  world.kerb = createKerb(KERB_LENGTH);
-  world.membrane = createMembrane(MEMBRANE_SIZE);
-  world.kerbRandom = makeRandom(seed);
-  world.membraneRandom = makeRandom(seed + 1);
-  world.kerbMisses = [];
-  world.membraneMisses = [];
-  world.kerbTrace = [];
-  world.membraneTrace = [];
-  world.time = 0;
+function need(id) {
+  const el = document.getElementById(id);
+  if (!el) throw new Error(`missing element #${id}`);
+  return el;
 }
 
-/** @param {number} dt advance in dimensionless RSA time */
-function advance(dt) {
-  world.time += dt;
-  const kerb = world.kerb;
-  const kerbTarget = world.time * kerb.length;
-  let guard = 0;
-  while (kerb.attempts < kerbTarget && !kerb.jammed && guard < 40000) {
-    guard += 1;
-    const parked = world.polite
-      ? attemptPolitePark(kerb, world.kerbRandom)
-      : attemptPark(kerb, world.kerbRandom);
-    if (!parked) world.kerbMisses.push({ aim: kerb.lastAim, age: 0 });
-  }
+const busCanvas = /** @type {HTMLCanvasElement} */ (need('bus-canvas'));
+const townCanvas = /** @type {HTMLCanvasElement} */ (need('town-canvas'));
+const spreadInput = /** @type {HTMLInputElement} */ (need('spread'));
+const sortInput = /** @type {HTMLInputElement} */ (need('sorting'));
+const resetButton = /** @type {HTMLButtonElement} */ (need('reset'));
 
-  const membrane = world.membrane;
-  const perTime = (membrane.size * membrane.size) / (Math.PI * membrane.radius * membrane.radius);
-  const membraneTarget = world.time * perTime;
-  guard = 0;
-  while (membrane.attempts < membraneTarget && guard < 60000) {
-    guard += 1;
-    if (!attemptAdsorb(membrane, world.membraneRandom)) {
-      world.membraneMisses.push({ x: membrane.lastAimX, y: membrane.lastAimY, age: 0 });
-    }
-  }
+/** @type {ReturnType<typeof buildState>} */
+let state;
 
-  world.kerbMisses = world.kerbMisses.slice(-14).map((m) => ({ ...m, age: m.age + 1 })).filter((m) => m.age < 18);
-  world.membraneMisses = world.membraneMisses.slice(-18).map((m) => ({ ...m, age: m.age + 1 })).filter((m) => m.age < 18);
+/**
+ * @param {number} cv
+ * @param {number} swaps
+ */
+function buildState(cv, swaps) {
+  const rng = makeRng(20260826);
+  const gaps = sampleGaps(rng, GAPS, MEAN_GAP, cv);
+  const degrees = degreeSequence(rng, PEOPLE, MEAN_FRIENDS, cv);
+  const neutral = configurationModel(rng, degrees);
+  const graph = swaps > 0 ? rewireAssortative(rng, neutral, swaps) : neutral;
+  const adj = adjacency(graph);
 
-  if (world.time > 0) {
-    world.kerbTrace.push({ t: kerbTime(kerb), coverage: kerbCoverage(kerb) });
-    world.membraneTrace.push({ t: membraneTime(membrane), coverage: membraneCoverage(membrane) });
-    if (world.kerbTrace.length > 4000) world.kerbTrace = world.kerbTrace.filter((_, i) => i % 2 === 0);
-    if (world.membraneTrace.length > 4000) world.membraneTrace = world.membraneTrace.filter((_, i) => i % 2 === 0);
-  }
+  const gapMean = meanOf(gaps);
+  const degMean = meanOf(degrees);
+  let maxDeg = 1;
+  for (let i = 0; i < degrees.length; i++) maxDeg = Math.max(maxDeg, degrees[i]);
+
+  const gapHi = gapMean * 5;
+  const degBins = Math.min(maxDeg + 1, BINS);
+  const cumulative = new Float64Array(gaps.length + 1);
+  for (let i = 0; i < gaps.length; i++) cumulative[i + 1] = cumulative[i] + gaps[i];
+
+  return {
+    cv,
+    swaps,
+    rng: makeRng(7717),
+    gaps,
+    cumulative,
+    gapMean,
+    gapCv: cvOf(gaps),
+    graph,
+    adj,
+    degrees,
+    degMean,
+    degCv: cvOf(degrees),
+    maxDeg,
+    gapTruth: histogramOf(gaps, BINS, 0, gapHi),
+    gapLived: makeHistogram(BINS, 0, gapHi),
+    degTruth: histogramOf(degrees, degBins, 0, maxDeg + 1),
+    degLived: makeHistogram(degBins, 0, maxDeg + 1),
+    busSum: 0,
+    busN: 0,
+    friendSum: 0,
+    friendN: 0,
+    focusGap: 0,
+    arrivalFrac: 0.5,
+    focusPerson: 0,
+    pickedFriend: -1,
+    tick: 0,
+    exactBus: sizeBiasedMean(gaps) / gapMean,
+    exactFriendship: edgeEndpointMeanDegree(graph) / degMean,
+    exactPerson: personAveragedFriendDegree(adj, degrees) / degMean,
+    predicted: predictedInflation(degrees),
+    predictedGaps: predictedInflation(gaps),
+    assortativity: degreeAssortativity(graph),
+  };
 }
 
-/** @param {number} value @param {number} [dp] */
-const pct = (value, dp = 1) => `${(value * 100).toFixed(dp)}%`;
+/** One uniformly random instant on the timetable; report the gap it fell inside. */
+function dropArrival() {
+  const total = state.cumulative[state.gaps.length];
+  const x = state.rng() * total;
+  let lo = 0;
+  let hi = state.gaps.length - 1;
+  while (lo < hi) {
+    const mid = (lo + hi + 1) >> 1;
+    if (state.cumulative[mid] <= x) lo = mid;
+    else hi = mid - 1;
+  }
+  addToHistogram(state.gapLived, state.gaps[lo]);
+  state.busSum += state.gaps[lo];
+  state.busN += 1;
+  return { index: lo, frac: (x - state.cumulative[lo]) / state.gaps[lo] };
+}
 
-function paint() {
-  const kerbCtx = fitCanvas(kerbCanvas);
-  drawKerb(
-    kerbCtx,
-    world.kerb,
-    KERB_ROWS,
-    world.kerbMisses,
-    kerbCanvas.getBoundingClientRect().width,
-    kerbCanvas.getBoundingClientRect().height,
-  );
+/** Pick a person at random, then one of their friends at random. */
+function askAboutAFriend() {
+  let person = Math.floor(state.rng() * state.adj.length);
+  while (state.adj[person].length === 0) person = Math.floor(state.rng() * state.adj.length);
+  const friends = state.adj[person];
+  const picked = friends[Math.floor(state.rng() * friends.length)];
+  addToHistogram(state.degLived, state.degrees[picked]);
+  state.friendSum += state.degrees[picked];
+  state.friendN += 1;
+  return { person, picked };
+}
 
-  const membraneCtx = fitCanvas(membraneCanvas);
-  drawMembrane(
-    membraneCtx,
-    world.membrane,
-    world.membraneMisses,
-    membraneCanvas.getBoundingClientRect().width,
-    membraneCanvas.getBoundingClientRect().height,
-  );
+/**
+ * @param {number} x
+ * @param {number} places
+ */
+function fixed(x, places) {
+  return Number.isFinite(x) ? x.toFixed(places) : '\u2013';
+}
 
-  const chartCtx = fitCanvas(chartCanvas);
-  drawChart(
-    chartCtx,
-    [
-      { label: 'kerb', colour: '#e8743b', points: world.kerbTrace },
-      { label: 'membrane', colour: '#3d8fd1', points: world.membraneTrace },
-    ],
-    [
-      { label: `74.76% kerb`, colour: '#e8743b', value: RENYI_CONSTANT },
-      { label: `55.89% Palásti`, colour: '#9d8cd4', value: PALASTI_CONJECTURE, dashed: true },
-      { label: `54.71% discs`, colour: '#3d8fd1', value: DISK_JAMMING_COVERAGE },
-    ],
-    chartCanvas.getBoundingClientRect().width,
-    chartCanvas.getBoundingClientRect().height,
-  );
+function paintReadouts() {
+  need('r-predicted').textContent = `\u00d7${fixed(state.predictedGaps, 2)}`;
+  need('r-bus').textContent = `\u00d7${fixed(state.busN > 0 ? state.busSum / state.busN / state.gapMean : NaN, 2)}`;
+  need('r-friend').textContent = `\u00d7${fixed(state.friendN > 0 ? state.friendSum / state.friendN / state.degMean : NaN, 2)}`;
+  need('r-exact-friendship').textContent = `\u00d7${fixed(state.exactFriendship, 2)}`;
+  need('r-assort').textContent = fixed(state.assortativity, 2);
+  need('r-samples').textContent = `${(state.busN + state.friendN).toLocaleString()} samples drawn`;
+  need('v-spread').textContent = fixed(state.cv, 2);
+  need('v-gapcv').textContent = fixed(state.gapCv, 2);
+  need('v-degcv').textContent = fixed(state.degCv, 2);
+  need('v-sorting').textContent = state.swaps === 0 ? 'off' : `r = ${fixed(state.assortativity, 2)}`;
 
-  el('kerb-coverage').textContent = pct(kerbCoverage(world.kerb));
-  el('kerb-cars').textContent = String(world.kerb.cars.length);
-  el('kerb-attempts').textContent = world.kerb.attempts.toLocaleString();
-  el('kerb-waste').textContent = pct(1 - kerbCoverage(world.kerb));
-  el('membrane-coverage').textContent = pct(membraneCoverage(world.membrane));
-  el('membrane-discs').textContent = String(world.membrane.xs.length);
-  el('membrane-attempts').textContent = world.membrane.attempts.toLocaleString();
-  el('membrane-waste').textContent = pct(1 - membraneCoverage(world.membrane));
-  el('clock').textContent = world.time.toFixed(1);
+  const drift = Math.abs(state.exactPerson / state.predicted - 1);
+  const warn = need('drift-note');
+  warn.textContent =
+    state.swaps === 0
+      ? `Asking each person lands ${fixed(drift * 100, 1)}% off the formula \u2014 within the 4% the unsorted case was measured to hold.`
+      : `Asking each person is now ${fixed(drift * 100, 1)}% off the formula. Picking a random friendship is still exact.`;
+  warn.className = drift > 0.04 ? 'note broken' : 'note';
 }
 
 function frame() {
-  if (world.running) advance(TIME_PER_FRAME * Number(speedInput.value));
-  paint();
-  requestAnimationFrame(frame);
+  state.tick += 1;
+  for (let i = 0; i < 30; i++) {
+    const arrival = dropArrival();
+    const ask = askAboutAFriend();
+    if (i === 0 && state.tick % 12 === 0) {
+      state.focusGap = arrival.index < SHOWN_GAPS ? arrival.index : Math.floor(state.rng() * SHOWN_GAPS);
+      state.arrivalFrac = arrival.frac;
+      state.focusPerson = ask.person;
+      state.pickedFriend = ask.picked;
+    }
+  }
+
+  const busCtx = fitCanvas(busCanvas);
+  if (busCtx) {
+    drawTimetable(busCtx, busCanvas.clientWidth, busCanvas.clientHeight, {
+      gaps: state.gaps,
+      shown: SHOWN_GAPS,
+      focus: state.focusGap,
+      truth: state.gapTruth,
+      lived: state.gapLived,
+      arrivalFrac: state.arrivalFrac,
+    });
+  }
+  const townCtx = fitCanvas(townCanvas);
+  if (townCtx) {
+    drawTown(townCtx, townCanvas.clientWidth, townCanvas.clientHeight, {
+      degrees: state.degrees,
+      friends: state.adj[state.focusPerson] ?? [],
+      focus: state.focusPerson,
+      picked: state.pickedFriend,
+      truth: state.degTruth,
+      lived: state.degLived,
+    });
+  }
+  paintReadouts();
+  handle = window.requestAnimationFrame(frame);
 }
 
-playButton.addEventListener('click', () => {
-  world.running = !world.running;
-  playButton.textContent = world.running ? 'Pause' : 'Resume';
-});
+/** @type {number} */
+let handle = 0;
 
+function rebuild() {
+  state = buildState(Number(spreadInput.value), Number(sortInput.value));
+  paintReadouts();
+}
+
+spreadInput.addEventListener('input', rebuild);
+sortInput.addEventListener('input', rebuild);
 resetButton.addEventListener('click', () => {
-  reset();
-  paint();
+  spreadInput.value = '0.8';
+  sortInput.value = '0';
+  rebuild();
 });
 
-stallButton.addEventListener('click', () => {
-  const wasRunning = world.running;
-  world.running = false;
-  stallButton.disabled = true;
-  stallButton.textContent = 'Running…';
-  const tick = () => {
-    for (let i = 0; i < 30 && world.time < STALL_TIME; i += 1) advance(4);
-    paint();
-    if (world.time < STALL_TIME) {
-      requestAnimationFrame(tick);
-      return;
-    }
-    stallButton.disabled = false;
-    stallButton.textContent = 'Fast-forward to the stall';
-    world.running = wasRunning;
-  };
-  requestAnimationFrame(tick);
+rebuild();
+handle = window.requestAnimationFrame(frame);
+
+mountClaimsPanel(need('claims-root'));
+
+Object.defineProperty(window, 'dailyBrief', {
+  value: {
+    freeze: () => window.cancelAnimationFrame(handle),
+    settle: (/** @type {number} */ steps) => {
+      for (let i = 0; i < steps; i++) {
+        dropArrival();
+        askAboutAFriend();
+      }
+      paintReadouts();
+    },
+  },
 });
-
-politeInput.addEventListener('change', () => {
-  world.polite = politeInput.checked;
-  // The two rules are different processes, so the street starts again rather
-  // than carrying over a layout that the other rule produced.
-  reset();
-  paint();
-});
-
-window.addEventListener('resize', paint);
-
-mountClaimsPanel(el('claims-root'));
-// A fresh street on every load: the ceiling should not depend on which one.
-reset();
-paint();
-requestAnimationFrame(frame);

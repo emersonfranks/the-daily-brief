@@ -1,302 +1,227 @@
 // @ts-check
+import {
+  makeRng,
+  sampleGaps,
+  degreeSequence,
+  configurationModel,
+  adjacency,
+  rewireAssortative,
+  landedGaps,
+  meanOf,
+  cvOf,
+  sizeBiasedMean,
+  predictedInflation,
+  edgeEndpointMeanDegree,
+  personAveragedFriendDegree,
+  degreeAssortativity,
+} from './sizebias.js';
 
 /**
- * Every assertion this page makes, as data. Each claim states what it catches
- * and returns the evidence it measured, or throws. No DOM and no test runner is
- * imported here, so `node --test` and the browser proof panel execute the same
- * code against the same thresholds.
- *
- * Thresholds are set from measured seed spread with headroom, and each one
- * records the run it came from.
+ * @typedef {{ id: string, title: string, catches: string, threshold: string, verify: () => Record<string, string> }} Claim
  */
 
-import {
-  jamKerb,
-  jamPoliteKerb,
-  jamDimerLattice,
-  kerbCoverageCurve,
-  membraneCoverageCurve,
-  createMembrane,
-  createKerb,
-  attemptAdsorb,
-  attemptPark,
-  kerbCoverage,
-  checkKerbInvariant,
-  checkMembraneInvariant,
-  makeRandom,
-  RENYI_CONSTANT,
-  FLORY_DIMER_COVERAGE,
-  DISK_JAMMING_COVERAGE,
-  PALASTI_CONJECTURE,
-} from './rsa.js';
-import { summarise, linearFit, logSpace } from './analysis.js';
-
-const SEEDS_8 = [1, 2, 3, 4, 5, 6, 7, 8];
-const SEEDS_4 = [1, 2, 3, 4];
-
-/** @param {number} v @param {number} [dp] */
-const fx = (v, dp = 4) => Number(v.toFixed(dp));
+/**
+ * @param {number} x
+ * @param {number} places
+ * @returns {string}
+ */
+function num(x, places) {
+  return Number(x).toFixed(places);
+}
 
 /**
  * @param {boolean} ok
  * @param {string} message
  */
-function require(ok, message) {
+function must(ok, message) {
   if (!ok) throw new Error(message);
 }
-
-/**
- * @typedef {Object} Claim
- * @property {string} id
- * @property {string} title
- * @property {string} catches      what a failure of this claim would mean
- * @property {() => Record<string, unknown>} verify returns evidence, or throws
- */
 
 /** @type {Claim[]} */
 export const claims = [
   {
-    id: 'renyi-parking-constant',
-    title: 'Random parking jams at 74.76% of the kerb',
+    id: 'algebraic-identity',
+    title: 'The inflation factor is algebra, not an approximation',
     catches:
-      'An acceptance test that lets cars overlap, or a placement rule that is not uniform, would push the ceiling away from Rényi\u2019s constant.',
+      'Catches this page overstating its own result. If size-biasing were only approximately 1 + CV squared, every headline number here would be a fit rather than an identity.',
+    threshold: 'Relative error below 1e-12. Worst observed across 20 runs when thresholds were set: 1.5e-14.',
     verify() {
-      const runs = SEEDS_8.map((s) => jamKerb(4000, s).coverage);
-      const stats = summarise(runs);
-      // Threshold: 0.006. Worst single seed observed over 8 runs was 0.7508,
-      // i.e. 0.0033 from the constant; the mean sits 0.0002 away.
-      const delta = Math.abs(stats.mean - RENYI_CONSTANT);
-      require(delta <= 0.006, `mean coverage ${fx(stats.mean, 5)} is ${fx(delta, 5)} from Rényi's ${fx(RENYI_CONSTANT, 5)}`);
-      return {
-        'measured jamming coverage': fx(stats.mean, 5),
-        'Rényi\u2019s constant': fx(RENYI_CONSTANT, 5),
-        'gap': fx(delta, 5),
-        'seed spread (sd)': fx(stats.sd, 5),
-        'runs': `${stats.n} streets of 4000 car lengths`,
-      };
-    },
-  },
-
-  {
-    id: 'flory-dimer-coverage',
-    title: 'Dimers on a lattice jam at 1 − e⁻² = 86.47%',
-    catches:
-      'The discrete case has a closed form Flory derived in 1939. Missing it would mean the lattice version is not really doing sequential adsorption.',
-    verify() {
-      const runs = SEEDS_8.map((s) => jamDimerLattice(20000, s).coverage);
-      const stats = summarise(runs);
-      const delta = Math.abs(stats.mean - FLORY_DIMER_COVERAGE);
-      // Threshold: 0.006, against an observed seed sd of 0.0017.
-      require(delta <= 0.006, `mean coverage ${fx(stats.mean, 5)} is ${fx(delta, 5)} from 1 − e⁻²`);
-      return {
-        'measured coverage': fx(stats.mean, 5),
-        '1 − e⁻²': fx(FLORY_DIMER_COVERAGE, 5),
-        'gap': fx(delta, 5),
-        'seed spread (sd)': fx(stats.sd, 5),
-        'runs': `${stats.n} lattices of 20000 sites`,
-      };
-    },
-  },
-
-  {
-    id: 'palasti-conjecture-fails',
-    title: 'Discs jam at 54.7%, not at Palásti\u2019s conjectured 55.9%',
-    catches:
-      'Palásti conjectured in 1960 that the two-dimensional limit is the square of the one-dimensional one. If our extrapolation landed on 0.5589 the conjecture would survive this test.',
-    verify() {
-      const times = logSpace(50, 2000, 16);
-      // Feder's law is imposed here, not tested: with the exponent fixed at 1/2,
-      // coverage is linear in t^(-1/2) and the intercept is the jamming limit.
-      const perSeed = SEEDS_4.map((s) => {
-        const curve = membraneCoverageCurve(40, s, times);
-        return linearFit(curve.map((p) => p.t ** -0.5), curve.map((p) => p.coverage)).intercept;
-      });
-      const stats = summarise(perSeed);
-      const delta = Math.abs(stats.mean - DISK_JAMMING_COVERAGE);
-      // Thresholds: 0.010 against the accepted value (observed 0.00003), and
-      // every individual seed below Palásti (worst observed 0.5534, margin 0.0055).
-      require(delta <= 0.01, `extrapolated limit ${fx(stats.mean, 5)} is ${fx(delta, 5)} from the accepted 0.54707`);
-      require(stats.max < PALASTI_CONJECTURE, `a seed reached ${fx(stats.max, 5)}, at or above Palásti's ${fx(PALASTI_CONJECTURE, 5)}`);
-      return {
-        'extrapolated jamming coverage': fx(stats.mean, 5),
-        'accepted value': fx(DISK_JAMMING_COVERAGE, 5),
-        'Palásti\u2019s conjecture': fx(PALASTI_CONJECTURE, 5),
-        'highest seed': fx(stats.max, 5),
-        'distance to Palásti': fx(Math.abs(stats.mean - PALASTI_CONJECTURE), 5),
-        'runs': `${stats.n} periodic patches of 40 × 40 diameters, to t = 2000`,
-      };
-    },
-  },
-
-  {
-    id: 'feder-exponent-one-dimension',
-    title: 'The crawl toward jamming is a power law with exponent ≈ 1',
-    catches:
-      'If the approach were exponential the last gaps would fill quickly and the ceiling would be an accident of run length rather than a real limit.',
-    verify() {
-      const times = logSpace(50, 3000, 14);
-      const alphas = SEEDS_8.map((s) => {
-        // theta_J is measured by running the same seed to a full jam, so the
-        // regression has one free parameter instead of the degenerate three.
-        const jam = jamKerb(6000, s).coverage;
-        const curve = kerbCoverageCurve(6000, s, times);
-        /** @type {number[]} */ const lx = [];
-        /** @type {number[]} */ const ly = [];
-        for (const p of curve) {
-          const deficit = jam - p.coverage;
-          if (deficit > 0) {
-            lx.push(Math.log(p.t));
-            ly.push(Math.log(deficit));
-          }
+      let worst = 0;
+      for (const cv of [0.2, 0.6, 1.0, 1.4, 1.6]) {
+        for (const seed of [1, 2, 3, 4]) {
+          const gaps = sampleGaps(makeRng(seed), 4000, 10, cv);
+          const lhs = sizeBiasedMean(gaps) / meanOf(gaps);
+          const rhs = predictedInflation(gaps);
+          worst = Math.max(worst, Math.abs(lhs / rhs - 1));
         }
-        return -linearFit(lx, ly).slope;
-      });
-      const stats = summarise(alphas);
-      // Threshold: 0.35 on the mean. Observed mean 1.089, seed sd 0.172, with
-      // individual seeds ranging 0.88 to 1.42 — the spread is real, so the claim
-      // is made on the mean and the spread is reported alongside it.
-      require(Math.abs(stats.mean - 1) <= 0.35, `fitted exponent ${fx(stats.mean, 3)} is not within 0.35 of 1`);
-      return {
-        'fitted exponent': fx(stats.mean, 3),
-        'Feder\u2019s prediction (1/d, d = 1)': 1,
-        'seed spread (sd)': fx(stats.sd, 3),
-        'seed range': `${fx(stats.min, 3)} to ${fx(stats.max, 3)}`,
-        'runs': `${stats.n} streets of 6000 car lengths, fitted over t = 50 to 3000`,
-      };
-    },
-  },
-
-  {
-    id: 'ceiling-is-scale-free',
-    title: 'The ceiling does not depend on how long the street is',
-    catches:
-      'If the limit moved with street length it would be a boundary artefact of one particular simulation rather than a property of the process.',
-    verify() {
-      const short = summarise(SEEDS_8.map((s) => jamKerb(1000, s).coverage));
-      const long = summarise(SEEDS_8.map((s) => jamKerb(4000, s).coverage));
-      const delta = Math.abs(short.mean - long.mean);
-      // Threshold: 0.012. The short street's own seed sd is 0.009, so anything
-      // tighter would be testing noise; the observed difference is 0.0004.
-      require(delta <= 0.012, `1000-length streets jam at ${fx(short.mean, 5)} but 4000-length at ${fx(long.mean, 5)}`);
-      return {
-        'coverage, 1000 car lengths': fx(short.mean, 5),
-        'coverage, 4000 car lengths': fx(long.mean, 5),
-        'difference': fx(delta, 5),
-        'spread of the shorter street (sd)': fx(short.sd, 5),
-        'runs': `${short.n} streets at each length`,
-      };
-    },
-  },
-
-  {
-    id: 'coordination-recovers-the-gap',
-    title: 'Parking flush against a neighbour recovers the missing quarter',
-    catches:
-      'The shortfall must be caused by where drivers stop, not by the cars. If courteous parking also jammed near 75% the story would be about geometry rather than about irreversible random choice.',
-    verify() {
-      const random = summarise(SEEDS_4.map((s) => jamKerb(4000, s).coverage));
-      const polite = summarise(SEEDS_4.map((s) => jamPoliteKerb(4000, s).coverage));
-      const gain = polite.mean - random.mean;
-      // Thresholds: flush parking above 0.98 (observed 0.99975) and a gain of
-      // at least 0.20 over random parking (observed 0.252).
-      require(polite.mean >= 0.98, `flush parking only reached ${fx(polite.mean, 5)}`);
-      require(gain >= 0.2, `flush parking gained only ${fx(gain, 5)} over random parking`);
-      return {
-        'random parking': fx(random.mean, 5),
-        'flush parking': fx(polite.mean, 5),
-        'kerb recovered': fx(gain, 5),
-        'runs': `${random.n} streets of 4000 car lengths each way`,
-      };
-    },
-  },
-
-  {
-    id: 'animated-path-agrees',
-    title: 'The street you watch fill is the same process as the one measured',
-    catches:
-      'Every other kerb check uses a shortcut that skips over failed attempts analytically. The panel above instead simulates each refused driver so you can see the rejections. If those two disagreed, the animation would be a decoration rather than the experiment.',
-    verify() {
-      const seeds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-      const coverages = [];
-      let tightest = Infinity;
-      for (const seed of seeds) {
-        const kerb = createKerb(1200);
-        const rand = makeRandom(seed);
-        let guard = 0;
-        while (!kerb.jammed && guard < 1200 * 20000) {
-          attemptPark(kerb, rand);
-          guard += 1;
-        }
-        require(kerb.jammed, `seed ${seed} ran out of attempts before the street jammed`);
-        const invariant = checkKerbInvariant(kerb);
-        require(invariant.ok, `seed ${seed} parked two cars on top of each other`);
-        tightest = Math.min(tightest, invariant.minGap);
-        coverages.push(kerbCoverage(kerb));
       }
-      const stats = summarise(coverages);
-      const delta = Math.abs(stats.mean - RENYI_CONSTANT);
-      // Threshold: 0.008, about five standard errors of the observed seed sd
-      // (0.0048 over 12 streets). The observed gap is 0.0016.
-      require(delta <= 0.008, `simulating every refusal gives ${fx(stats.mean, 5)}, ${fx(delta, 5)} from the shortcut's answer`);
+      must(worst < 1e-12, `identity broke: relative error ${worst.toExponential(2)}`);
+      return { 'worst relative error': worst.toExponential(2), threshold: '1e-12' };
+    },
+  },
+  {
+    id: 'arrivals-land-in-big-gaps',
+    title: 'A random arrival really does land in an inflated gap',
+    catches:
+      'Catches the claim being a property of the formula but not of the world. The timetable is untouched here; only the passenger is random.',
+    threshold: 'Relative error below 1.5% at 200,000 arrivals. Worst observed across 80 runs: 0.50%.',
+    verify() {
+      let worst = 0;
+      let sample = 0;
+      let samplePred = 0;
+      for (const cv of [0.2, 0.8, 1.6]) {
+        for (const seed of [1, 2, 3]) {
+          const gaps = sampleGaps(makeRng(seed), 4000, 10, cv);
+          const landed = landedGaps(makeRng(seed * 104729), gaps, 200000);
+          const measured = meanOf(landed) / meanOf(gaps);
+          const predicted = predictedInflation(gaps);
+          if (cv === 0.8 && seed === 1) {
+            sample = measured;
+            samplePred = predicted;
+          }
+          worst = Math.max(worst, Math.abs(measured / predicted - 1));
+        }
+      }
+      must(worst < 0.015, `arrival sampling missed the formula by ${num(worst * 100, 2)}%`);
       return {
-        'coverage, every refusal simulated': fx(stats.mean, 5),
-        'R\u00e9nyi\u2019s constant': fx(RENYI_CONSTANT, 5),
-        'gap': fx(delta, 5),
-        'seed spread (sd)': fx(stats.sd, 5),
-        'tightest gap between cars': fx(tightest, 8),
-        'runs': `${stats.n} streets of 1200 car lengths, driven to a genuine jam`,
+        'worst relative error': `${num(worst * 100, 3)}%`,
+        threshold: '1.5%',
+        'example at CV 0.8': `measured ${num(sample, 4)} against predicted ${num(samplePred, 4)}`,
       };
     },
   },
-
   {
-    id: 'nothing-overlaps',
-    title: 'No car and no molecule ever overlaps its neighbour',
+    id: 'random-friendship-is-exact',
+    title: 'Sampling a random friendship is the same operator, exactly',
     catches:
-      'This is the invariant every coverage number on the page rests on. A rejection test that is off by a rounding error would silently inflate all of them.',
+      'Catches the network side being a loose analogy. Picking a friendship at random and reading one end of it must equal sum of k squared over sum of k on the nose, for any wiring at all.',
+    threshold: 'Relative error below 1e-12, including on a network rewired to degree assortativity above 0.6.',
     verify() {
-      const kerb = jamKerb(2000, 9).kerb;
-      const kerbCheck = checkKerbInvariant(kerb);
-      require(kerbCheck.ok, `two parked cars overlap by ${fx(-kerbCheck.minGap, 8)}`);
-
-      const membrane = createMembrane(20);
-      const rand = makeRandom(9);
-      for (let i = 0; i < 200000; i += 1) attemptAdsorb(membrane, rand);
-      const membraneCheck = checkMembraneInvariant(membrane);
-      require(membraneCheck.ok, `two discs sit ${fx(membraneCheck.minCentreDistance, 8)} apart, closer than one diameter`);
-
+      let worst = 0;
+      let worstR = 0;
+      for (const cv of [0.4, 0.8, 1.4]) {
+        for (const seed of [1, 2, 3]) {
+          const rng = makeRng(seed);
+          const degrees = degreeSequence(rng, 4000, 6, cv);
+          const neutral = configurationModel(rng, degrees);
+          const sorted = rewireAssortative(rng, neutral, 20000);
+          for (const g of [neutral, sorted]) {
+            worst = Math.max(worst, Math.abs(edgeEndpointMeanDegree(g) / sizeBiasedMean(g.degrees) - 1));
+          }
+          worstR = Math.max(worstR, degreeAssortativity(sorted));
+        }
+      }
+      must(worst < 1e-12, `edge-endpoint sampling drifted by ${worst.toExponential(2)}`);
       return {
-        'cars parked': kerb.cars.length,
-        'tightest gap between cars': fx(kerbCheck.minGap, 8),
-        'discs adsorbed': membrane.xs.length,
-        'closest disc centres (one diameter = 1)': fx(membraneCheck.minCentreDistance, 8),
+        'worst relative error': worst.toExponential(2),
+        threshold: '1e-12',
+        'held up to assortativity': `r = ${num(worstR, 3)}`,
       };
     },
   },
-
   {
-    id: 'runs-are-reproducible',
-    title: 'A seed reproduces exactly, and different seeds genuinely differ',
+    id: 'asking-each-person-neutral',
+    title: 'On an unsorted network, asking each person also matches',
     catches:
-      'Every threshold above is quoted against a fixed seed set. If the stream were not deterministic those numbers would describe a run nobody can repeat.',
+      'Catches the friendship paradox being asserted for the everyday version of the question when only the edge-weighted version was ever tested.',
+    threshold: 'Relative error below 4% at 4,000 people. Worst observed across 80 runs: 1.83%.',
     verify() {
-      const a = jamKerb(1500, 42);
-      const b = jamKerb(1500, 42);
-      const c = jamKerb(1500, 43);
-      require(a.cars === b.cars && a.attempts === b.attempts, 'the same seed produced two different streets');
-
-      const kerb = createKerb(200);
-      const rand = makeRandom(7);
-      let parked = 0;
-      for (let i = 0; i < 5000; i += 1) if (attemptPark(kerb, rand)) parked += 1;
-      require(parked === kerb.cars.length, 'the attempt counter and the car list disagree');
-      require(a.cars !== c.cars, 'two different seeds produced identical streets');
-
+      let worst = 0;
+      for (const cv of [0.2, 0.8, 1.6]) {
+        for (const seed of [1, 2, 3]) {
+          const rng = makeRng(seed);
+          const degrees = degreeSequence(rng, 4000, 6, cv);
+          const graph = configurationModel(rng, degrees);
+          const measured = personAveragedFriendDegree(adjacency(graph), degrees) / meanOf(degrees);
+          worst = Math.max(worst, Math.abs(measured / predictedInflation(degrees) - 1));
+        }
+      }
+      must(worst < 0.04, `person-averaged sampling missed by ${num(worst * 100, 2)}%`);
+      return { 'worst relative error': `${num(worst * 100, 2)}%`, threshold: '4%' };
+    },
+  },
+  {
+    id: 'sorting-breaks-the-everyday-version',
+    title: 'Sorting friends by popularity breaks the everyday version and not the exact one',
+    catches:
+      'This is the published failure. It catches the page pretending one clean law covers both ways of asking the question.',
+    threshold:
+      'At CV of 0.6 and above, the person-averaged answer must move more than 10% off the formula while random-friendship sampling stays within 1e-12. Smallest deviation observed across 60 runs: 18.7%.',
+    verify() {
+      let minDeviation = Infinity;
+      let worstExact = 0;
+      let worstR = 0;
+      for (const cv of [0.6, 1.0, 1.4]) {
+        for (const seed of [1, 2, 3, 4]) {
+          const rng = makeRng(seed);
+          const degrees = degreeSequence(rng, 4000, 6, cv);
+          const sorted = rewireAssortative(rng, configurationModel(rng, degrees), 20000);
+          const person = personAveragedFriendDegree(adjacency(sorted), degrees) / meanOf(degrees);
+          minDeviation = Math.min(minDeviation, Math.abs(person / predictedInflation(degrees) - 1));
+          worstExact = Math.max(worstExact, Math.abs(edgeEndpointMeanDegree(sorted) / sizeBiasedMean(degrees) - 1));
+          worstR = Math.max(worstR, degreeAssortativity(sorted));
+        }
+      }
+      must(minDeviation > 0.1, `sorting failed to break it: smallest deviation only ${num(minDeviation * 100, 2)}%`);
+      must(worstExact < 1e-12, `sorting also broke the exact route by ${worstExact.toExponential(2)}`);
       return {
-        'seed 42, first run': `${a.cars} cars after ${a.attempts} attempts`,
-        'seed 42, second run': `${b.cars} cars after ${b.attempts} attempts`,
-        'seed 43': `${c.cars} cars`,
-        'rejection sampling agrees with the car list': `${parked} parked from 5000 attempts`,
+        'smallest deviation of the everyday answer': `${num(minDeviation * 100, 1)}%`,
+        threshold: 'above 10%',
+        'random-friendship answer meanwhile': `${worstExact.toExponential(2)} relative error`,
+        'assortativity reached': `r up to ${num(worstR, 3)}`,
+      };
+    },
+  },
+  {
+    id: 'no-spread-no-illusion',
+    title: 'Remove the spread and the illusion disappears',
+    catches:
+      'This is the falsifier. If the inflation were an artefact of the sampler rather than of the spread, it would survive here. It must not.',
+    threshold: 'At CV 0.05 both systems must sit within 1% of 1.0. Worst observed: 0.27%.',
+    verify() {
+      let worst = 0;
+      for (const seed of [1, 2, 3, 4]) {
+        const gaps = sampleGaps(makeRng(seed), 4000, 10, 0.05);
+        const bus = meanOf(landedGaps(makeRng(seed * 31), gaps, 100000)) / meanOf(gaps);
+        const rng = makeRng(seed);
+        const degrees = degreeSequence(rng, 4000, 6, 0.05);
+        const net = edgeEndpointMeanDegree(configurationModel(rng, degrees)) / meanOf(degrees);
+        worst = Math.max(worst, Math.abs(bus - 1), Math.abs(net - 1));
+      }
+      must(worst < 0.01, `inflation survived zero spread: ${num(worst * 100, 2)}%`);
+      return { 'worst deviation from 1.0': `${num(worst * 100, 3)}%`, threshold: '1%' };
+    },
+  },
+  {
+    id: 'matched-spread-matches-worlds',
+    title: 'Matched on spread, the two worlds report the same inflation',
+    catches:
+      'This is the pairing claim itself. It catches the two panels being driven by one slider while secretly sitting at different spreads, which is exactly what happens at the top of the range.',
+    threshold: 'Agreement within 12% once the realised spreads are matched. Worst observed across 40 runs: 7.1%.',
+    verify() {
+      let worst = 0;
+      let sampleBus = 0;
+      let sampleNet = 0;
+      for (const cv of [0.4, 0.8, 1.2, 1.6]) {
+        for (const seed of [1, 2, 3]) {
+          const rng = makeRng(seed);
+          const degrees = degreeSequence(rng, 4000, 6, cv);
+          const graph = configurationModel(rng, degrees);
+          const gaps = sampleGaps(makeRng(seed * 17), 6000, 10, cvOf(degrees));
+          const bus = meanOf(landedGaps(makeRng(seed * 97), gaps, 100000)) / meanOf(gaps);
+          const net = edgeEndpointMeanDegree(graph) / meanOf(degrees);
+          if (cv === 0.8 && seed === 1) {
+            sampleBus = bus;
+            sampleNet = net;
+          }
+          worst = Math.max(worst, Math.abs(bus / net - 1));
+        }
+      }
+      must(worst < 0.12, `the two worlds disagreed by ${num(worst * 100, 2)}%`);
+      return {
+        'worst disagreement': `${num(worst * 100, 2)}%`,
+        threshold: '12%',
+        'example at CV 0.8': `buses ${num(sampleBus, 3)} against friends ${num(sampleNet, 3)}`,
       };
     },
   },
