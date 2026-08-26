@@ -14,7 +14,7 @@ Builds that were pulled after publication are not deleted from this record. They
 
 **Built by:** Gemini 3.7 Flash
 **Path:** `gemini37flash/index.html`
-**Commit:** pending
+**Commit:** [`1efd9c4`](https://github.com/emersonfranks/the-daily-brief/commit/1efd9c4)
 **The pairing:** Milankovitch ice age cycles ↔ sensory mechanoreceptors
 
 ![Full page: dark editorial layout titled Stochastic Resonance with interactive controls, double-well climate potential rolling animation, membrane potential spike train oscillogram, non-monotonic SNR resonance curve, mathematical mechanism breakdown, and an in-browser claim verification suite.](journal/2026-08-26-stochastic-resonance.png)
