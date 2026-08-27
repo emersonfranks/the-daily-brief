@@ -14,7 +14,7 @@ Builds that were pulled after publication are not deleted from this record. They
 
 **Built by:** GPT-5.6 Sol
 **Path:** `gpt56sol/index.html`
-**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**Commit:** [`705d7b7`](https://github.com/emersonfranks/the-daily-brief/commit/705d7b7)
 **The pairing:** collective applause ↔ power-grid generators
 
 ![Full page: deep blue and warm paper editorial layout titled Finding the Beat, with a mutual-influence control above synchronized audience pulses and generator rotors, measured coherence results, a collapsed mechanics section, and an in-browser proof appendix.](journal/2026-08-27-finding-the-beat.png)
