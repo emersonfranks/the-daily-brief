@@ -10,6 +10,27 @@ Builds that were pulled after publication are not deleted from this record. They
 
 ---
 
+## 2026-08-27 — Poiseuille Flux Feedback
+
+**Built by:** Gemini 3.7 Flash
+**Path:** `gemini37flash/index.html`
+**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**The pairing:** slime mold veins ↔ adaptive data routing
+
+![Full page: dark layout titled Poiseuille Flux Feedback & Adaptive Network Routing showing live fluid conduit network simulation with peristaltic cytoplasm pulses, interactive controls for feedback exponent and vein severance, side-by-side comparative table, mathematical derivation accordions, and five green in-browser verified claims.](journal/2026-08-27-physarum-flux-adaptation.png)
+
+**The thesis.** Optimal transport networks do not require centralized architectural planning. When conduit conductance expands in response to hydrodynamic flux and atrophies under stagnation, decentralized networks autonomously discover geodesic shortest paths, balance congestion, and self-heal around severed arteries. Both the plasmodial veins of the true slime mold (*Physarum polycephalum*) and autonomous Internet routing meshes are physical instances of this exact same conductance relaxation principle.
+
+**The interaction.** The reader interacts with a live simulation of tubular network flow governed by the Tero-Kobayashi-Nakagaki model. Selecting presets (Double Bridge, Tokyo Regional Lattice, Byzantine Reroute) or switching between Petri Dish (Bio) and Cyber Mesh (Data) lenses reveals the shared physics. The reader can adjust the nonlinear feedback exponent $\gamma$ across the bifurcation threshold ($0.4 \le \gamma \le 1.8$) and use the **✂ Cut Conduit** tool to sever active arteries, triggering immediate backpressure rerouting and autonomous self-healing.
+
+**What it measured.** Five mathematical invariants and behavioral claims execute identically in `node --test` (5/5 passing) and in the in-browser test runner. (1) Kirchhoff Nodal Flow Conservation: maximum divergence across intermediate non-nutrient junctions is $9.71 \times 10^{-16}$, satisfying mass conservation to machine precision. (2) Shortest Path Dynamic Pruning ($\gamma = 1.2$): direct path captured $99.85\%$ of flux while the detour decayed to $D = 0.0021$. (3) Feedback Exponent Bifurcation: sublinear feedback ($\gamma = 0.6$) stably maintained redundant detour conduits ($D_{detour}/D_{direct} = 0.657$), whereas superlinear feedback ($\gamma = 1.4$) pruned alternative loops to $0.0061$. (4) Autonomous Fault Self-Healing: severing the dominant artery (pre-cut flux $1.86$) caused dormant backup routes to re-inflate and restore $100.0\%$ of throughput ($D_{top} = 0.96, D_{bot} = 0.96$). (5) Lattice Wiring Cost Reduction: total active conduit length on a 5-hub planar mesh dropped by $48.8\%$ (from $5740\text{ px}$ to $2940\text{ px}$) while preserving global connectivity to all nutrient endpoints.
+
+**What failed.** In continuous models where conductivity can reach zero ($D=0$), an active route completely disconnects the rest of the graph, making post-cut exploration impossible. The simulation was regularized with a biological floor conductance ($D_{min} = 10^{-3}$), reflecting the basal protoplasmic sheet in living plasmodia that allows backpressure waves to propagate through dormant conduits upon injury.
+
+**Stack:** no external libraries, no build step, pure static ES modules. `physarum.js` contains the pure DOM-free graph Laplacian solver and adaptation integrator, `renderer.js` renders bioluminescent plasmodia and cybernetic data streams with particle dynamics, `main.js` manages UI events and animation, and `claims.js` supplies the unified test assertions imported by `physarum.test.js` and `claims-panel.js`. Every module carries `// @ts-check`.
+
+---
+
 ## 2026-08-27 — Finding the Beat
 
 **Built by:** GPT-5.6 Sol

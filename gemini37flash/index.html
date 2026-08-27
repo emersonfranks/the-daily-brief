@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Physarum Flux Adaptation &harr; Dynamic Infrastructure Routing | The Daily Brief</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page-container">
+    <!-- Header -->
+    <header class="hero-header">
+      <div class="meta-bar">
+        <span>The Daily Brief</span>
+        <span>&middot;</span>
+        <span class="meta-badge">Gemini 3.7 Flash</span>
+        <span>&middot;</span>
+        <span>Universal Morphogenesis</span>
+      </div>
+      <h1 class="hero-title">Poiseuille Flux Feedback &harr; Adaptive Network Routing</h1>
+      <p class="hero-subtitle">
+        How a brainless single-celled slime mold (<em>Physarum polycephalum</em>) and autonomous Internet traffic routers solve optimal transport via the exact same physical law of conductance adaptation.
+      </p>
+    </header>
+
+    <!-- LAYER 1: Interactive Surface -->
+    <section class="experiment-card">
+      <div class="experiment-callout">
+        <div class="callout-title">
+          <span>⚡</span> Live Experiment: Slime Mold Tube Conductance vs Packet Flow
+        </div>
+        <p class="callout-instruction">
+          <strong>What to do:</strong> Choose a preset below, observe how flow thickens dominant arteries while starving redundant loops, or click <strong>✂ Cut Conduit</strong> and sever an active vein to watch the network autonomously reroute fluid and heal.
+        </p>
+      </div>
+
+      <div class="canvas-wrapper">
+        <canvas id="sim-canvas"></canvas>
+        <div class="canvas-hud">
+          <div class="hud-pill"><span>Step:</span> <span id="hud-step" class="val">0</span></div>
+          <div class="hud-pill"><span>Active Conduits:</span> <span id="hud-edges" class="val">0</span></div>
+          <div class="hud-pill"><span>Total Wire Length:</span> <span id="hud-length" class="val">0 px</span></div>
+          <div class="hud-pill"><span>Nodal Divergence:</span> <span id="hud-divergence" class="val">0.00e+0</span></div>
+        </div>
+      </div>
+
+      <div class="controls-toolbar">
+        <div class="control-row">
+          <!-- Preset Selector -->
+          <div class="btn-group" id="preset-group">
+            <button class="btn-group-btn active" data-preset="double-bridge">Double Bridge (Shortest Path)</button>
+            <button class="btn-group-btn" data-preset="lattice">Tokyo Regional Lattice</button>
+            <button class="btn-group-btn" data-preset="fault-tolerant">Byzantine Reroute</button>
+          </div>
+
+          <!-- Lens View Mode -->
+          <div class="btn-group" id="mode-group">
+            <button class="btn-group-btn active bio-active" data-mode="bio">🌿 Petri Dish (Bio)</button>
+            <button class="btn-group-btn" data-mode="network">⚡ Cyber Mesh (Data)</button>
+          </div>
+        </div>
+
+        <div class="control-row">
+          <!-- Playback Controls -->
+          <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+            <button id="btn-play-pause" class="btn btn-primary">
+              <span id="play-icon">⏸</span> <span id="play-text">Pause</span>
+            </button>
+            <button id="btn-step" class="btn">
+              <span>⏭</span> Step
+            </button>
+            <button id="btn-reset" class="btn">
+              <span>🔄</span> Reset
+            </button>
+            <button id="btn-cut-mode" class="btn btn-danger">
+              <span>✂</span> Cut Conduit
+            </button>
+            <button id="btn-restore" class="btn">
+              <span>🩹</span> Restore Cuts
+            </button>
+          </div>
+
+          <!-- Nonlinear Feedback Exponent Slider -->
+          <div class="slider-container">
+            <label for="gamma-slider" title="Exponent gamma governs the topological bifurcation: gamma < 1 preserves resilient loops; gamma > 1 prunes loops into minimal Steiner trees.">
+              Feedback Exponent (&gamma;):
+            </label>
+            <input type="range" id="gamma-slider" min="0.4" max="1.8" step="0.1" value="1.2">
+            <span id="gamma-val" class="slider-val">1.2</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LAYER 2: Core Plain-English Thesis -->
+    <section class="thesis-section">
+      <div class="thesis-label">Core Universal Thesis</div>
+      <div class="thesis-body">
+        Optimal transport does not require a central architect. When conduit conductance expands in response to hydrodynamic flux and atrophies under stagnation, decentralized networks autonomously discover geodesic shortest paths, balance congestion, and self-heal around severed arteries. Both the amoeba's protoplasmic cytoplasm and the Internet's dynamic routing fabric are manifestations of this exact same conductance relaxation principle.
+      </div>
+
+      <div class="comparison-grid">
+        <div class="comparison-card bio-card">
+          <div class="comp-title bio">🌿 System A: Physarum polycephalum (Slime Mold)</div>
+          <ul class="comp-list">
+            <li><strong>Conduit:</strong> Protoplasmic tubular veins with diameter $D_{ij}$</li>
+            <li><strong>Driving Potential:</strong> Hydrostatic pressure gradient ($\Delta p$) generated by rhythmic actomyosin contractions</li>
+            <li><strong>Transport Flux:</strong> Cytoplasm volumetric flow rate $Q_{ij} = \frac{D_{ij}}{L_{ij}} \Delta p$ (Hagen-Poiseuille)</li>
+            <li><strong>Adaptation Mechanism:</strong> Shear stress on vein walls triggers actin polymerisation, dilating veins under high flux</li>
+            <li><strong>Endpoint Nodes:</strong> Oat flake nutrient sources & humid agar sinks</li>
+          </ul>
+        </div>
+
+        <div class="comparison-card net-card">
+          <div class="comp-title net">⚡ System B: Dynamic Infrastructure / Internet Routing</div>
+          <ul class="comp-list">
+            <li><strong>Conduit:</strong> Optical fiber & network routing links with bandwidth conductance $D_{ij}$</li>
+            <li><strong>Driving Potential:</strong> Packet queue pressure differential & latency gradient ($\Delta p$)</li>
+            <li><strong>Transport Flux:</strong> Data throughput & packet bitrate $Q_{ij}$ (Kirchhoff traffic flow)</li>
+            <li><strong>Adaptation Mechanism:</strong> OSPF / multi-commodity backpressure dynamic routing adjusting link weights</li>
+            <li><strong>Endpoint Nodes:</strong> Ingress traffic gateways & server cluster sinks</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- LAYER 3: Deep Technical & Mathematical Mechanics -->
+    <section class="deep-section">
+      <details class="deep-accordion">
+        <summary>
+          <span>📐 The Mathematical Mechanics: Kirchhoff-Poiseuille Relaxation</span>
+          <span>▼</span>
+        </summary>
+        <div class="accordion-content">
+          <p>
+            The mathematical foundation connecting biological transport and electrical/data networks is the <strong>Tero-Kobayashi-Nakagaki model (2007)</strong>. Consider a network of nodes $V$ connected by tubular edges $E$. Each edge $(i,j)$ has length $L_{ij}$ and conductivity $D_{ij}$.
+          </p>
+          
+          <h4>1. Poiseuille Flow & Kirchhoff's Current Law</h4>
+          <p>
+            Assuming laminar viscous flow, the flux $Q_{ij}$ through conduit $(i,j)$ is proportional to the pressure gradient $\Delta p_{ij} = p_i - p_j$:
+          </p>
+          <div class="math-box">
+            Q_{ij} = \frac{D_{ij}}{L_{ij}} (p_i - p_j)
+          </div>
+          <p>
+            At every intermediate node $i$, fluid is neither created nor destroyed. The sum of all incoming and outgoing fluxes equals the externally injected current $I_i$ ($+I_0$ at sources, $-I_0$ at sinks, $0$ at junctions):
+          </p>
+          <div class="math-box">
+            \sum_{j \in N(i)} \frac{D_{ij}}{L_{ij}} (p_i - p_j) = I_i \quad \Longrightarrow \quad \mathbf{K} \mathbf{p} = \mathbf{I}
+          </div>
+          <p>
+            where $\mathbf{K}$ is the symmetric, positive semi-definite graph Laplacian conductance matrix.
+          </p>
+
+          <h4>2. Flux-Driven Conductance Evolution</h4>
+          <p>
+            Tubes adapt over time according to biological shear stress feedback. The diameter grows with the absolute flux carried, balanced by natural metabolic decay rate $r$:
+          </p>
+          <div class="math-box">
+            \frac{d D_{ij}}{dt} = |Q_{ij}|^\gamma - r D_{ij}
+          </div>
+          <p>
+            Here, $\gamma$ is the non-linear feedback exponent. This non-linear ordinary differential equation governs the global topological phase transition of the network.
+          </p>
+        </div>
+      </details>
+
+      <details class="deep-accordion">
+        <summary>
+          <span>🔀 The Bifurcation Theorem: Why &gamma; Governs Resilience vs Efficiency</span>
+          <span>▼</span>
+        </summary>
+        <div class="accordion-content">
+          <p>
+            The exponent $\gamma$ controls the fundamental economic trade-off in network architecture:
+          </p>
+          <ul>
+            <li><strong>Sublinear Feedback ($\gamma < 1$):</strong> Marginal reinforcement diminishes as flow grows. The network maintains multiple redundant parallel pathways, guaranteeing high fault tolerance against unexpected line cuts (crucial for resilient Internet topologies).</li>
+            <li><strong>Linear Feedback ($\gamma = 1$):</strong> Exponential divergence between asymmetric loops. Proven by Bonifaci et al. (2012) to compute the geodesic shortest path in polynomial time.</li>
+            <li><strong>Superlinear Feedback ($\gamma > 1$):</strong> Winner-take-all dynamics. Alternative loops are rapidly starved to minimum floor conductivity, collapsing the graph into a minimal spanning or Steiner tree with zero loop redundancy (optimizing infrastructure construction cost).</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="deep-accordion">
+        <summary>
+          <span>🔬 Empirical Precedents & Verified Citations</span>
+          <span>▼</span>
+        </summary>
+        <div class="accordion-content">
+          <p>
+            This system reproduces classic findings from landmark studies in biological computation and physics:
+          </p>
+          <ul class="citations-list">
+            <li>
+              <strong>Nakagaki, T., Yamada, H., & Tóth, Á. (2000).</strong> <em>"Intelligence: Maze-solving by an amoeboid organism."</em> Nature, 407(6803), 470-470. (Demonstrated that <em>Physarum</em> places its tubular veins along the shortest path through an agar labyrinth).
+            </li>
+            <li>
+              <strong>Tero, A., Kobayashi, R., & Nakagaki, T. (2007).</strong> <em>"A mathematical model for adaptive transport network in path finding by true slime mold."</em> Journal of Theoretical Biology, 244(4), 553-564. (Derived the conductance adaptation equations implemented on this page).
+            </li>
+            <li>
+              <strong>Tero, A., Takagi, S., Saigusa, T., et al. (2010).</strong> <em>"Rules for biologically inspired adaptive network design."</em> Science, 327(5964), 439-442. (Showed <em>Physarum</em> networks match the efficiency, fault tolerance, and cost of the Tokyo rail transit system).
+            </li>
+            <li>
+              <strong>Bonifaci, V., Mehlhorn, K., & Varma, G. (2012).</strong> <em>"Physarum can compute shortest paths."</em> Journal of Theoretical Biology, 309, 121-133. (Rigorous mathematical convergence proof of the continuous Physarum dynamical system).
+            </li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="deep-accordion">
+        <summary>
+          <span>⚠️ Numerical Limits & Discrepancy Analysis</span>
+          <span>▼</span>
+        </summary>
+        <div class="accordion-content">
+          <p>
+            In continuous mathematics, dormant veins can decay to zero conductivity ($D \to 0$). However, if $D = 0$ everywhere except the active path, the graph Laplacian becomes permanently disconnected, preventing the system from ever exploring alternative paths when an artery is severed.
+          </p>
+          <p>
+            To mirror real biological tissue (where basal plasmodial sheets maintain a microscopic dormant vascular bed), our implementation enforces a physical floor $D_{\text{min}} = 10^{-3}$. This small residual conductance allows pressure waves to propagate through dormant conduits upon severance, providing the backpressure trigger that drives autonomous self-healing.
+          </p>
+        </div>
+      </details>
+    </section>
+
+    <!-- LAYER 4: Proof Level (In-Browser Test Suite) -->
+    <section class="proof-section" id="proof-container">
+      <!-- Mounted by claims-panel.js -->
+    </section>
+
+    <!-- Footer -->
+    <footer class="page-footer">
+      <p>
+        The Daily Brief &middot; Rebuilt daily from scratch &middot; 
+        <a href="../index.html">View Today's Pairings</a>
+      </p>
+    </footer>
+  </div>
+
+  <!-- Main ES Module Entry Point -->
+  <script type="module" src="main.js"></script>
+</body>
+</html>
