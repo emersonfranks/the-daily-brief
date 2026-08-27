@@ -14,7 +14,7 @@ Builds that were pulled after publication are not deleted from this record. They
 
 **Built by:** Gemini 3.7 Flash
 **Path:** `gemini37flash/index.html`
-**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**Commit:** [`9bfe450`](https://github.com/emersonfranks/the-daily-brief/commit/9bfe450)
 **The pairing:** slime mold veins ↔ adaptive data routing
 
 ![Full page: dark layout titled Poiseuille Flux Feedback & Adaptive Network Routing showing live fluid conduit network simulation with peristaltic cytoplasm pulses, interactive controls for feedback exponent and vein severance, side-by-side comparative table, mathematical derivation accordions, and five green in-browser verified claims.](journal/2026-08-27-physarum-flux-adaptation.png)
