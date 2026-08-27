@@ -1,159 +1,138 @@
 // @ts-check
 
-/** @typedef {import("./branching.js").BranchingRun} BranchingRun */
-
-const palette = {
-  ink: "#181816",
-  paper: "#f3f0e8",
-  mail: "#197f91",
-  mailSoft: "#7fc7cf",
-  atom: "#d04432",
-  atomSoft: "#ef9b80",
-  muted: "#77736a",
+const colors = {
+  night: "#071c24",
+  cream: "#f4edda",
+  coral: "#ff6b4a",
+  cyan: "#40d9cf",
+  gold: "#f3c84b",
+  dim: "#59717a",
 };
 
-/**
- * @param {HTMLCanvasElement} canvas
- */
+/** @param {HTMLCanvasElement} canvas */
 export function createRenderer(canvas) {
   const context = canvas.getContext("2d");
   if (!context) throw new Error("Canvas rendering is unavailable");
 
-  /**
-   * @param {BranchingRun} run
-   * @param {number} visibleGeneration
-   */
-  function render(run, visibleGeneration) {
+  /** @param {number[]} phases @param {number} coherence @param {boolean} shocked */
+  function render(phases, coherence, shocked) {
     const bounds = canvas.getBoundingClientRect();
     const scale = Math.min(window.devicePixelRatio || 1, 2);
-    const width = Math.max(640, Math.round(bounds.width));
-    const height = Math.max(460, Math.round(bounds.height));
+    const width = Math.max(320, Math.round(bounds.width));
+    const height = Math.max(520, Math.round(bounds.height));
     if (canvas.width !== width * scale || canvas.height !== height * scale) {
       canvas.width = width * scale;
       canvas.height = height * scale;
     }
     context.setTransform(scale, 0, 0, scale, 0, 0);
-    context.clearRect(0, 0, width, height);
-    context.fillStyle = palette.paper;
+    context.fillStyle = colors.night;
     context.fillRect(0, 0, width, height);
-
-    const gap = width < 820 ? 18 : 42;
-    const panelWidth = (width - gap) / 2;
-    drawWorld(run, visibleGeneration, 0, panelWidth, height, "mail");
-    drawWorld(run, visibleGeneration, panelWidth + gap, panelWidth, height, "atom");
+    const stacked = width < 720;
+    if (stacked) {
+      drawAudience(phases, 0, 0, width, height / 2, shocked);
+      drawGrid(phases, 0, height / 2, width, height / 2, shocked);
+      context.fillStyle = colors.night;
+      context.fillRect(0, height / 2 - 1, width, 2);
+    } else {
+      drawAudience(phases, 0, 0, width / 2, height, shocked);
+      drawGrid(phases, width / 2, 0, width / 2, height, shocked);
+      context.fillStyle = colors.night;
+      context.fillRect(width / 2 - 1, 0, 2, height);
+    }
+    drawGauge(coherence, width, height);
   }
 
-  /**
-   * @param {BranchingRun} run
-   * @param {number} visibleGeneration
-   * @param {number} offsetX
-   * @param {number} panelWidth
-   * @param {number} height
-   * @param {"mail" | "atom"} world
-   */
-  function drawWorld(run, visibleGeneration, offsetX, panelWidth, height, world) {
-    const color = world === "mail" ? palette.mail : palette.atom;
-    const soft = world === "mail" ? palette.mailSoft : palette.atomSoft;
-    const title = world === "mail" ? "THE REPLY CHAIN" : "THE FISSION CHAIN";
-    const unit = world === "mail" ? "one dot = one sent reply" : "one dot = one fission event";
-    const top = 96;
-    const plotHeight = height - top - 34;
-    const maxGeneration = Math.max(1, run.generations.length - 1);
-    const visibleNodes = run.nodes.filter((node) => node.generation <= visibleGeneration);
-    const byGeneration = new Map();
-    for (const node of visibleNodes) {
-      const group = byGeneration.get(node.generation) ?? [];
-      group.push(node);
-      byGeneration.set(node.generation, group);
-    }
+  /** @param {number[]} phases @param {number} x @param {number} y @param {number} width @param {number} height @param {boolean} shocked */
+  function drawAudience(phases, x, y, width, height, shocked) {
+    context.fillStyle = "#e9dfc5";
+    context.fillRect(x, y, width, height);
+    drawLabel("THE AUDIENCE", "one pulse = one person's clap", x, y, colors.coral);
+    const columns = 8;
+    const top = y + 86;
+    const plotHeight = height - 112;
+    phases.forEach((phase, index) => {
+      const column = index % columns;
+      const row = Math.floor(index / columns);
+      const personX = x + ((column + 0.5) / columns) * width;
+      const personY = top + ((row + 0.6) / 6) * plotHeight;
+      const pulse = (Math.sin(phase) + 1) / 2;
+      context.strokeStyle = index < 12 && shocked ? colors.gold : colors.coral;
+      context.lineWidth = 1 + pulse * 2.4;
+      context.beginPath();
+      context.arc(personX, personY, 5 + pulse * 13, 0, Math.PI * 2);
+      context.stroke();
+      context.fillStyle = colors.night;
+      context.beginPath();
+      context.arc(personX, personY, 4.2, 0, Math.PI * 2);
+      context.fill();
+    });
+  }
 
-    context.fillStyle = color;
-    context.font = "700 13px 'Arial Narrow', sans-serif";
-    context.fillText(title, offsetX + 18, 30);
-    context.fillStyle = palette.ink;
-    context.font = "600 12px Georgia, serif";
-    context.fillText(unit, offsetX + 18, 52);
-    context.fillStyle = palette.muted;
-    context.font = "11px 'Arial Narrow', sans-serif";
-    context.fillText(`GENERATION ${Math.min(visibleGeneration, maxGeneration)} / ${maxGeneration}`, offsetX + 18, 75);
-
-    context.strokeStyle = "rgba(24, 24, 22, 0.12)";
+  /** @param {number[]} phases @param {number} x @param {number} y @param {number} width @param {number} height @param {boolean} shocked */
+  function drawGrid(phases, x, y, width, height, shocked) {
+    context.fillStyle = "#10313a";
+    context.fillRect(x, y, width, height);
+    drawLabel("THE POWER GRID", "one dial = one generator rotor", x, y, colors.cyan);
+    const columns = 8;
+    const top = y + 86;
+    const plotHeight = height - 112;
+    context.strokeStyle = "rgba(64, 217, 207, 0.14)";
     context.lineWidth = 1;
-    for (let generation = 0; generation <= maxGeneration; generation += 2) {
-      const x = offsetX + 22 + (generation / maxGeneration) * (panelWidth - 44);
+    for (let row = 0; row < 6; row += 1) {
       context.beginPath();
-      context.moveTo(x, top - 8);
-      context.lineTo(x, height - 20);
+      for (let column = 0; column < columns; column += 1) {
+        const pointX = x + ((column + 0.5) / columns) * width;
+        const pointY = top + ((row + 0.6) / 6) * plotHeight;
+        if (column === 0) context.moveTo(pointX, pointY);
+        else context.lineTo(pointX, pointY);
+      }
       context.stroke();
     }
-
-    /** @type {Map<number, {x: number, y: number}>} */
-    const positions = new Map();
-    for (const [generation, nodes] of byGeneration) {
-      nodes.forEach((node, index) => {
-        const x = offsetX + 22 + (generation / maxGeneration) * (panelWidth - 44);
-        const distributed = (index + 1) / (nodes.length + 1);
-        const y = top + distributed * plotHeight;
-        positions.set(node.id, { x, y });
-      });
-    }
-
-    context.strokeStyle = soft;
-    context.lineWidth = 1.2;
-    for (const node of visibleNodes) {
-      if (node.parentId === null) continue;
-      const start = positions.get(node.parentId);
-      const end = positions.get(node.id);
-      if (!start || !end) continue;
+    phases.forEach((phase, index) => {
+      const column = index % columns;
+      const row = Math.floor(index / columns);
+      const rotorX = x + ((column + 0.5) / columns) * width;
+      const rotorY = top + ((row + 0.6) / 6) * plotHeight;
+      const radius = Math.max(8, Math.min(15, width / 32));
+      context.strokeStyle = index < 12 && shocked ? colors.gold : colors.cyan;
+      context.lineWidth = 1.5;
       context.beginPath();
-      context.moveTo(start.x, start.y);
-      context.bezierCurveTo((start.x + end.x) / 2, start.y, (start.x + end.x) / 2, end.y, end.x, end.y);
+      context.arc(rotorX, rotorY, radius, 0, Math.PI * 2);
       context.stroke();
-    }
-
-    for (const node of visibleNodes) {
-      const position = positions.get(node.id);
-      if (!position) continue;
-      if (world === "mail") drawMail(position.x, position.y, color, node.generation === visibleGeneration);
-      else drawAtom(position.x, position.y, color, node.generation === visibleGeneration);
-    }
+      context.beginPath();
+      context.moveTo(rotorX, rotorY);
+      context.lineTo(rotorX + Math.cos(phase) * radius, rotorY + Math.sin(phase) * radius);
+      context.stroke();
+      context.fillStyle = colors.cream;
+      context.beginPath();
+      context.arc(rotorX, rotorY, 2.2, 0, Math.PI * 2);
+      context.fill();
+    });
   }
 
-  /**
-   * @param {number} x
-   * @param {number} y
-   * @param {string} color
-   * @param {boolean} newest
-   */
-  function drawMail(x, y, color, newest) {
-    context.fillStyle = newest ? color : palette.paper;
-    context.strokeStyle = color;
-    context.lineWidth = 1.4;
-    context.fillRect(x - 4.5, y - 3.4, 9, 6.8);
-    context.strokeRect(x - 4.5, y - 3.4, 9, 6.8);
-    context.beginPath();
-    context.moveTo(x - 4, y - 2.8);
-    context.lineTo(x, y + 0.2);
-    context.lineTo(x + 4, y - 2.8);
-    context.stroke();
-  }
-
-  /**
-   * @param {number} x
-   * @param {number} y
-   * @param {string} color
-   * @param {boolean} newest
-   */
-  function drawAtom(x, y, color, newest) {
+  /** @param {string} title @param {string} unit @param {number} x @param {number} y @param {string} color */
+  function drawLabel(title, unit, x, y, color) {
     context.fillStyle = color;
-    context.beginPath();
-    context.arc(x, y, newest ? 4.2 : 3, 0, Math.PI * 2);
-    context.fill();
-    context.strokeStyle = color;
-    context.lineWidth = 0.8;
-    context.beginPath();
-    context.ellipse(x, y, 6.5, 2.4, Math.PI / 5, 0, Math.PI * 2);
-    context.stroke();
+    context.font = "700 12px 'Arial Narrow', sans-serif";
+    context.fillText(title, x + 22, y + 30);
+    context.fillStyle = x === 0 ? colors.night : colors.cream;
+    context.font = "12px Georgia, serif";
+    context.fillText(unit, x + 22, y + 52);
+  }
+
+  /** @param {number} coherence @param {number} width @param {number} height */
+  function drawGauge(coherence, width, height) {
+    const gaugeWidth = Math.min(360, width - 40);
+    const left = (width - gaugeWidth) / 2;
+    const top = height - 27;
+    context.fillStyle = colors.night;
+    context.fillRect(left - 8, top - 12, gaugeWidth + 16, 28);
+    context.fillStyle = colors.dim;
+    context.fillRect(left, top, gaugeWidth, 3);
+    context.fillStyle = coherence > 0.85 ? colors.gold : colors.coral;
+    context.fillRect(left, top, gaugeWidth * coherence, 3);
+    context.font = "700 9px 'Arial Narrow', sans-serif";
+    context.fillText(`COHERENCE ${coherence.toFixed(2)}`, left, top - 4);
   }
 
   return { render };

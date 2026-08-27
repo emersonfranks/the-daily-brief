@@ -1,43 +1,44 @@
 // @ts-check
 
-import { measureRegime } from "./branching.js";
+import { measureCoupling, simulateSynchrony } from "./synchrony.js";
 
-const seeds = Array.from({ length: 96 }, (_, index) => 7400 + index * 7919);
+const seeds = Array.from({ length: 64 }, (_, index) => 5600 + index * 7919);
 
 export const claims = [
   {
-    name: "Below one, cascades disappear",
-    catches: "A subcritical process that persists too often or grows too large.",
+    name: "Weak influence leaves timing scattered",
+    catches: "A weakly coupled population that becomes consistently coherent in this model.",
     verify() {
-      const result = measureRegime(0.72, seeds);
-      if (result.extinctionRate < 0.94 || result.meanTotal >= 8) {
-        throw new Error(`extinction ${result.extinctionRate.toFixed(3)}, mean total ${result.meanTotal.toFixed(2)}`);
+      const result = measureCoupling(0.25, seeds);
+      if (result.meanCoherence >= 0.6) {
+        throw new Error(`mean late coherence ${result.meanCoherence.toFixed(3)}`);
       }
-      return `${(result.extinctionRate * 100).toFixed(1)}% extinct by generation 14; ${result.meanTotal.toFixed(2)} mean events across ${result.runs} seeds`;
+      return `Mean late coherence ${result.meanCoherence.toFixed(3)} across ${result.runs} seeds (0 means scattered; 1 means aligned)`;
     },
   },
   {
-    name: "Above one, some cascades sustain",
-    catches: "A supercritical process that fails to survive or separate from the quiet regime.",
+    name: "Strong influence locks the population",
+    catches: "A strongly coupled population that fails to align reliably.",
     verify() {
-      const quiet = measureRegime(0.72, seeds);
-      const active = measureRegime(1.28, seeds);
-      if (active.survivalRate < 0.22 || active.meanTotal < quiet.meanTotal * 8) {
-        throw new Error(`survival ${active.survivalRate.toFixed(3)}, growth ratio ${(active.meanTotal / quiet.meanTotal).toFixed(2)}`);
+      const result = measureCoupling(2.8, seeds);
+      if (result.minimumCoherence < 0.97 || result.meanCoherence < 0.98) {
+        throw new Error(`mean ${result.meanCoherence.toFixed(3)}, minimum ${result.minimumCoherence.toFixed(3)}`);
       }
-      return `${(active.survivalRate * 100).toFixed(1)}% alive at generation 14; ${(active.meanTotal / quiet.meanTotal).toFixed(1)}x the subcritical mean`;
+      return `Mean late coherence ${result.meanCoherence.toFixed(3)}; worst seed ${result.minimumCoherence.toFixed(3)} across ${result.runs} seeds`;
     },
   },
   {
-    name: "Crossing the threshold raises survival",
-    catches: "A seeded measurement whose survival trend does not increase with reproduction.",
+    name: "A locked group absorbs a timing shock",
+    catches: "Strong coupling that cannot restore alignment after one quarter of the population is displaced.",
     verify() {
-      const means = [0.6, 0.9, 1.1, 1.4];
-      const rates = means.map((mean) => measureRegime(mean, seeds).survivalRate);
-      if (rates.some((rate, index) => index > 0 && rate < rates[index - 1])) {
-        throw new Error(`survival rates ${rates.map((rate) => rate.toFixed(3)).join(", ")}`);
-      }
-      return means.map((mean, index) => `${mean.toFixed(1)} → ${(rates[index] * 100).toFixed(1)}%`).join(" · ");
+      const recoveryTimes = seeds.map((seed) => {
+        const run = simulateSynchrony({ coupling: 2.8, seed, perturbAt: 12 });
+        const recovered = run.frames.find((frame) => frame.time > 12 && frame.coherence >= 0.95);
+        return recovered ? recovered.time - 12 : Number.POSITIVE_INFINITY;
+      });
+      const worstRecovery = Math.max(...recoveryTimes);
+      if (worstRecovery > 1.2) throw new Error(`worst recovery ${worstRecovery.toFixed(2)} model-seconds`);
+      return `All ${seeds.length} seeds returned above 0.95 coherence within ${worstRecovery.toFixed(1)} model-seconds`;
     },
   },
 ];

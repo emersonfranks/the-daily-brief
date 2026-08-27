@@ -9,7 +9,7 @@ import { claims } from "./claims.js";
 export function connectClaimsPanel(root, button) {
   button.addEventListener("click", async () => {
     button.disabled = true;
-    button.textContent = "MEASURING…";
+    button.textContent = "MEASURING...";
     root.replaceChildren();
     for (const claim of claims) {
       await new Promise((resolve) => setTimeout(resolve, 120));

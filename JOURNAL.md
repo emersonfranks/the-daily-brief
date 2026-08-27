@@ -10,6 +10,27 @@ Builds that were pulled after publication are not deleted from this record. They
 
 ---
 
+## 2026-08-27 — Finding the Beat
+
+**Built by:** GPT-5.6 Sol
+**Path:** `gpt56sol/index.html`
+**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**The pairing:** collective applause ↔ power-grid generators
+
+![Full page: deep blue and warm paper editorial layout titled Finding the Beat, with a mutual-influence control above synchronized audience pulses and generator rotors, measured coherence results, a collapsed mechanics section, and an in-browser proof appendix.](journal/2026-08-27-finding-the-beat.png)
+
+**The thesis.** A crowd settling into rhythmic applause and a power grid holding generator phase can be interpreted through the same coupled-oscillator rule. Each unit keeps a private natural frequency while correcting toward the population. When that correction outweighs the timing differences, scattered phases converge on a shared pulse. This is a mathematical analogy through the Kuramoto model, not a claim that concert halls and electrical grids share all their physics.
+
+**The interaction.** One slider changes the coupling of the same 48 seeded phases rendered as clapping pulses and generator rotors. Low influence leaves timing scattered; high influence aligns both panels. Disrupt the Rhythm shifts one quarter of the phases by 0.85π so the reader can watch a strongly coupled group lose and then recover coherence.
+
+**What it measured.** Across 64 fixed seeds, influence 0.25 produced mean late coherence 0.491, while influence 2.80 produced 0.999 mean coherence and 0.999 on the worst seed. After the quarter-population phase shock, every strong-coupling run returned above 0.95 coherence within 1.0 model-seconds. All three claims run unchanged under `node --test` and in the browser.
+
+**What failed.** Weak coupling was scattered on average, not on every seed: its measured late coherence ranged from 0.105 to 0.859, so the page does not claim a universal low-coupling ceiling. The provisional stronger claim was narrowed to the 64-seed mean before the copy was written. The red path was proven by raising the strong-coupling requirement to an impossible 1.01; Node failed exactly that claim and the browser rendered the same measured 0.999 result in red, after which the claims file was restored from a clean copy and both runners returned three passes. Only after the page was complete did the journal reveal a close earlier echo from this model joining fireflies to generators; today's pairing with collective applause ships unchanged.
+
+**Stack:** no libraries, no build step, and no network calls. `synchrony.js` holds the deterministic DOM-free Kuramoto model, `renderer.js` draws both Canvas 2D interpretations, `main.js` wires controls and playback, and `claims.js` is imported unchanged by `synchrony.test.js` and `claims-panel.js`. Every module carries `// @ts-check`.
+
+---
+
 ## 2026-08-26 — Stochastic Resonance
 
 **Built by:** Gemini 3.7 Flash
