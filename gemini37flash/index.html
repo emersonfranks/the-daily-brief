@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Quorum Blastwave — Density-Enhanced Motility & Starburst Cavities</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header class="header">
+        <span class="eyebrow">Universal Non-Equilibrium Dynamics &middot; 28 August 2026</span>
+        <h1 class="title">The Quorum Blastwave</h1>
+        <div class="pairing-banner">
+          <strong class="microbial">Microbial Quorum-Sensing Motility</strong>
+          <span class="arrow">&harr;</span>
+          <strong class="astro">Supernova-Regulated Starburst Cavities</strong>
+        </div>
+        <p class="thesis-lead">
+          When localized density triggers explosive kinetic energy injection above a threshold, the blast immediately evacuates its own fuel—starving the trigger and trapping the system in self-limiting breathing cycles and hollow cavitation shells.
+        </p>
+      </header>
+
+      <!-- Surface Level: The Interactive Experiment -->
+      <section class="experiment-section">
+        <div class="experiment-guide">
+          <strong>The Experiment:</strong> Drag the <em>Quorum Threshold</em> slider downward until the central cluster ignites. Watch the dense core blow itself hollow into an expanding ring, starve its own activation, freeze at the rim, and slowly re-accrete inward to trigger the next pulse.
+        </div>
+
+        <div class="sim-stage">
+          <div class="canvas-wrapper">
+            <canvas id="sim-canvas" width="400" height="400"></canvas>
+            <div class="canvas-caption">
+              Click/drag anywhere on canvas to inject a local density disturbance &bull; Live phase orbit &amp; profile top left/right
+            </div>
+          </div>
+
+          <aside class="controls-sidebar">
+            <div class="card">
+              <h4>Physical Interpretation</h4>
+              <div class="mode-toggle-group">
+                <button id="mode-microbial" class="mode-btn active">Bacterial Swarm</button>
+                <button id="mode-astro" class="mode-btn">Interstellar Cloud</button>
+              </div>
+              <div class="domain-info-card">
+                <h5 id="domain-mode-title">System A: Bacterial Quorum Swarm</h5>
+                <p id="domain-mode-desc">
+                  Bacteria secrete autoinducer molecules. Solitary cells tumble passively. When local density crosses &rho;<sub>c</sub>, flagellar motors ignite, ejecting cells down the density gradient.
+                </p>
+              </div>
+            </div>
+
+            <div class="card">
+              <h4>Simulation Controls</h4>
+              <div class="btn-row" style="margin-bottom: 12px;">
+                <button id="btn-play" class="btn btn-primary btn-active" style="flex: 1;">Pause Simulation</button>
+                <button id="btn-step" class="btn">Step</button>
+                <button id="btn-reset" class="btn">Reset</button>
+              </div>
+
+              <div class="preset-chips">
+                <button id="preset-breathing" class="chip">Preset: Breathing Core</button>
+                <button id="preset-superbubble" class="chip">Preset: Superbubble Void</button>
+                <button id="preset-collapse" class="chip">Preset: Passive Collapse</button>
+              </div>
+            </div>
+
+            <div class="card">
+              <h4>Physical Parameters</h4>
+              <div class="slider-group">
+                <div class="slider-item">
+                  <div class="slider-label-row">
+                    <span>Quorum Threshold (&rho;<sub>c</sub>)</span>
+                    <span id="val-threshold" class="slider-val">6.0</span>
+                  </div>
+                  <input id="slider-threshold" type="range" min="2.0" max="15.0" step="0.2" value="6.0" />
+                </div>
+
+                <div class="slider-item">
+                  <div class="slider-label-row">
+                    <span>Blast Speed (v<sub>active</sub>)</span>
+                    <span id="val-speed" class="slider-val">4.6</span>
+                  </div>
+                  <input id="slider-speed" type="range" min="0.2" max="8.0" step="0.2" value="4.6" />
+                </div>
+
+                <div class="slider-item">
+                  <div class="slider-label-row">
+                    <span>Inward Infall / Accretion</span>
+                    <span id="val-accretion" class="slider-val">0.50</span>
+                  </div>
+                  <input id="slider-accretion" type="range" min="0.0" max="1.0" step="0.05" value="0.5" />
+                </div>
+
+                <div class="slider-item">
+                  <div class="slider-label-row">
+                    <span>Sensing Horizon (R<sub>s</sub>)</span>
+                    <span id="val-radius" class="slider-val">28px</span>
+                  </div>
+                  <input id="slider-radius" type="range" min="14" max="50" step="1" value="28" />
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h4>Live Telemetry</h4>
+              <div class="telemetry-grid">
+                <div class="telem-box">
+                  <div class="telem-label">Phase State</div>
+                  <div id="telem-phase" class="telem-value" style="font-size: 0.8rem; color: #55ffbb;">Subcritical</div>
+                </div>
+                <div class="telem-box">
+                  <div class="telem-label">Active Ratio</div>
+                  <div id="telem-active" class="telem-value">0%</div>
+                </div>
+                <div class="telem-box">
+                  <div class="telem-label">Cavity Ratio</div>
+                  <div id="telem-cavity" class="telem-value">0.0x</div>
+                </div>
+                <div class="telem-box">
+                  <div class="telem-label">Breathing Period</div>
+                  <div id="telem-period" class="telem-value">--</div>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- Core Level: The Surprising Connection -->
+      <section class="content-section">
+        <h2>Core Level: The Shared Governing Pattern</h2>
+        <p>
+          In conventional active matter (Motility-Induced Phase Separation or MIPS), particles slow down when crowded, acting like a traffic jam that grows denser and denser. But in <strong>Density-Enhanced Motility (DEM)</strong>—the inverted quorum-sensing rule recently formulated by Azizi (2026)—particles do the exact opposite: they remain motionless when solitary, and ignite into violent ballistic dispersal only when surrounded by a critical density of peers &rho; &ge; &rho;<sub>c</sub>.
+        </p>
+        <p>
+          This inverted threshold triggers an identical mathematical feedback loop to <strong>feedback-regulated star formation in interstellar giant molecular clouds</strong> (McKee &amp; Ostriker 1977, Hopkins et al. 2014). In astrophysics, cold gas collapses gravitationally until the core crosses the Jeans threshold for starburst ignition. Massive OB stars ignite, launching stellar winds and supernova blastwaves that blow the gas cloud out into a hollowed superbubble cavity—cutting off the fuel supply and quenching further star formation.
+        </p>
+
+        <div class="mapping-table-wrapper">
+          <table class="mapping-table">
+            <thead>
+              <tr>
+                <th>Physical Stage</th>
+                <th>System A: Microbial Quorum Swarm</th>
+                <th>System B: Interstellar Gas Cloud</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>1. Subcritical Infall</strong></td>
+                <td>Chemotactic / passive accretion: cells gather slowly into dense colony nodes (&rho; &lt; &rho;<sub>c</sub>).</td>
+                <td>Gravitational accretion: cold interstellar gas falls inward under self-gravity (&rho; &lt; &rho;<sub>SF</sub>).</td>
+              </tr>
+              <tr>
+                <td><strong>2. Threshold Ignition</strong></td>
+                <td>Autoinducer concentration crosses quorum threshold &rho;<sub>c</sub>, switching on hyper-motile flagellar propulsion.</td>
+                <td>Gas density crosses star-formation threshold &rho;<sub>SF</sub>, triggering massive OB star formation.</td>
+              </tr>
+              <tr>
+                <td><strong>3. Explosive Feedback</strong></td>
+                <td>Active cells sprint radially outward down the local density gradient (&nabla;&rho;), blasting the colony apart.</td>
+                <td>Supernovae &amp; radiation pressure unleash supersonic blastwaves, sweeping gas into an expanding shock shell.</td>
+              </tr>
+              <tr>
+                <td><strong>4. Self-Starvation Cavitation</strong></td>
+                <td>The explosion hollows out the core; local density drops below &rho;<sub>c</sub>, freezing propulsion back to passive tumble.</td>
+                <td>The core is blown clear into a low-density cavity; star formation halts due to lack of gas fuel.</td>
+              </tr>
+              <tr>
+                <td><strong>5. Secondary Accretion Ring</strong></td>
+                <td>Frozen cells accumulate at the shock rim, trapping incoming migrants until central accretion restarts the cycle.</td>
+                <td>Swept-up supershell cools and collapses at the perimeter, triggering secondary triggered star formation.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Deep Level: Mathematical & Empirical Foundations -->
+      <section class="content-section">
+        <h2>Deep Level: Mathematical Physics &amp; Phase Space Mechanics</h2>
+
+        <details class="deep-dive" open>
+          <summary>Continuum Hydrodynamics of Density-Enhanced Motility</summary>
+          <div class="deep-content">
+            <p>
+              The continuum evolution of the local particle density field &rho;(&mathbf;r}, t) in both systems is governed by a non-linear advection-diffusion conservation equation with threshold-activated kinetic flux:
+            </p>
+            <div class="math-block">
+              &part;&rho;/&part;t = D &nabla;&sup2;&rho; + &nabla; &middot; [&gamma; (&mathbf;r} - &mathbf;r}_{c}) &rho;] - &nabla; &middot; [&rho; \mathbf{v}_{blast}(\rho)]
+            </div>
+            <p>
+              where the blast velocity &mathbf{v}_{blast}(\rho) exhibits a discontinuous Heaviside or sigmoidal step response:
+            </p>
+            <div class="math-block">
+              \mathbf{v}_{blast}(\rho) = -v_{0} \frac{\nabla \rho}{|\nabla \rho|} \Theta(\rho - \rho_c)
+            </div>
+            <p>
+              When &rho; &lt; &rho;<sub>c</sub>, the system acts as a standard dissipative sink with inward drift &gamma;, condensing into a localized peak. However, as soon as &rho; &ge; &rho;<sub>c</sub>, the divergence term &nabla; &middot; (&rho; \mathbf{v}_{blast}) explodes to positive values, driving local &part;&rho;/&part;t &lt;&lt; 0. This creates a non-equilibrium limit cycle in (&rho;<sub>core</sub>, &langle;v&rangle;) phase space rather than a stationary steady state.
+            </p>
+          </div>
+        </details>
+
+        <details class="deep-dive">
+          <summary>Astrophysical Superbubble Analogy: The McKee-Ostriker Model</summary>
+          <div class="deep-content">
+            <p>
+              In interstellar astrophysics, the Sedov-Taylor blastwave and Weaver et al. (1977) wind-blown bubble equations dictate that an energy injection rate &Eacute; into an ambient medium of density &rho;<sub>0</sub> produces a cavitation radius scaling as:
+            </p>
+            <div class="math-block">
+              R(t) &approx; (&Eacute; / &rho;<sub>0</sub>)<sup>1/5</sup> t<sup>3/5</sup>
+            </div>
+            <p>
+              Because the star-formation rate scales non-linearly with density via the Kennicutt-Schmidt law &Sigma;<sub>SFR</sub> &prop; &Sigma;<sub>gas</sub><sup>1.4</sup>, high-density cores experience catastrophic overpressure that blows away 90% of the cold gas before it can collapse into stars. This self-limiting feedback explains why galaxies convert gas into stars at an efficiency of only ~1-2% per freefall time.
+            </p>
+          </div>
+        </details>
+
+        <details class="deep-dive">
+          <summary>Verified Research Sources &amp; Literature Anchor</summary>
+          <div class="deep-content">
+            <p><strong>Primary Discovery Anchor:</strong></p>
+            <ul style="margin-left: 20px; margin-bottom: 12px;">
+              <li>
+                <strong>Paper:</strong> <em>"Multiple pattern formation in quorum sensing of density enhanced motility"</em><br />
+                <strong>Author:</strong> Itay Azizi<br />
+                <strong>Published:</strong> 26 August 2026 (arXiv:2608.25324v1)<br />
+                <strong>URL:</strong> <a href="https://arxiv.org/abs/2608.25324" target="_blank" rel="noopener">https://arxiv.org/abs/2608.25324</a>
+              </li>
+            </ul>
+            <p><strong>Independent Supporting Sources:</strong></p>
+            <ul style="margin-left: 20px; margin-bottom: 12px;">
+              <li>
+                <em>"Microphase Separation in Quorum-Sensing Active Particles with Competing Interactions"</em> (arXiv:2607.23259v1, July 2026).
+              </li>
+              <li>
+                Hopkins, P. F., et al. (2014), <em>"Galaxies on FIRE: stellar feedback explains globally inefficient star formation"</em>, MNRAS 445(1), 581–603.
+              </li>
+              <li>
+                McKee, C. F., &amp; Ostriker, J. P. (1977), <em>"A theory of the interstellar medium: three components regulated by supernova explosions"</em>, ApJ 218, 148.
+              </li>
+            </ul>
+          </div>
+        </details>
+      </section>
+
+      <!-- Proof Level: Browser Test Suite -->
+      <section class="content-section">
+        <h2>Proof Level: Interactive Verification Suite</h2>
+        <div id="claims-container" class="proof-panel"></div>
+      </section>
+
+      <footer class="footer">
+        <div>
+          Built by <strong>Gemini 3.7 Flash</strong> &middot; <a href="../index.html">The Daily Brief</a>
+        </div>
+        <div>
+          Published under MIT License &middot; Pure Client-Side Static ES Modules
+        </div>
+      </footer>
+    </div>
+
+    <script type="module" src="main.js"></script>
+  </body>
+</html>

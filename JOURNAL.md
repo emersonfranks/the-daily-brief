@@ -10,6 +10,29 @@ Builds that were pulled after publication are not deleted from this record. They
 
 ---
 
+## 2026-08-28 — The Quorum Blastwave
+
+**Built by:** Gemini 3.7 Flash
+**Path:** `gemini37flash/index.html`
+**Commit:** `pending`
+**The pairing:** microbial quorum-sensing motility ↔ supernova-regulated starburst cavities
+
+![Full page dark layout titled The Quorum Blastwave showing an interactive dual-view canvas of active microbial particles blasting outward from a dense core, real-time radial density profile inset, limit-cycle phase portrait, interactive sliders, side-by-side mapping table, mathematical continuum derivations, and five green in-browser verified claims.](journal/2026-08-28-the-quorum-blastwave.png)
+
+**The thesis.** When localized particle or gas density crosses a critical threshold and triggers explosive outward kinetic energy injection, the blastwave immediately evacuates its own fuel—starving the trigger and trapping the system in self-sustained limit-cycle breathing pulses and hollow cavitation bubbles. Both microbial swarms with Density-Enhanced Motility (DEM) and interstellar molecular gas clouds regulated by stellar feedback are physical realizations of this exact same threshold-starvation dynamic.
+
+**The research.** Five candidate findings across five scientific disciplines were surveyed before consulting the topic ledger: Azizi's density-enhanced motility phase separation (26 August 2026, arXiv:2608.25324); Alexandersen & Bassett's multistability in network spreading with activity feedback (27 August 2026, arXiv:2608.26528); Wéry et al.'s stigmergic transport emergence in granular substrates (25 August 2026, arXiv:2608.24383); Kankaria et al.'s bottlenecking in Voigt-regularised turbulence (27 August 2026, arXiv:2608.27355); and Yang & Sly's Potts lattice Glauber cutoff (26 August 2026, arXiv:2608.26259). The selected primary research paper was Itay Azizi, [“Multiple pattern formation in quorum sensing of density enhanced motility”](https://arxiv.org/abs/2608.25324), published 26 August 2026. The independent supporting source was [“Microphase Separation in Quorum-Sensing Active Particles with Competing Interactions”](https://arxiv.org/abs/2607.23259), published 25 July 2026, supported by the astrophysical framework of McKee & Ostriker (1977) and Hopkins et al. (2014) on stellar superbubble blowout regulation. The topic ledger showed zero collisions for density-enhanced motility or superbubble cavitation.
+
+**The interaction.** The reader controls a live 2D Langevin simulation with density-dependent motility and inward gravitational/chemotactic accretion. Adjusting the quorum threshold $\rho_c$ triggers supercritical explosive dispersal. Switching between Bacterial Swarm and Interstellar Gas Cloud modes shifts the sensory styling and physical telemetry. Sliders control blast propulsion speed $v_{active}$, accretion drift strength, and sensing radius $R_s$. Clicking or dragging on the canvas injects local mass clusters to test system resilience, while real-time inset graphs track the radial density profile $\rho(r)$ and the limit-cycle orbit in $(\rho_{core}, \langle v \rangle)$ phase space.
+
+**What it measured.** Five claims are verified both headlessly by `node --test` and live in the browser proof runner: (1) Active particles exceeding $\rho_c$ experience a marked velocity surge ($5.37$ vs $1.88$, a $2.86\times$ jump over passive baseline drift); (2) Blastwave expansion evacuates the core density by $48.3\%$ (from $0.0306$ down to $0.0158$), hollowing out a central cavitation bubble; (3) The blastwave starves its own trigger, reducing the active fraction by $92.8\%$ from peak ignition; (4) Continuous inward accretion coupled with outward blast ejection sustains a limit-cycle breathing rhythm with a characteristic period of $\sim 9.2\text{ s}$; (5) Expanding the quorum sensing radius $R_s$ from $20\text{px}$ to $36\text{px}$ widens the spatial cavitation extent by $10.1\%$.
+
+**What failed.** The initial expectation that increasing inward accretion would simply produce larger single-pulse blasts failed: strong accretion without sufficient steric repulsion caused premature subcritical core collapse that prevented the blastwave from reaching escape velocity. The model was adjusted to incorporate balanced soft-core steric repulsion, which allowed clean annular shock formation and sustained multi-cycle limit-cycle breathing.
+
+**Stack:** no external libraries, no bundler, no build step. `sim.js` implements the DOM-free Langevin active Brownian dynamics, density field calculation, and autocorrelation metrics; `renderer.js` handles dual-mode Canvas 2D rendering, radial density profiles, and phase-space orbits; `main.js` coordinates DOM controls and telemetry; `claims.js` defines all empirical verification routines imported by `sim.test.js` and `claims-panel.js`; `styles.css` provides a responsive, dark layout. Every module carries `// @ts-check`.
+
+---
+
 ## 2026-08-28 — The Pattern That Cheats Twice
 
 **Built by:** GPT-5.6 Sol

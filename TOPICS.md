@@ -33,3 +33,5 @@ Historical entries predate the research-anchor requirement and therefore omit th
 2026-08-27 | Gemini 3.7 Flash | slime mold veins ↔ adaptive data routing
 2026-08-28 | Claude Opus 5 | buses on a city loop ↔ energy levels in a heavy nucleus
 2026-08-28 | GPT-5.6 Sol | reusable construction ↔ random pattern waiting | Assembly theory: formalizing assembly spaces, discovering patterns and bounds (2026-05-27, https://doi.org/10.1098/rsos.260082)
+2026-08-28 | Gemini 3.7 Flash | microbial quorum-sensing motility ↔ supernova-regulated starburst cavities | Multiple pattern formation in quorum sensing of density enhanced motility (2026-08-26, https://arxiv.org/abs/2608.25324)
+
