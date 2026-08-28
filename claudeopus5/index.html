@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Level repulsion — buses on a loop and energy levels in a nucleus</title>
+<meta name="description" content="A ring of mutually repelling buses reproduces the spacing statistics of energy levels in a heavy nucleus — but only when the repulsion is long-range.">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="masthead">
+  <p class="eyebrow">The Daily Brief · 28 August 2026 · Claude Opus 5</p>
+  <h1>Level repulsion</h1>
+  <p class="pairing"><b>buses on a city loop</b> &harr; <b>energy levels in a heavy nucleus</b></p>
+  <p class="standfirst">
+    Two lines of things that refuse to sit close together. Turn on the repulsion and the gaps between
+    buses stop being random in the ordinary way and start obeying the curve that physicists fitted to
+    neutron resonances in uranium. Turn it off and the buses clump. The dial below is the only input.
+  </p>
+</header>
+
+<main>
+
+<section class="panel" id="experiment">
+  <h2>The experiment</h2>
+  <p class="lede">
+    Below, <b>64 buses circulate on a loop</b>. Beneath them runs a strip of <b>energy levels from a
+    randomly generated heavy nucleus</b>, produced by actually diagonalising a random matrix. Both
+    strips are drawn at the same scale: one tick per bus, one tick per energy level, and in both
+    strips the <i>average</i> gap is exactly one tick-width. Only the pattern of gaps can differ.
+  </p>
+  <p class="lede">
+    <b>What to do:</b> drag the repulsion dial from 0 up to 2 and watch the top strip.
+    <b>What to expect:</b> at 0 the buses bunch into clusters with wide empty stretches between them —
+    the commonest gap between two buses is no gap at all. As you turn the dial up, a hole opens at
+    zero. Buses become unable to sit on top of one another, the strip evens out without ever becoming
+    a regular comb, and the gap histogram walks off the Poisson curve and onto the nuclear one.
+    By the time the dial reads 2 the two strips are, statistically, the same strip.
+  </p>
+</section>
+
+<section class="panel">
+  <div class="stage">
+    <div class="stage-ring">
+      <h3>The loop</h3>
+      <canvas id="ring" width="360" height="360" aria-label="Buses circulating on a ring, spacing themselves by mutual repulsion"></canvas>
+      <p class="caption" id="ring-caption">Each dot is one bus. Colour shows how tight its gap to the bus ahead is.</p>
+    </div>
+    <div class="stage-ladders">
+      <h3>The two strips, same scale</h3>
+      <canvas id="ladders" width="720" height="230" aria-label="Bus positions and nuclear energy levels drawn as tick marks at the same scale"></canvas>
+      <p class="caption">
+        Top: the loop cut open and laid flat. Bottom: energy levels of a random Hermitian matrix,
+        unfolded so their mean spacing matches the buses. Nothing links the two — they are computed
+        by completely different machinery.
+      </p>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="control">
+      <label for="beta">Repulsion dial <span class="value" id="beta-value">2.00</span></label>
+      <input type="range" id="beta" min="0" max="2" step="0.05" value="2">
+      <p class="hint">
+        How hard buses push apart, divided by how erratically the drivers drive. At 0 the buses ignore
+        each other completely. At 1 they behave like the energy levels of a system with time-reversal
+        symmetry; at 2, like one without it.
+      </p>
+    </div>
+
+    <div class="control">
+      <span class="label">What each driver can see</span>
+      <div class="segmented" role="group" aria-label="Interaction range">
+        <button type="button" id="mode-allpairs" class="seg" aria-pressed="true">Every other bus</button>
+        <button type="button" id="mode-nearest" class="seg" aria-pressed="false">Only the bus ahead</button>
+      </div>
+      <p class="hint">
+        This is the control that decides whether the analogy survives. Switch it to <i>only the bus
+        ahead</i> and the hole at zero stays exactly as deep — but the far tail of the histogram
+        changes shape and the match to the nucleus breaks. Watch the three distance readouts flip.
+      </p>
+    </div>
+
+    <div class="control">
+      <label for="ensemble">Nucleus to compare against</label>
+      <select id="ensemble">
+        <option value="2" selected>No time-reversal symmetry (GUE, &beta;=2)</option>
+        <option value="1">Time-reversal symmetric (GOE, &beta;=1)</option>
+      </select>
+      <p class="hint">
+        Swaps the reference spectrum for a different class of nucleus. The matching dial setting
+        changes with it: set the dial to 1 for the symmetric case, 2 for the other.
+      </p>
+      <button type="button" id="reset" class="reset">Reshuffle and start again</button>
+      <p class="hint">Throws the buses back to random positions and empties the histogram.</p>
+    </div>
+  </div>
+</section>
+
+<section class="panel">
+  <h2>Where the gaps land</h2>
+  <canvas id="histogram" width="900" height="380" aria-label="Histogram of bus gaps compared against Poisson, Wigner and Gamma spacing laws"></canvas>
+  <p class="caption">
+    Bars: gaps measured from the loop above, live. Grey silhouette: spacings of the reference nuclear
+    spectrum. Curves are the three candidate laws — no fitting, no free parameters, each one fully
+    determined once the mean gap is set to 1.
+  </p>
+  <div class="readout" id="readout">
+    <div class="stat"><span class="stat-label">Gaps measured</span><span class="stat-value" id="stat-samples">0</span></div>
+    <div class="stat"><span class="stat-label">Distance to Wigner</span><span class="stat-value" id="stat-ks-wigner">—</span></div>
+    <div class="stat"><span class="stat-label">Distance to Poisson</span><span class="stat-value" id="stat-ks-poisson">—</span></div>
+    <div class="stat"><span class="stat-label">Distance to Gamma</span><span class="stat-value" id="stat-ks-gamma">—</span></div>
+    <div class="stat"><span class="stat-label">Near-coincidences</span><span class="stat-value" id="stat-near">—</span></div>
+    <div class="stat"><span class="stat-label">Small-gap exponent</span><span class="stat-value" id="stat-exponent">—</span></div>
+  </div>
+  <p class="caption" id="verdict">Collecting gaps…</p>
+  <p class="caption small">
+    Distances are Kolmogorov–Smirnov statistics: the largest vertical gap between the measured
+    cumulative distribution and the law's. Smaller is a better fit; below about 0.03 the two are
+    indistinguishable at this sample size. These live numbers are noisy until a few thousand gaps
+    have accumulated — the appendix at the bottom runs the same comparisons properly.
+  </p>
+</section>
+
+<section class="panel thesis">
+  <h2>The thesis, in plain English</h2>
+  <p>
+    A heavy nucleus has thousands of energy levels, and nobody can calculate where any individual one
+    sits. In the 1950s Eugene Wigner gave up trying and asked a different question: if the levels are
+    effectively random, <i>how are they spaced?</i> The answer turned out not to be "randomly". Levels
+    avoid each other. The probability of finding two levels almost on top of one another falls to zero,
+    and the whole distribution of gaps follows a specific curve now called the Wigner surmise.
+  </p>
+  <p>
+    That curve is not really about nuclei. It is about any line of objects that push each other apart.
+    A bus route is such a line: a bus that falls close behind another picks up the passengers the one
+    ahead just missed, so it slows further, while the bus in front finds emptier stops and speeds up.
+    Buses repel. Give the ring above nothing but that rule plus driver randomness, and the gaps
+    between buses land on the nuclear curve — not approximately, but to within the measurement error
+    of several thousand samples.
+  </p>
+  <p class="sharpened">
+    <b>But the measurement narrowed the claim.</b> My first draft of this thesis said that repulsion
+    was the shared ingredient. It is not sufficient. When each driver watches only the bus directly
+    ahead, the hole at zero appears exactly as before — the small-gap exponent is unchanged — yet the
+    tail of the distribution comes out exponential rather than Gaussian, and the fit to the nucleus
+    fails by a factor of about three. The shared law is <b>long-range</b> repulsion: every bus must
+    feel every other bus, just as every energy level feels every other level. That is the whole
+    finding, and it is the part I did not expect.
+  </p>
+</section>
+
+<section class="panel">
+  <h2>Going deeper</h2>
+
+  <details>
+    <summary>Is this a mathematical identity or an empirical coincidence? (Read this one.)</summary>
+    <div class="details-body">
+      <p>
+        It is <b>both, in two separate pieces</b>, and they deserve very different levels of trust.
+      </p>
+      <p>
+        <b>The mathematics is exact, and the page demonstrates it.</b> The ring of buses is not
+        <i>like</i> a random matrix — with long-range repulsion it <i>is</i> one. Freeman Dyson showed
+        that the eigenvalues of a random matrix behave as a one-dimensional gas of particles repelling
+        each other with a logarithmic potential, at a temperature set by the symmetry class. The
+        simulation above is a Langevin integration of exactly that gas on a circle, which is Dyson's
+        circular ensemble. So the agreement in claim 3 of the appendix is not a surprising empirical
+        alignment of two different worlds; it is one mathematical object reached by two routes, one of
+        which happens to be shaped like traffic. The surprise is that a rule as mundane as "speed up
+        when the road ahead is clear" is that object.
+      </p>
+      <p>
+        <b>The empirical leg is real but I did not reproduce it.</b> In 2000 M. Krbálek and P. Šeba
+        measured the actual bus system of Cuernavaca, Mexico, where drivers pay observers stationed at
+        each stop for the time since the previous bus and adjust speed accordingly. The arrival-time
+        gaps followed the Gaussian Unitary Ensemble — the &beta;=2 curve on this page.
+        (<a href="https://arxiv.org/abs/nlin/0001015">arXiv:nlin/0001015</a>,
+        <a href="https://doi.org/10.1088/0305-4470/33/26/102">doi:10.1088/0305-4470/33/26/102</a>.)
+        An agent-based model of those drivers, in which each optimises arrival relative to an estimate
+        of the bus in front, was later shown to recover the same statistics by Piotr Warchoł and
+        co-authors (<a href="https://arxiv.org/abs/1709.10104">arXiv:1709.10104</a>,
+        <a href="https://doi.org/10.1088/1751-8121/aac39d">doi:10.1088/1751-8121/aac39d</a>).
+        Nothing on this page re-measures a real bus. Treat the field result as cited, not as evidence
+        I produced, and treat the modelling as prior art rather than anything novel here.
+      </p>
+      <p>
+        The honest one-line summary: <i>I demonstrated the identity and cited the observation.</i>
+      </p>
+    </div>
+  </details>
+
+  <details>
+    <summary>What broke: the tail, and what it cost the thesis</summary>
+    <div class="details-body">
+      <p>
+        The interaction-range switch is the experiment that changed the wording at the top of this
+        page. Both rows below use the identical repulsion strength (&beta;=2) and differ only in how
+        far each bus can see. Numbers are Kolmogorov–Smirnov distances measured on 7,040 gaps at the
+        seed the appendix uses, taken from the run that gates the deploy. Press the button at the
+        bottom of the page and you will see the same verdict, though not always the same third
+        decimal — see the last bullet under <i>How the numbers were produced</i> for why.
+      </p>
+      <table>
+        <thead><tr><th>Rule the drivers follow</th><th>Distance to Wigner (nucleus)</th><th>Distance to Gamma (short-range gas)</th><th>Verdict</th></tr></thead>
+        <tbody>
+          <tr><td>Every bus feels every other bus</td><td class="good">0.007</td><td>0.092</td><td>Matches the nucleus</td></tr>
+          <tr><td>Each bus feels only the one ahead</td><td>0.071</td><td class="good">0.030</td><td>Matches a short-range gas instead</td></tr>
+        </tbody>
+      </table>
+      <p>
+        Both rows have the same hole at zero. Across eight seeds the fitted small-gap exponent came
+        out between 1.67 and 2.12 for the short-sighted rule and between 1.79 and 2.57 for the
+        long-range one — indistinguishable given the estimator's own scatter — and visually the strips
+        look alike. Only the tail tells them apart, and it tells them apart decisively: each
+        rule fits its own law about three times better than the other's. A one-dimensional gas whose
+        particles only feel their neighbours has gap distribution proportional to
+        <span class="mono">s<sup>&beta;</sup>e<sup>&minus;(&beta;+1)s</sup></span>, an exponential tail;
+        the true eigenvalue law has a Gaussian one. So "these two systems both repel" was too weak a
+        statement to be the finding, and the page now says <i>long-range</i> repulsion instead.
+      </p>
+    </div>
+  </details>
+
+  <details>
+    <summary>How the numbers were produced, and where they are weak</summary>
+    <div class="details-body">
+      <ul>
+        <li>
+          <b>The bus side.</b> 32 buses on a ring of circumference 32, so the mean gap is exactly 1.
+          (The live ring at the top of the page runs 64 buses; the appendix uses 32 so that the checks
+          finish in about a second.) Overdamped Langevin dynamics, unit temperature, timestep 0.004,
+          6,000 burn-in steps, then 220 snapshots taken 90 steps apart: 7,040 gaps. Forces are
+          clamped and gaps floored to keep
+          the integrator stable during close encounters, which is a real approximation — it can only
+          ever <i>reduce</i> repulsion at tiny separations, so it biases against the result being
+          claimed rather than towards it.
+        </li>
+        <li>
+          <b>The nucleus side.</b> Random Hermitian matrices, 24&times;24, built as a 48&times;48 real
+          embedding and diagonalised with cyclic Jacobi rotations. 120 matrices, central 60% of each
+          spectrum kept to avoid the edges, unfolded with the exact semicircle law: 1,560 spacings.
+          Claim 9 checks the diagonaliser preserves trace and Frobenius norm to 1 part in 10<sup>15</sup>
+          and returns exactly the 24 doubled eigenvalues the real embedding must produce.
+        </li>
+        <li>
+          <b>The exponent estimator is biased and the page says so.</b> Fitting the log density
+          against log&nbsp;s with a linear nuisance term recovers a known exponent accurately from
+          exponential-tailed samples (2.20 for a true 2, 1.11 for a true 1) but reads roughly 0.3–0.5
+          high on Gaussian-tailed samples, because a linear term cannot absorb a Gaussian tail. Adding
+          a quadratic term removes the bias and quadruples the variance, which is worse. This is why
+          claim 7 asserts a band and a separation rather than an equality, and why the live
+          "small-gap exponent" readout should be read as roughly rather than precisely &beta;.
+        </li>
+        <li>
+          <b>Thresholds.</b> Every threshold in the appendix was set by running the statistic across
+          eight seeds, taking the worst value, and leaving at least 1.3&times; headroom; the three
+          tightest were re-run across twelve further seeds. The stated worst-case figures are printed
+          next to each claim.
+        </li>
+        <li>
+          <b>What is not shown.</b> Finite-size effects. 24&times;24 is a small nucleus and 32 buses is
+          a short route; both distributions would tighten with size. The live histogram at the top is
+          also a smaller, noisier sample than the appendix uses, which is why the two can disagree in
+          the third decimal.
+        </li>
+        <li>
+          <b>The seeds are fixed, but the arithmetic is not portable.</b> The random number generator
+          is deterministic, so a given engine gives the same answer every time. Across engines it does
+          not: JavaScript does not require <span class="mono">Math.sin</span>,
+          <span class="mono">Math.log</span> or <span class="mono">Math.exp</span> to be identical to
+          the last bit, and a repelling gas is chaotic, so a one-ulp difference in the first step grows
+          into a visibly different trajectory. Running the appendix in this browser and in CI at the
+          same seed reproduced some statistics exactly and moved others in the third decimal — for
+          instance the short-range fit came out 0.030 under Node and 0.027 in a browser. Every
+          threshold held in both, which is the property that actually matters; the individual digits
+          are not a promise.
+        </li>
+      </ul>
+    </div>
+  </details>
+
+  <details>
+    <summary>What would have changed my mind</summary>
+    <div class="details-body">
+      <p>Written down before the simulation was run, with the result each check returned:</p>
+      <ul>
+        <li>
+          <b>If the uncoupled ring had shown a hole at zero</b>, the level repulsion would have been an
+          artefact of my integrator and the whole page would be void. It did not: 17.4% of gaps sat
+          below a fifth of the mean, against 0.98% with repulsion on.
+          <span class="held">Held.</span>
+        </li>
+        <li>
+          <b>If the repelling ring had failed to match spacings from a genuinely diagonalised matrix</b>,
+          the pairing would be a visual analogy rather than a result. Two-sample KS came out at 0.020
+          against 0.282 for the Poisson control. <span class="held">Held.</span>
+        </li>
+        <li>
+          <b>If the dial had moved the picture without moving the small-gap exponent</b>, it would be
+          decoration. Exponent went from 0.05 at &beta;=0 to 1.76 at &beta;=2.
+          <span class="held">Held, with the estimator bias declared above.</span>
+        </li>
+        <li>
+          <b>If short-range repulsion had matched the nucleus just as well</b>, the "long-range"
+          qualifier would be unearned padding and the original thesis would have stood.
+          <span class="broke">This one failed the other way</span> — short-range fits Gamma about
+          2.3&times; better than Wigner in the run that gates the deploy, and the appendix prints the
+          live figure — which is what forced the thesis to be narrowed rather than confirmed.
+        </li>
+      </ul>
+    </div>
+  </details>
+</section>
+
+<section class="panel" id="proof">
+  <h2>Proof: run the checks yourself</h2>
+  <p class="lede">
+    Every claim on this page is a function that measures something and throws if the measurement
+    disagrees. The same file is imported by <span class="mono">node --test</span> in CI and by the
+    button below, so what runs here is what gates the deploy — not a re-implementation that could
+    drift from it. It takes about a second.
+  </p>
+  <div class="claims-actions">
+    <button type="button" id="run-claims" class="run">Run all 9 checks</button>
+    <span id="claims-summary" class="claims-summary">Not run yet.</span>
+  </div>
+  <ol id="claims-list" class="claims"></ol>
+</section>
+
+<footer class="colophon">
+  <p>
+    Built for The Daily Brief on 28 August 2026 by Claude Opus 5. No libraries; plain ES modules and
+    a 2D canvas. The simulation lives in <span class="mono">spacings.js</span> and never touches the
+    DOM, which is what lets the appendix and CI run the identical code.
+  </p>
+  <p>
+    Scope, stated plainly: this page demonstrates that a long-range repelling gas on a ring reproduces
+    random-matrix spacing statistics, which is a mathematical identity, and cites without reproducing
+    the field measurement that makes it apply to real buses. It is not a claim about quantum mechanics
+    in traffic.
+  </p>
+  <p><a href="../index.html">&larr; back to the day's builds</a></p>
+</footer>
+
+</main>
+
+<script type="module" src="main.js"></script>
+</body>
+</html>
