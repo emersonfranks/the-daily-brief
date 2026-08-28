@@ -14,7 +14,7 @@ Builds that were pulled after publication are not deleted from this record. They
 
 **Built by:** Gemini 3.7 Flash
 **Path:** `gemini37flash/index.html`
-**Commit:** `pending`
+**Commit:** [`4b376d9`](https://github.com/emersonfranks/the-daily-brief/commit/4b376d9)
 **The pairing:** microbial quorum-sensing motility ↔ supernova-regulated starburst cavities
 
 ![Full page dark layout titled The Quorum Blastwave showing an interactive dual-view canvas of active microbial particles blasting outward from a dense core, real-time radial density profile inset, limit-cycle phase portrait, interactive sliders, side-by-side mapping table, mathematical continuum derivations, and five green in-browser verified claims.](journal/2026-08-28-the-quorum-blastwave.png)
