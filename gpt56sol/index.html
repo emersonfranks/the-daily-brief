@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1016">
+  <title>The Pattern That Cheats Twice</title>
+  <meta name="description" content="Build a binary pattern from reusable pieces, then wait for the same pattern in random coin flips.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="masthead">
+    <a class="back-link" href="../index.html">The Daily Brief</a>
+    <span>28 August 2026</span>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="page-title">
+      <p class="eyebrow">A two-sided pattern experiment</p>
+      <h1 id="page-title">The pattern that<br><em>cheats twice.</em></h1>
+      <p class="dek">Repeated pieces make a pattern quick to build. The same repetition can make it slower to catch in random noise.</p>
+      <div class="hero-proof" aria-label="Measured result">
+        <strong>−0.449</strong>
+        <span>correlation between build steps and fair-coin waiting time across every 8-bit pattern</span>
+      </div>
+    </section>
+
+    <section class="experiment" aria-labelledby="experiment-title">
+      <div class="experiment-head">
+        <div>
+          <p class="section-number">01 / Try it</p>
+          <h2 id="experiment-title">Change the pattern. Watch both worlds answer.</h2>
+          <p>Tap any bit. The left workshop finds the fewest reusable joins; the right signal calculates the exact average wait for that pattern in fair independent coin flips.</p>
+        </div>
+        <button id="shuffle-pattern" class="icon-button" type="button" title="Make a random pattern" aria-label="Make a random pattern">↝</button>
+      </div>
+
+      <div id="bit-controls" class="bit-controls" aria-label="Editable eight-bit pattern"></div>
+      <div class="presets" aria-label="Pattern presets">
+        <button type="button" data-pattern="01010101">alternating</button>
+        <button type="button" data-pattern="00000000">one long run</button>
+        <button type="button" data-pattern="00101101">irregular</button>
+      </div>
+
+      <div class="world-labels" aria-hidden="true">
+        <div><span>A</span><strong>Reuse workshop</strong><small>one tile = a stored binary substring</small></div>
+        <div><span>B</span><strong>Random signal</strong><small>one dot = one fair coin flip</small></div>
+      </div>
+      <canvas id="comparison-canvas" width="1200" height="480" aria-label="The pattern's shortest assembly tree beside a stream of random binary signals"></canvas>
+
+      <div class="readouts" aria-live="polite">
+        <div><span>fewest joins</span><strong id="assembly-value">3</strong></div>
+        <div><span>expected flips</span><strong id="waiting-value">340</strong></div>
+        <div><span>overlap penalty</span><strong id="overlap-value">+84</strong></div>
+      </div>
+    </section>
+
+    <section class="thesis" aria-labelledby="thesis-title">
+      <p class="section-number">02 / The connection</p>
+      <h2 id="thesis-title">A shortcut in one world can be a trap in another.</h2>
+      <div class="thesis-grid">
+        <p class="thesis-lead">A workshop rewards <em>reuse</em>: once it has made <code>01</code>, it can double that piece again and again. A random signal pays for <em>self-overlap</em>: after a promising near-match fails, repeated edges can leave the matcher tangled in partial progress.</p>
+        <div class="scope-note">
+          <strong>This is a mathematical analogy.</strong>
+          <p>The two quantities act on the same strings, but they do not describe the same physical process. This page tests eight-bit binary strings, not molecules, life, or evolution.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="population" aria-labelledby="population-title">
+      <p class="section-number">03 / No hand-picked winner</p>
+      <h2 id="population-title">Every eight-bit pattern, grouped by its shortest build.</h2>
+      <p class="population-intro">The featured alternating pattern is one of four minimum-step patterns. The bars show the measured mean wait for each complete group.</p>
+      <div class="bars">
+        <div class="bar-row"><span>3 joins</span><div class="bar"><i style="--size: 100%"></i></div><strong>425.0</strong><small>4 patterns</small></div>
+        <div class="bar-row"><span>4 joins</span><div class="bar"><i style="--size: 63.5%"></i></div><strong>269.9</strong><small>38 patterns</small></div>
+        <div class="bar-row"><span>5 joins</span><div class="bar"><i style="--size: 61%"></i></div><strong>259.2</strong><small>134 patterns</small></div>
+        <div class="bar-row"><span>6 joins</span><div class="bar"><i style="--size: 60.7%"></i></div><strong>258.0</strong><small>80 patterns</small></div>
+      </div>
+      <p class="measurement-note">Exact enumeration, all 256 strings. Waiting time uses the fair-coin pattern-matching theorem; assembly cost uses breadth-first search over reusable binary concatenations.</p>
+    </section>
+
+    <section class="mechanics" aria-labelledby="mechanics-title">
+      <p class="section-number">04 / Under the surface</p>
+      <h2 id="mechanics-title">Open the machine.</h2>
+      <details open>
+        <summary>How this pattern is assembled</summary>
+        <ol id="step-list" class="step-list"></ol>
+      </details>
+      <details>
+        <summary>Why overlap changes the wait</summary>
+        <div class="details-body">
+          <p id="border-list"></p>
+          <p>For a fair binary source, the exact expected wait is the sum of <code>2ᵏ</code> over every length <code>k</code> where the pattern’s prefix also matches its suffix, including the whole pattern.</p>
+        </div>
+      </details>
+      <details>
+        <summary>Research foundation and limits</summary>
+        <div class="details-body sources">
+          <p><a href="https://doi.org/10.1098/rsos.260082">Bieniawski, Masierak, Tomski, Łukaszyk &amp; Tworz (2026)</a> formalized string assembly spaces and reported an inverse relationship between assembly index and expected waiting time. Published 27 May 2026 in <cite>Royal Society Open Science</cite>.</p>
+          <p><a href="https://doi.org/10.1371/journal.pcsy.0000014">Abrahão, Hernández-Orozco, Kiani, Tegnér &amp; Zenil (2024)</a> independently argued that assembly index is a grammar-compression measure and does not uniquely explain selection or evolution. That critique sets this page’s boundary.</p>
+          <p><a href="research.md">Read the five-candidate research record</a>, including dates, links, collision check, prediction, and falsification rule.</p>
+        </div>
+      </details>
+    </section>
+
+    <section class="proof" aria-labelledby="proof-title">
+      <div class="proof-head">
+        <div>
+          <p class="section-number">05 / Proof appendix</p>
+          <h2 id="proof-title">Don’t trust the page. Run it.</h2>
+          <p>The browser imports the same assertions as the repository’s Node test runner. Each result shows what it measured.</p>
+        </div>
+        <button id="run-claims" type="button">Run all four claims</button>
+      </div>
+      <div id="claims-results" class="claims-results" aria-live="polite">
+        <p class="proof-idle">Ready to enumerate 256 patterns and attack the thesis.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>Built by GPT-5.6 Sol</span>
+    <span>Exact search · no libraries · source in the open</span>
+  </footer>
+  <script type="module" src="main.js"></script>
+</body>
+</html>

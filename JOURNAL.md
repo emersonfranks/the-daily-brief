@@ -10,6 +10,29 @@ Builds that were pulled after publication are not deleted from this record. They
 
 ---
 
+## 2026-08-28 — The Pattern That Cheats Twice
+
+**Built by:** GPT-5.6 Sol
+**Path:** `gpt56sol/index.html`
+**Commit:** `pending`
+**The pairing:** reusable construction ↔ random pattern waiting
+
+![Full dark editorial page titled The Pattern That Cheats Twice. An editable row of eight binary tiles sits above a split canvas: an orange reuse workshop assembles 01010101 in three joins while a teal fair-coin signal reports an expected wait of 340 flips and an overlap penalty of 84. Below are the measured thesis, four population bars, three collapsed mechanics sections, and the browser proof appendix.](journal/2026-08-28-the-pattern-that-cheats-twice.png)
+
+**The thesis.** A pattern can be cheap to construct from reusable pieces yet slow to appear by chance, because a build recipe and a random wait measure different kinds of difficulty. Repetition lets a workshop double stored substrings; in a random signal, the same self-overlap adds partial-match states and raises the exact expected waiting time. This is a mathematical string model, not a claim about molecules, life, or evolution.
+
+**The research.** Five recent candidates were considered before the topic ledger was opened: Bieniawski et al.'s assembly-space bounds and inverse assembly-index/waiting-time result (27 May 2026); O'Hagan et al.'s fivefold-expanded Auckland volcanic-field earthquake catalogue (7 June 2026); Li, Li and Minari's charge-controlled reversal from nanowire repulsion to attraction (8 June 2026); Zomer and De Domenico's premature consensus in networks of cognitive agents (21 March 2026); and Alfei's context-dependent recovery after postretrieval memory disruption (online 12 March 2026). The selected primary source was Wawrzyniec Bieniawski, Piotr Masierak, Andrzej Tomski, Szymon Łukaszyk and Szymon Tworz, [“Assembly theory: formalizing assembly spaces, discovering patterns and bounds”](https://doi.org/10.1098/rsos.260082), published in *Royal Society Open Science* on 27 May 2026. The independent supporting and limiting source was Felipe S. Abrahão, Santiago Hernández-Orozco, Narsis A. Kiani, Jesper Tegnér and Hector Zenil, [“Assembly Theory is an approximation to algorithmic complexity based on LZ compression that does not explain selection or evolution”](https://doi.org/10.1371/journal.pcsy.0000014), published by *PLOS Complex Systems* on 23 September 2024. It identifies assembly index with grammar compression and rejects broader selection claims, which is why this page stays with strings. No ledger entry paired reusable construction with random pattern waiting, so the candidate survived unchanged.
+
+**The interaction.** Eight bit buttons edit one pattern shared by both panels. The left panel recomputes an exact shortest plan using reusable binary concatenations; the right recomputes the exact fair-coin waiting time from matching prefix-suffix lengths. Three presets contrast alternating, single-run and irregular strings, while a randomize control supplies uncurated examples. The deep section exposes the current assembly path, overlap rule, sources and limits.
+
+**What it measured.** All 256 eight-bit strings were exhaustively enumerated. Assembly cost and expected waiting time correlated at **−0.449**. The four strings buildable in three joins averaged **425.0 flips**; the 38 four-join strings averaged **269.9**; the 134 five-join strings averaged **259.2**; and the 80 six-join strings averaged **258.0**. The combined five-to-six-join mean was **258.7**, so the minimum-step group waited **1.64×** longer. The featured `01010101` needs three joins and 340 expected flips: 256 from its length plus 84 from prefix-suffix overlaps at lengths 2, 4 and 6. Four claims run unchanged in Node and the browser: three exact waiting-time anchors, validity of every eight-bit assembly plan, the population-level inverse relationship, and the featured pattern's membership in the complete four-way minimum-step tie.
+
+**What failed.** The provisional thesis survived exhaustive enumeration, so the headline did not need correction. Its broader interpretation did fail the evidence boundary: the recent paper's result cannot justify claims that this scalar detects life, selection, or a physical history, and the independent critique directly warns against those extensions. The page therefore calls the connection mathematical and tests only short strings. The proof's red path was exercised by tightening the correlation guard from −0.400 to an impossible-for-this-run −0.500; Node failed with measured −0.449 and the browser rendered the same claim in red with the same evidence. Restoring the measured threshold returned four passes in both runners.
+
+**Stack:** no libraries and no build step. `assembly.js` contains the exact DOM-free breadth-first search and waiting-time calculation; `renderer.js` draws the paired canvas; `main.js` wires the controls; `claims.js` is imported unchanged by `assembly.test.js` and `claims-panel.js`; `styles.css` supplies the responsive editorial layout with optional web fonts and system fallbacks. Every JavaScript module carries `// @ts-check`.
+
+---
+
 ## 2026-08-28 — Level repulsion
 
 **Built by:** Claude Opus 5
