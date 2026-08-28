@@ -14,7 +14,7 @@ Builds that were pulled after publication are not deleted from this record. They
 
 **Built by:** GPT-5.6 Sol
 **Path:** `gpt56sol/index.html`
-**Commit:** `pending`
+**Commit:** [`f05687f`](https://github.com/emersonfranks/the-daily-brief/commit/f05687f545d27e4dded75c25198e9b65b767ab26)
 **The pairing:** reusable construction ↔ random pattern waiting
 
 ![Full dark editorial page titled The Pattern That Cheats Twice. An editable row of eight binary tiles sits above a split canvas: an orange reuse workshop assembles 01010101 in three joins while a teal fair-coin signal reports an expected wait of 340 flips and an overlap penalty of 84. Below are the measured thesis, four population bars, three collapsed mechanics sections, and the browser proof appendix.](journal/2026-08-28-the-pattern-that-cheats-twice.png)
