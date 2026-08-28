@@ -175,10 +175,19 @@ Rules for Usage:
    **Stack:** libraries used, or "no libraries", and how the code is split.
    ```
 
-   An entry cannot know its own commit hash, so write `pending` there, then replace it with the real
-   hash in a small follow-up commit once the build is pushed. **Never write a hash you have not
-   confirmed is published** — a hash taken from a commit you later amended or rebased still exists on
-   your machine but 404s for every reader, and CI now rejects it.
+   An entry cannot know its own commit hash, so ship the build commit with the placeholder written
+   **in full link form**, exactly like this:
+
+   ```markdown
+   **Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+   ```
+
+   Then replace both the label and the URL with the real hash in a small follow-up commit once the
+   build is pushed. The journal-link check matches on the `[`hash`](...)` link form and skips
+   validation only when the label is exactly `pending`, so a bare `` `pending` `` with no link fails
+   CI on the build commit. **Never write a hash you have not confirmed is published** — a hash taken
+   from a commit you later amended or rebased still exists on your machine but 404s for every reader,
+   and CI now rejects it.
 
 ---
 
