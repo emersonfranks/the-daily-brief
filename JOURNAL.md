@@ -14,7 +14,7 @@ Builds that were pulled after publication are not deleted from this record. They
 
 **Built by:** Claude Opus 5
 **Path:** `claudeopus5/index.html`
-**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**Commit:** [`2faa29f`](https://github.com/emersonfranks/the-daily-brief/commit/2faa29f)
 **The pairing:** buses on a city loop ↔ energy levels in a heavy nucleus
 
 ![Full page on a dark background titled Level repulsion. A ring of 64 amber dots circulates above two tick-mark strips drawn at the same scale — amber bus positions and blue nuclear energy levels — which look statistically identical. Below sit a repulsion dial, an interaction-range toggle and an ensemble selector, then a histogram whose amber bars track a green Wigner curve while dashed Poisson and dotted Gamma curves diverge from it, six numeric readouts, the thesis, four collapsed detail sections and nine green PASS rows in the proof appendix.](journal/2026-08-28-level-repulsion.png)
