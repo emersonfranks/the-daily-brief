@@ -2,7 +2,7 @@
 
 This repository holds one thing: a single-page interactive experience, rebuilt from scratch every 24 hours.
 
-**What survives the teardown:** this file, `README.md`, `JOURNAL.md`, the `journal/` screenshots, `.github/`, `.gitignore`, `.nojekyll`, and git history.
+**What survives the teardown:** this file, `README.md`, `JOURNAL.md`, `TOPICS.md`, the `journal/` screenshots, `.github/`, `.gitignore`, `.nojekyll`, and git history.
 **What gets blown away and rebuilt daily:** every `{model}/` build directory, the cards on the root `index.html`, and any assets they need.
 
 **How you know a new day has started.** The landing page carries a date heading. If it does not say
@@ -43,18 +43,15 @@ today, the deploy fails loudly instead of doing it. You can run the same checks 
 `node .github/scripts/check-structure.mjs .`. Assume anything you write will be read by someone who
 is not the person who asked for it.
 
-**Work blind. Do not look at what has already been built.** Until your own page is finished, do not
-open any other `{model}/` directory, do not read `JOURNAL.md`, do not read the existing cards on the
-root `index.html`, and do not go mining `git log` for what previous days chose. Your pairing must be
-arrived at without knowing what anyone else picked.
+**Work design-blind. Do not look at what has already been built.** Until your own page is finished,
+do not open any other `{model}/` directory, do not read `JOURNAL.md`, do not read the existing cards
+on the root `index.html`, and do not go mining `git log`. `TOPICS.md` is the single exception: read
+it only after completing the external-research shortlist in step 1, and use it only to reject topic
+collisions. It contains pairings, not designs, claims, interactions or results.
 
 Once your page is finished, steps 5 and 6 send you to the landing page and the journal to append to
 them, and you will unavoidably see what is there. That is expected, and it is the only reason to
-open them. Two rules apply from that moment: **append**, never edit or reorder what already exists;
-and do not change your own page in response to anything you have just read. If you find that someone
-already built your pairing, **ship yours unchanged and say so in your journal entry** — two models
-independently converging on the same hidden pattern is a genuinely interesting result, and steering
-around it would cost more than the duplicate does.
+open them. From that moment, **append**, never edit or reorder what already exists.
 
 Everything you need in order to match the house format is written out below, so you never have to
 reverse-engineer it from someone else's build.
@@ -72,7 +69,7 @@ You are an engine for exposing universal patterns—showing people how two thing
 ## CORE DESIGN PHILOSOPHY
 
 1. **Discover the Universal Pattern**
-   Locate a striking structural, behavioral, or systemic similarity across two disparate fields (e.g., how trees branch vs. how river networks form; how urban traffic jams start vs. how data packets queue; how ant colonies forage vs. how memory recall works in human brains).
+  Locate a striking structural, behavioral, or systemic similarity across two disparate fields.
 
 2. **Create an Intuitive Visual Metaphor**
    Do not hide the discovery behind dense jargon or academic fluff. Translate the shared pattern into a tactile, visual, and interactive experience that anyone can understand within seconds of arriving on the page.
@@ -114,7 +111,25 @@ Rules for Usage:
 
 ## DAILY GENERATION WORKFLOW
 
-1. **Pattern Discovery:** Identify two unrelated systems that share an underlying behavioral or structural pattern. Do this from your own knowledge, without reading anything else in this repository.
+1. **Research, then discover:** Before proposing a final pairing, use web research to survey at least
+  five candidate findings from at least four broad scientific disciplines. Every candidate must be
+  grounded in a source published or substantially revised within the six calendar months preceding
+  today's Pacific date. Memory may help formulate searches; it is not a source and must not choose
+  the topic before the search. For the selected finding, open and verify at least one primary
+  research paper or preprint and one independent supporting source. Confirm the title, authors,
+  publication or revision date, URL, and that each source actually supports the statement you plan
+  to make. Before opening `TOPICS.md`, write the shortlist to `{model}/research.md`. For each
+  candidate, record its discipline, source title, verified date, URL, and the specific finding that
+  might support an interactive pairing. This file is part of the published build and must be
+  committed.
+
+  After the shortlist exists, read only `TOPICS.md` from this repository. Reject any candidate that
+  repeats a listed pairing, reuses the same two phenomena in a different order, or merely relabels
+  the same governing mechanism with cosmetically different systems. If all five collide or cannot
+  support a browser-sized experiment, return to external research and make a new shortlist. The
+  recent source is the discovery anchor; the second half of the final pairing may come from older
+  established science when that produces the stronger hidden connection. Add the collision result
+  and final selection rationale to `research.md` after checking the ledger.
 2. **Conceptual Framing:** Draft a single, compelling "plain-English thesis" that articulates the connection. Treat it as provisional — it is a hypothesis until step 4 measures it, and the wording is not final until then.
 3. **Interactive Canvas:** Code a clean, performant, front-end interactive simulation or visual interface that demonstrates this shared pattern live. Make sure all four layers from *Layered Discovery* end up on the page: the interactive surface, the plain-English thesis, the expandable deep section, and the proof appendix from step 4.
 4. **Measure, then Prove:** Run your simulation headlessly and check the thesis against what it actually produces. **If the measurement disagrees with your draft thesis, the thesis changes.** Then encode those checks so the reader can run them too. On top of the page modules described under *How the code is expected to look*, the test apparatus is three more files:
@@ -140,7 +155,7 @@ Rules for Usage:
    ```
 
    The date heading keeps the format `<h2>21 August 2026 &middot; today's pairings</h2>`.
-6. **Record It:** Capture a full-page screenshot of your finished page to `journal/YYYY-MM-DD-your-page-title.png`, then append an entry to the top of the entry list in `JOURNAL.md`, newest first:
+6. **Record It:** Capture a full-page screenshot of your finished page to `journal/YYYY-MM-DD-your-page-title.png`. Append one line to the end of `TOPICS.md` using its existing format; include the date, model, pairing and recent research anchor. Then append an entry to the top of the entry list in `JOURNAL.md`, newest first:
 
    ```markdown
    ## YYYY-MM-DD — Your Page Title
@@ -153,6 +168,7 @@ Rules for Usage:
    ![Descriptive alt text saying what the screenshot shows](journal/YYYY-MM-DD-your-page-title.png)
 
    **The thesis.** What the connection is, in plain English.
+  **The research.** The five candidates considered, followed by the selected primary source and independent supporting source with verified dates and links. Say why the selected finding survived the topic-ledger check.
    **The interaction.** What the reader can do, and what it reveals.
    **What it measured.** The numbers, with the conditions they were measured under.
    **What failed.** Anything that did not reproduce, and what you concluded from it.
@@ -187,9 +203,9 @@ These are settled decisions from previous days. They are not part of the origina
 - **The site is served by GitHub Pages** from `main` at the repo root, so every path must work as a plain static file over HTTP. Keep links relative, and remember `.nojekyll` means files are served exactly as committed. Verify your page on the live URL after pushing, not only from `file://` — a directory link like `foo/` resolves over HTTP but not on disk, so link `foo/index.html` explicitly.
 - **To test locally over HTTP, run `python -m http.server 8000` from the repo root** and open `http://localhost:8000/`. Python is already on the machine; do not reach for a package manager to get a static server. ES modules are fetched rather than inlined, so a browser may refuse to load them over `file://` — if your page looks dead on disk, serve it before assuming it is broken.
 - **Commit every file your page loads.** The CI link check verifies the landing page and each build's own references, but the surest habit is to read `git status` before pushing and account for every untracked file. A page whose stylesheet or module never got committed deploys as a blank frame.
-- **Stage your own paths by name. Never `git add -A` or `git add .`.** A blanket stage sweeps up whatever another model left in the tree and publishes it under your commit — pages then reach the site with no journal entry of their own, which has already happened. Stage your `{model}/` directory, your card, your screenshot and your journal entry, and nothing else.
+- **Stage your own paths by name. Never `git add -A` or `git add .`.** A blanket stage sweeps up whatever another model left in the tree and publishes it under your commit — pages then reach the site with no journal entry of their own, which has already happened. Stage your `{model}/` directory, your card, your screenshot, your `TOPICS.md` line and your journal entry, and nothing else.
 - **Another model's uncommitted work is not yours to delete or to commit.** If a teardown would remove a directory that has uncommitted changes in it, leave that directory alone, finish publishing your own build, and note it in your journal entry. Do not abandon your own finished page over someone else's debris, and do not commit their files to tidy up.
-- **Push straight to `main`.** No branches, no pull requests. One commit per day per model, containing your `{model}/` directory, your card on the root `index.html`, your `journal/` screenshot and your `JOURNAL.md` entry, with a message naming the thesis. If another model pushed while you were building and your push is rejected, `git pull --rebase` and re-apply your card and journal entry underneath theirs — never drop or reorder what they added.
+- **Push straight to `main`.** No branches, no pull requests. One commit per day per model, containing your `{model}/` directory, your card on the root `index.html`, your `journal/` screenshot, your `TOPICS.md` line and your `JOURNAL.md` entry, with a message naming the thesis. If another model pushed while you were building and your push is rejected, `git pull --rebase` and re-apply your card, topic-ledger line and journal entry underneath theirs — never drop or reorder what they added.
 - **`.github/` is infrastructure, not part of the daily build.** It survives every teardown. Do not edit the publish workflow to get a page out; if the link check fails, the link is wrong.
 - **Deleting is the one irreversible-looking act here, so gate it on the date and nothing else.** A build directory is only ever removed because its day is over, never because it looks stale, duplicated, broken or wrong. If another model's page is on the site under today's date, it stays, whatever you think of it. Pulling a published build early is a **retraction**, it is the operator's call and not yours, and it takes a commit message line reading `Retract: <slug> - reason`. Never retract another model's build.
 - **Every module in a build carries `// @ts-check`**, tests included, and CI rejects the build if one does not. There is no build step; the pragma plus JSDoc is the whole type story.
@@ -214,9 +230,10 @@ you made this up?"
 - **Name the science out loud.** State which phenomenon, model or law the page rests on and who
   established it. However good the simulation is, a page with no named foundation reads as
   invention.
-- **Cite where you can; never invent a citation.** Links and DOIs are welcome and are not mandatory.
-  A fabricated reference is far worse than none — if you are not certain a paper exists and says
-  what you are claiming, name the result and the researchers in prose and leave the link out.
+- **The recent research anchor must be cited.** Link the verified primary paper or preprint and the
+  independent supporting source from the page. A DOI is welcome but not required. If you cannot
+  confirm that a source exists, falls inside the six-month window and says what you claim, discard
+  that candidate and research another one. Never fill a missing citation from memory.
 - **Say whether the analogy is mathematical or empirical.** "Both systems are described by the same
   equation" and "both systems have been measured behaving the same way" are very different claims. A
   stylised analogy is legitimate and interesting; presenting one as the other is not. If your pairing
@@ -293,4 +310,4 @@ The pages are a showcase of the build as much as the idea, so the code is read a
 - **SRP and dependency inversion are the parts of SOLID that apply here.** Do not invent inheritance
   hierarchies, factories, or injection containers to satisfy the other three. Over-abstraction in a
   400-line simulation is its own kind of slop.
-- **One commit per day's build**, message naming the thesis. The journal entry and its screenshot go in that same commit.
+- **One commit per day's build**, message naming the thesis. The research record, topic-ledger line, journal entry and screenshot go in that same commit.
