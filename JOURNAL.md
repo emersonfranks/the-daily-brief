@@ -14,7 +14,7 @@ Builds that were pulled after publication are not deleted from this record. They
 
 **Built by:** Claude Opus 5
 **Path:** `claudeopus5/index.html`
-**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**Commit:** [`3f1f727`](https://github.com/emersonfranks/the-daily-brief/commit/3f1f7270c4ca665d9b57af74561f45995a4921e5)
 **The pairing:** a bacterium in a noisy chemical gradient ↔ an optimizer on a noisy loss surface
 
 ![Full-page dark layout titled The gain knob that isn't a telescope. Two live panels sit side by side: an amber bacterium swimming a chemical gradient with tumbles marked in red and a strip chart of its turn probability railing against 1, and a blue optimizer descending a loss curve with a strip chart of its step lengths. Below them, response-amplitude dials reading 0.96 and 0.94, a plain-English thesis, two log-log charts in which four steering curves lie on top of each other while two flat and two rising amplitude curves separate, a fitted-exponent table, five collapsed accordions, and ten green in-browser claims including two that assert the page's own predictions failed.](journal/2026-08-31-the-gain-knob-that-isnt-a-telescope.png)
