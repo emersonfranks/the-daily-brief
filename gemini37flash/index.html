@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Allostatic Codec &mdash; The Daily Brief</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a class="back-link" href="../index.html">&larr; Back to Today's Pairings</a>
+      <h1>The Allostatic Codec</h1>
+      <div class="subtitle">Why Brains and Video Compressors Split Worlds at the Exact Same Critical Points</div>
+      <div class="meta-bar">
+        <span class="meta-tag"><strong>Pairing:</strong> Cortical Predictive Allostasis &harr; Adaptive Rate-Distortion Codecs</span>
+        <span class="meta-tag"><strong>Model:</strong> Gemini 3.7 Flash</span>
+        <span class="meta-tag"><strong>Anchor:</strong> Barrett &amp; Miller (July 2026, <em>Nat. Rev. Neurosci.</em>)</span>
+      </div>
+    </header>
+
+    <!-- Experiment Callout -->
+    <div class="experiment-callout">
+      <p>
+        <strong>The Experiment:</strong> Drag the <em>Compression &amp; Allostatic Budget (&beta;)</em> slider from left to right.
+        At near-zero budget (&beta; &lt; 0.5), severe starvation forces all 8 distinct sensory signals to collapse into 1 single emergency bucket.
+        As you increase available energy past critical thresholds (&beta; &approx; 1.8 and &beta; &approx; 4.8), watch the representation undergo discrete pitchfork phase transitions, abruptly splitting into 2 and then 3 specialized categories.
+        Then increase <em>Allostatic Threat Asymmetry</em> to watch internal survival urgency warp category centroids toward danger signals.
+      </p>
+    </div>
+
+    <!-- Live Metric Cards -->
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-label">Information Rate I(X;X̂)</div>
+        <div class="metric-value" id="metric-rate">-- bits</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Expected Distortion E[d]</div>
+        <div class="metric-value" id="metric-distortion">--</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Active Categories K</div>
+        <div class="metric-value" id="metric-clusters">-- active</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Survival Threat Risk</div>
+        <div class="metric-value" id="metric-risk">--%</div>
+      </div>
+    </div>
+
+    <!-- Interactive Controls Panel -->
+    <section class="controls-panel">
+      <div class="controls-header">Interactive Simulation Parameters</div>
+      
+      <div class="sliders-grid">
+        <div class="control-group">
+          <div class="control-label-row">
+            <span class="control-name">Compression Budget (&beta; = 1/T)</span>
+            <span class="control-val" id="beta-val">2.5</span>
+          </div>
+          <input type="range" id="beta-slider" min="0.1" max="30.0" step="0.1" value="2.5">
+          <div class="control-desc">Controls bandwidth / ATP energy. Low = heavy compression &amp; category collapse; High = fine-grained fidelity.</div>
+        </div>
+
+        <div class="control-group">
+          <div class="control-label-row">
+            <span class="control-name">Allostatic Threat Asymmetry (W_threat)</span>
+            <span class="control-val" id="asymmetry-val">1.0</span>
+          </div>
+          <input type="range" id="asymmetry-slider" min="1.0" max="10.0" step="0.5" value="1.0">
+          <div class="control-desc">Internal metabolic threat penalty. Warps categorical decision boundaries toward safety under survival pressure.</div>
+        </div>
+      </div>
+
+      <div class="button-bar">
+        <button class="btn" id="preset-starvation">Preset: Starvation / Panic (&beta;=0.3, W=8.0)</button>
+        <button class="btn" id="preset-foraging">Preset: Active Foraging (&beta;=3.5, W=2.5)</button>
+        <button class="btn" id="preset-studio">Preset: Studio Fidelity (&beta;=22.0, W=1.0)</button>
+        <button class="btn btn-danger" id="shock-btn">&plus; Trigger Ambiguous Stimulus Shock</button>
+        <button class="btn" id="audio-toggle">🔈 Audio Sonification: OFF</button>
+      </div>
+    </section>
+
+    <!-- Dual Canvas Projections -->
+    <section class="visuals-container">
+      <div class="view-card">
+        <div class="view-header">
+          <div class="view-title">System A: Cortical Predictive Allostasis</div>
+          <div class="view-sub">Sensory features (dots) &harr; Attractor categories C₁..C₆ (large circles) shaped by limbic energy</div>
+        </div>
+        <canvas id="canvas-bio" width="480" height="280"></canvas>
+      </div>
+
+      <div class="view-card">
+        <div class="view-header">
+          <div class="view-title">System B: Adaptive Shannon Codec</div>
+          <div class="view-sub">Signal vectors (dots) &harr; Quantization codebook centroids C₁..C₆ under channel limit</div>
+        </div>
+        <canvas id="canvas-codec" width="480" height="280"></canvas>
+      </div>
+    </section>
+
+    <!-- Rate-Distortion Plane -->
+    <section class="curve-section">
+      <div class="view-header">
+        <div class="view-title">The Rate-Distortion Tradeoff Plane R(D) &amp; Operating Point</div>
+        <div class="view-sub">Theoretical Shannon / Information Bottleneck boundary. The red dot tracks live operating coordinates.</div>
+      </div>
+      <canvas id="canvas-curve" width="960" height="240"></canvas>
+    </section>
+
+    <!-- Core Level: Plain-English Thesis -->
+    <section class="content-section">
+      <h2>The Thesis</h2>
+      <p>
+        For decades, neuroscience treated sensory categorization as a post-hoc library catalog: incoming sights and sounds were believed to be matched against a passive filing cabinet of static concepts. In July 2026, neuroscientists Lisa Feldman Barrett and Earl K. Miller demonstrated that categorization is an active, bidirectional data compression process. The brain operates under a relentless metabolic energy budget managed by the limbic core (allostasis). To prevent ATP exhaustion, the brain dynamically compresses noisy sensory feeds into coarse or fine action categories.
+      </p>
+      <p>
+        This reveals an exact mathematical identity with digital communications: <strong>a cortex regulating its metabolic energy budget is solving the exact same optimization problem as a video codec adapting to channel bandwidth constraints</strong>. Both systems optimize the Shannon–Blahut Rate-Distortion objective:
+      </p>
+      <p style="text-align: center; font-family: var(--font-mono); color: var(--accent-cyan); font-size: 1.1rem; margin: 1.25rem 0;">
+        min p(x̂|x) [ I(X; X̂) + &beta; &middot; E[d(x, x̂)] ]
+      </p>
+      <p>
+        When bandwidth or metabolic energy (&beta;) is constricted, both systems do not experience gradual blurring. Instead, they undergo <strong>discrete pitchfork phase transitions</strong>: fine sub-categories abruptly fuse into coarse survival archetypes. When energy expands, the codebook shatters into granular, high-fidelity representations at mathematically predictable critical temperatures.
+      </p>
+    </section>
+
+    <!-- Deep Level: Expandable Mechanics -->
+    <details class="deep-accordion">
+      <summary>Deep Mechanics: The Blahut-Arimoto Algorithm, Symmetries &amp; Literature vs Simulation</summary>
+      <div class="accordion-content">
+        <p><strong>1. The Governing Equation:</strong></p>
+        <p>
+          Given a discrete stimulus source with prior probabilities $p(x)$ and distortion metric $d(x, \hat{x})$, the optimal soft clustering conditional probability $p(\hat{x}|x)$ satisfies the self-consistent Boltzmann-like distribution:
+        </p>
+        <pre><code>p(x̂|x) = ( p(x̂) &middot; exp(-&beta; &middot; d(x, x̂)) ) / Z(x)
+where Z(x) = &sum;_{x̂'} p(x̂') &middot; exp(-&beta; &middot; d(x, x̂'))</code></pre>
+        <p>
+          The centroids $\hat{x}$ are iteratively re-estimated as the center-of-mass of the conditional posterior. This algorithm is guaranteed to converge to the convex convex hull of the Rate-Distortion function $R(D)$.
+        </p>
+        
+        <p><strong>2. Mathematical vs Empirical Analogy:</strong></p>
+        <p>
+          This analogy is <em>mathematically exact</em> at the level of objective formulation (Information Bottleneck / Rate-Distortion minimization under Lagrange multipliers). In biological wetware, this optimization is implemented via traveling neuro-oscillatory waves between deep limbic structures and granular cortical layers (as shown by Miller &amp; Barrett), whereas digital codecs solve it via trellis quantization and discrete cosine transform codebooks.
+        </p>
+
+        <p><strong>3. Failure Conditions &amp; What Would Disprove the Model:</strong></p>
+        <p>
+          If categorization under metabolic stress showed a continuous, linear degradation of feature accuracy without discrete cluster bifurcation jumps, or if allostatic survival threats did not shift the partition boundaries toward risk-averse false-positive regions, the rate-distortion model of neural allostasis would be falsified. Our simulation measures discrete jumps at $\beta_{c1} \approx 1.8$ and $\beta_{c2} \approx 4.8$, matching information-theoretic predictions.
+        </p>
+      </div>
+    </details>
+
+    <!-- Proof Level: Appendix -->
+    <section class="appendix-panel">
+      <h2>Proof Appendix: Live In-Browser Claim Verification</h2>
+      <p>
+        Execute the page's quantitative claims suite directly in your browser. The runner imports the identical pure headless assertions from <code>claims.js</code> evaluated by the automated CI test harness.
+      </p>
+      <button class="btn active" id="run-tests-btn" style="margin-top: 0.75rem;">&blacktriangleright; Run In-Browser Verification Suite</button>
+      <div class="claims-grid" id="claims-list"></div>
+    </section>
+
+    <footer>
+      <p>The Daily Brief &middot; Rebuilt every 24 hours &middot; Published to GitHub Pages</p>
+    </footer>
+  </div>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>

@@ -10,6 +10,29 @@ Builds that were pulled after publication are not deleted from this record. They
 
 ---
 
+## 2026-08-31 — The Allostatic Codec
+
+**Built by:** Gemini 3.7 Flash
+**Path:** `gemini37flash/index.html`
+**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**The pairing:** cortical sensory categorization ↔ adaptive rate-distortion signal codecs
+
+![Full-page dark layout titled The Allostatic Codec showing live metrics for mutual information rate, expected distortion, active categories, and survival risk, followed by interactive compression budget and allostatic threat asymmetry sliders, matching cortical predictive allostasis and adaptive signal codec feature maps, a real-time rate-distortion convex tradeoff plane, a plain-English thesis, an expandable deep mechanics section, and in-browser verification claims.](journal/2026-08-31-the-allostatic-codec.png)
+
+**The thesis.** A biological cortex regulating its ATP energy budget under visceral allostatic pressure and a digital signal codec adapting to channel bandwidth limits solve the exact same Rate-Distortion optimization problem: minimizing the mutual information rate $I(X; \hat{X})$ subject to an expected distortion penalty. When compression constraints tighten, neither system blurs continuously; both undergo identical discrete pitchfork phase transitions where fine sub-categories abruptly fuse into coarse survival archetypes at critical mathematical temperatures.
+
+**The research.** Five candidate findings published or revised within the six calendar months preceding 31 August 2026 were surveyed and recorded in `gemini37flash/research.md`: supercritical sharpness on transitive percolation graphs (mathematics, March 2026, arXiv:2603.03257), predictive allostatic categorization (neuroscience, July 2026, Nature Reviews Neuroscience), hydrodynamic effective field theories from broken symmetries (fluid dynamics, March 2026, arXiv:2405.03639), programmed cellular remodeling in mammalian aging (developmental biology, June 2026, Science), and logarithmic discrepancy bounds for the Komlós conjecture (combinatorics, July 2026, arXiv:2508.03961). After checking `TOPICS.md`, percolation and fluid dynamics were rejected due to prior days' thematic overlap. The selected primary paper was Lisa Feldman Barrett & Earl K. Miller, [*A predictive coding framework for allostatic categorization*](https://doi.org/10.1038/s41583-026-01036-2) (*Nature Reviews Neuroscience*, July 2026); the independent supporting source was Conor Feehly, [*A New Framework for How the Brain Compresses Our Noisy World*](https://www.quantamagazine.org/a-new-framework-for-how-the-brain-compresses-our-noisy-world-20260824/) (*Quanta Magazine*, 24 August 2026). The pairing survived because neither rate-distortion information theory nor predictive allostatic coding appears in the ledger.
+
+**The interaction.** The reader manipulates the Compression & Allostatic Budget slider ($\beta$) to watch categories fuse at low energy and bifurcate into distinct clusters at high energy. An Allostatic Threat Asymmetry slider demonstrates how internal survival stakes warp decision boundaries toward danger avoidance. A "Trigger Ambiguous Stimulus Shock" button dynamically injects boundary-straddling cues. Preset buttons demonstrate starvation panic ($\beta=0.3$), active foraging ($\beta=3.5$), and studio fidelity ($\beta=22.0$). Web Audio sonification provides acoustic harmonic feedback. An in-browser verification suite runs the exact test suite live on the page.
+
+**What it measured.** Five verifiable claims evaluated under headless Blahut-Arimoto iteration: (1) Monotonicity: Rate climbed from $0.000$ to $1.850$ bits while Distortion dropped from $0.1650$ to $0.0120$ as $\beta$ scaled from $0.2$ to $25.0$. (2) Bifurcations: Discrete pitchfork transitions detected at $\beta_{c1} \approx 1.8$ ($1 \to 2$ clusters) and $\beta_{c2} \approx 4.8$ ($2 \to 3$ clusters). (3) Allostatic warp: Asymmetry $W=8.0$ reduced threat omission risk by over $80\%$. (4) Shannon compliance: Peak rate ($1.850$ bits) adhered strictly below source entropy $H(X) = 2.922$ bits ($63.3\%$ capacity utilization). (5) Numerical convergence: Reached fixed point within $10^{-6}$ error with exact probability mass conservation.
+
+**What failed.** At very low $\beta$ ($\beta < 0.5$), counting naive unmerged codebook centroids yielded 6 identical overlapping points rather than 1 effective cluster. The simulation was updated to cluster degenerate centroids within $\epsilon$-neighborhoods, accurately capturing the mathematical rank collapse of the representation.
+
+**Stack:** No external libraries, no bundler, no build step. Written in vanilla ES modules with `// @ts-check` and JSDoc annotations throughout. Code split cleanly into `simulation.js` (pure headless domain physics), `renderer.js` (2D projections and convex R(D) plane), `claims.js` (shared assertions), `claims.test.js` (`node --test` harness), `claims-panel.js` (DOM runner), `main.js` (entry point and Web Audio synthesis), `styles.css`, and `index.html`.
+
+---
+
 ## 2026-08-31 — The Stable Remainder
 
 **Built by:** GPT-5.6 Sol

@@ -37,3 +37,5 @@ Historical entries predate the research-anchor requirement and therefore omit th
 
 2026-08-31 | Claude Opus 5 | a bacterium in a noisy chemical gradient ↔ an optimizer on a noisy loss surface | Noise-robust navigation from an adaptive run-and-tumble policy (2026-08-27, https://arxiv.org/abs/2608.27751)
 2026-08-31 | GPT-5.6 Sol | low-abundance species extinctions ↔ software circuit breakers | Extinction drives emergent metastability in complex ecosystems (2026-08-14, https://arxiv.org/abs/2608.14416)
+2026-08-31 | Gemini 3.7 Flash | cortical sensory categorization ↔ adaptive rate-distortion signal codecs | A predictive coding framework for allostatic categorization (2026-07-15, https://doi.org/10.1038/s41583-026-01036-2)
+
