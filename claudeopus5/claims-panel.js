@@ -1,133 +1,82 @@
 // @ts-check
+
+/**
+ * Browser-side runner for `claims.js`. It imports exactly the same assertions that
+ * `policy.test.js` hands to `node --test`, so what a reader sees here and what CI checks cannot
+ * drift apart. Deliberately not named `test-*.js`: Node's test discovery matches that pattern and
+ * would try to execute this file, where it would die on the first mention of `document`.
+ */
+
 import { claims, runClaim } from './claims.js';
 
 /**
- * @template {HTMLElement} T
- * @param {string} id
- * @returns {T}
+ * @param {HTMLElement} root
  */
-function mustGet(id) {
-  const el = document.getElementById(id);
-  if (!el) throw new Error(`missing element #${id}`);
-  return /** @type {T} */ (el);
-}
+export function mountClaimsPanel(root) {
+  const button = document.createElement('button');
+  button.className = 'run-claims';
+  button.type = 'button';
+  button.textContent = `Run all ${claims.length} claims in this browser`;
 
-/**
- * @param {string} key
- * @returns {string}
- */
-function humanise(key) {
-  return key
-    .replace(/([A-Z])/g, ' $1')
-    .replace(/^./, (c) => c.toUpperCase())
-    .toLowerCase();
-}
+  const status = document.createElement('p');
+  status.className = 'claims-status';
+  status.textContent =
+    'Nothing has been run yet. Every number below is measured when you press the button, on this ' +
+    'machine, by the same code the test runner uses.';
 
-/**
- * @param {import('./claims.js').Claim} claim
- * @param {number} index
- * @returns {HTMLLIElement}
- */
-function renderClaim(claim, index) {
-  const li = document.createElement('li');
-  li.className = 'claim';
-  li.id = `claim-${claim.id}`;
+  const list = document.createElement('ol');
+  list.className = 'claims-list';
 
-  const head = document.createElement('div');
-  head.className = 'claim-head';
-  const status = document.createElement('span');
-  status.className = 'claim-status';
-  status.textContent = '· · ·';
-  const title = document.createElement('span');
-  title.className = 'claim-title';
-  title.textContent = `${index + 1}. ${claim.title}`;
-  head.append(status, title);
-
-  const catches = document.createElement('p');
-  catches.className = 'claim-meta';
-  const catchesLabel = document.createElement('b');
-  catchesLabel.textContent = 'What it catches: ';
-  catches.append(catchesLabel, document.createTextNode(claim.catches));
-
-  const threshold = document.createElement('p');
-  threshold.className = 'claim-meta';
-  const thresholdLabel = document.createElement('b');
-  thresholdLabel.textContent = 'Passes when: ';
-  threshold.append(thresholdLabel, document.createTextNode(claim.threshold));
-
-  const evidence = document.createElement('div');
-  evidence.className = 'evidence';
-
-  const error = document.createElement('p');
-  error.className = 'claim-error';
-
-  li.append(head, catches, threshold, evidence, error);
-  return li;
-}
-
-/**
- * @param {HTMLElement} li
- * @param {import('./claims.js').ClaimResult} result
- */
-function applyResult(li, result) {
-  li.classList.remove('pass', 'fail');
-  li.classList.add(result.ok ? 'pass' : 'fail');
-  const status = li.querySelector('.claim-status');
-  if (status) status.textContent = result.ok ? 'PASS' : 'FAIL';
-
-  const evidence = li.querySelector('.evidence');
-  if (evidence) {
-    evidence.textContent = '';
-    for (const [key, value] of Object.entries(result.evidence)) {
-      const chip = document.createElement('span');
-      const label = document.createElement('i');
-      label.textContent = `${humanise(key)} `;
-      chip.append(label, document.createTextNode(String(value)));
-      evidence.append(chip);
-    }
-    if (result.ok) {
-      const chip = document.createElement('span');
-      const label = document.createElement('i');
-      label.textContent = 'measured in ';
-      chip.append(label, document.createTextNode(`${result.ms} ms`));
-      evidence.append(chip);
-    }
+  for (const claim of claims) {
+    const item = document.createElement('li');
+    item.dataset.state = 'idle';
+    item.innerHTML =
+      `<div class="claim-head"><span class="claim-flag">--</span>` +
+      `<span class="claim-name"></span></div>` +
+      `<p class="claim-catches"></p>` +
+      `<p class="claim-evidence">not yet run</p>`;
+    const nameNode = item.querySelector('.claim-name');
+    const catchesNode = item.querySelector('.claim-catches');
+    if (nameNode) nameNode.textContent = claim.name;
+    if (catchesNode) catchesNode.textContent = `Catches: ${claim.catches}`;
+    item.id = `claim-${claim.id}`;
+    list.appendChild(item);
   }
 
-  const error = li.querySelector('.claim-error');
-  if (error) error.textContent = result.ok ? '' : result.error;
-}
-
-export function mountClaimsPanel() {
-  const list = mustGet('claims-list');
-  const button = /** @type {HTMLButtonElement} */ (mustGet('run-claims'));
-  const summary = mustGet('claims-summary');
-
-  /** @type {HTMLLIElement[]} */
-  const items = claims.map((claim, index) => {
-    const li = renderClaim(claim, index);
-    list.append(li);
-    return li;
+  button.addEventListener('click', () => {
+    button.setAttribute('disabled', 'disabled');
+    status.textContent = 'Running...';
+    // Yield so the "Running..." text paints before the main thread is taken.
+    setTimeout(() => {
+      let passed = 0;
+      const started = Date.now();
+      for (const claim of claims) {
+        const result = runClaim(claim);
+        if (result.passed) passed += 1;
+        const item = document.getElementById(`claim-${claim.id}`);
+        if (!item) continue;
+        item.dataset.state = result.passed ? 'pass' : 'fail';
+        const flag = item.querySelector('.claim-flag');
+        const evidence = item.querySelector('.claim-evidence');
+        if (flag) flag.textContent = result.passed ? 'PASS' : 'FAIL';
+        if (evidence) {
+          evidence.textContent = result.passed
+            ? `Measured: ${result.evidence}`
+            : `Failed: ${result.evidence}`;
+        }
+      }
+      const elapsed = Date.now() - started;
+      status.textContent =
+        `${passed} of ${claims.length} claims passed in ${elapsed} ms. ` +
+        (passed === claims.length
+          ? 'Two of those claims assert that predictions this page registered in advance turned ' +
+            'out to be wrong. They are tests so that the page cannot quietly stop admitting it.'
+          : 'A claim failed. The page is making a statement it cannot support, and the statement ' +
+            'is the thing that should change.');
+      status.dataset.state = passed === claims.length ? 'pass' : 'fail';
+      button.removeAttribute('disabled');
+    }, 30);
   });
 
-  button.addEventListener('click', async () => {
-    button.disabled = true;
-    summary.className = 'claims-summary';
-    let passed = 0;
-    const started = Date.now();
-    for (let i = 0; i < claims.length; i++) {
-      summary.textContent = `Running check ${i + 1} of ${claims.length}…`;
-      await new Promise((resolve) => window.setTimeout(resolve, 0));
-      const result = runClaim(claims[i]);
-      if (result.ok) passed++;
-      applyResult(items[i], result);
-    }
-    const elapsed = Date.now() - started;
-    const allPassed = passed === claims.length;
-    summary.className = `claims-summary ${allPassed ? 'pass' : 'fail'}`;
-    summary.textContent = allPassed
-      ? `All ${claims.length} checks passed in ${elapsed} ms.`
-      : `${claims.length - passed} of ${claims.length} checks FAILED in ${elapsed} ms.`;
-    button.disabled = false;
-  });
+  root.append(button, status, list);
 }

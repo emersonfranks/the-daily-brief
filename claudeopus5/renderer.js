@@ -1,72 +1,446 @@
 // @ts-check
-import { poissonPdf, wignerPdf, gammaSpacingPdf, histogram } from './spacings.js';
-
-const COLORS = {
-  bus: '#ffb545',
-  busTight: '#ff7b72',
-  busLoose: '#5f6b82',
-  level: '#6ea8fe',
-  poisson: '#8a94a8',
-  wigner: '#7ee787',
-  gamma: '#ff7b72',
-  axis: '#26314a',
-  text: '#93a1b8',
-  track: '#1b2233',
-};
 
 /**
- * @param {HTMLCanvasElement} canvas
- * @returns {{ctx:CanvasRenderingContext2D, width:number, height:number}}
+ * All canvas drawing. Knows about pixels and colours and nothing about the physics: it is handed
+ * plain numbers by `main.js` and paints them. Keeping it separate is what lets `policy.js` be run
+ * headlessly by `node --test`.
  */
-export function setupCanvas(canvas) {
-  const ratio = Math.min(2, window.devicePixelRatio || 1);
+
+const BIO = '#f0b429';
+const BIO_DIM = 'rgba(240, 180, 41, 0.28)';
+const MACHINE = '#4cc9f0';
+const MACHINE_DIM = 'rgba(76, 201, 240, 0.28)';
+const INK = '#e8eef5';
+const MUTED = 'rgba(232, 238, 245, 0.42)';
+const GRID = 'rgba(232, 238, 245, 0.10)';
+
+export const PALETTE = { BIO, MACHINE, INK, MUTED };
+
+/**
+ * Size a canvas for the device pixel ratio and return a context scaled to CSS pixels.
+ * @param {HTMLCanvasElement} canvas
+ * @returns {{ ctx: CanvasRenderingContext2D, width: number, height: number } | null}
+ */
+export function prepare(canvas) {
   const rect = canvas.getBoundingClientRect();
-  const width = Math.max(1, Math.round(rect.width || canvas.width));
-  const height = Math.max(1, Math.round(rect.height || canvas.height));
-  canvas.width = Math.round(width * ratio);
-  canvas.height = Math.round(height * ratio);
+  const width = Math.max(1, Math.round(rect.width));
+  const height = Math.max(1, Math.round(rect.height));
+  const ratio = Math.min(2, window.devicePixelRatio || 1);
+  if (canvas.width !== width * ratio || canvas.height !== height * ratio) {
+    canvas.width = width * ratio;
+    canvas.height = height * ratio;
+  }
   const ctx = canvas.getContext('2d');
-  if (!ctx) throw new Error('canvas 2d context unavailable');
+  if (!ctx) return null;
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  ctx.clearRect(0, 0, width, height);
   return { ctx, width, height };
 }
 
 /**
- * @param {number} gap
- * @returns {string}
+ * @typedef {object} TrailPoint
+ * @property {number} x   World position along the search axis.
+ * @property {number} t   Step index when it was recorded.
+ * @property {boolean} event  Swimmer: did it tumble here? Optimizer: unused.
  */
-function gapColor(gap) {
-  if (gap < 0.35) return COLORS.busTight;
-  if (gap > 1.7) return COLORS.busLoose;
-  return COLORS.bus;
+
+/**
+ * The bacterium panel: a chemical gradient that brightens to the right, and a cell swimming in it.
+ * One horizontal pixel is one unit of the search axis; one dot on the trail is one step.
+ *
+ * @param {HTMLCanvasElement} canvas
+ * @param {{ x: number, heading: number, trail: TrailPoint[], step: number, scaleWorld: number }} view
+ */
+export function drawSwimmer(canvas, view) {
+  const prepared = prepare(canvas);
+  if (!prepared) return;
+  const { ctx, width, height } = prepared;
+  const midY = height * 0.55;
+  const camera = view.x - width / (2 * view.scaleWorld);
+
+  const gradient = ctx.createLinearGradient(0, 0, width, 0);
+  const left = concentrationAt(camera);
+  const right = concentrationAt(camera + width / view.scaleWorld);
+  gradient.addColorStop(0, `rgba(240, 180, 41, ${0.03 + 0.20 * left})`);
+  gradient.addColorStop(1, `rgba(240, 180, 41, ${0.03 + 0.20 * right})`);
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, width, height);
+
+  drawFoodSpecks(ctx, width, height, camera, view.scaleWorld);
+
+  ctx.strokeStyle = GRID;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, midY);
+  ctx.lineTo(width, midY);
+  ctx.stroke();
+
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = BIO_DIM;
+  ctx.beginPath();
+  let started = false;
+  for (const point of view.trail) {
+    const px = (point.x - camera) * view.scaleWorld;
+    const py = midY + wiggle(point.t);
+    if (!started) {
+      ctx.moveTo(px, py);
+      started = true;
+    } else {
+      ctx.lineTo(px, py);
+    }
+  }
+  ctx.stroke();
+
+  ctx.fillStyle = 'rgba(255, 122, 89, 0.85)';
+  for (const point of view.trail) {
+    if (!point.event) continue;
+    const px = (point.x - camera) * view.scaleWorld;
+    ctx.beginPath();
+    ctx.arc(px, midY + wiggle(point.t), 2.6, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  const cellX = (view.x - camera) * view.scaleWorld;
+  const cellY = midY + wiggle(view.step);
+  drawCell(ctx, cellX, cellY, view.heading, view.step);
+}
+
+/**
+ * The optimizer panel: a loss curve falling to the right, and a point descending it.
+ * @param {HTMLCanvasElement} canvas
+ * @param {{ x: number, trail: TrailPoint[], step: number, scaleWorld: number, lastStep: number }} view
+ */
+export function drawOptimizer(canvas, view) {
+  const prepared = prepare(canvas);
+  if (!prepared) return;
+  const { ctx, width, height } = prepared;
+  const camera = view.x - width / (2 * view.scaleWorld);
+
+  const backdrop = ctx.createLinearGradient(0, 0, 0, height);
+  backdrop.addColorStop(0, 'rgba(76, 201, 240, 0.02)');
+  backdrop.addColorStop(1, 'rgba(76, 201, 240, 0.10)');
+  ctx.fillStyle = backdrop;
+  ctx.fillRect(0, 0, width, height);
+
+  const lossY = (worldX) => {
+    const relative = worldX - view.x;
+    return height * 0.42 + relative * 0.34 * view.scaleWorld;
+  };
+
+  ctx.strokeStyle = GRID;
+  ctx.lineWidth = 1;
+  for (let i = 1; i < 5; i += 1) {
+    const y = (height * i) / 5;
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(width, y);
+    ctx.stroke();
+  }
+
+  ctx.strokeStyle = 'rgba(76, 201, 240, 0.55)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (let px = 0; px <= width; px += 4) {
+    const worldX = camera + px / view.scaleWorld;
+    const y = lossY(worldX);
+    if (px === 0) ctx.moveTo(px, y);
+    else ctx.lineTo(px, y);
+  }
+  ctx.stroke();
+
+  ctx.fillStyle = 'rgba(76, 201, 240, 0.07)';
+  ctx.lineTo(width, height);
+  ctx.lineTo(0, height);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = MACHINE_DIM;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  let started = false;
+  for (const point of view.trail) {
+    const px = (point.x - camera) * view.scaleWorld;
+    const py = lossY(point.x) - 9;
+    if (!started) {
+      ctx.moveTo(px, py);
+      started = true;
+    } else {
+      ctx.lineTo(px, py);
+    }
+  }
+  ctx.stroke();
+
+  const ballX = (view.x - camera) * view.scaleWorld;
+  const ballY = lossY(view.x) - 9;
+
+  const strideWidth = Math.min(width * 0.45, Math.abs(view.lastStep) * view.scaleWorld);
+  if (strideWidth > 1) {
+    ctx.strokeStyle = 'rgba(255, 122, 89, 0.75)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(ballX, ballY - 18);
+    ctx.lineTo(ballX + Math.sign(view.lastStep) * strideWidth, ballY - 18);
+    ctx.stroke();
+  }
+
+  ctx.fillStyle = MACHINE;
+  ctx.beginPath();
+  ctx.arc(ballX, ballY, 7, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(76, 201, 240, 0.20)';
+  ctx.beginPath();
+  ctx.arc(ballX, ballY, 14, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+/**
+ * A horizontal meter with a marked target value. Used for the response-amplitude dial, which is
+ * the quantity the whole page turns on.
+ *
+ * @param {HTMLCanvasElement} canvas
+ * @param {{ value: number, max: number, target: number, colour: string, label: string }} view
+ */
+export function drawMeter(canvas, view) {
+  const prepared = prepare(canvas);
+  if (!prepared) return;
+  const { ctx, width, height } = prepared;
+  const barY = height * 0.55;
+  const barH = Math.max(8, height * 0.30);
+
+  ctx.fillStyle = 'rgba(232, 238, 245, 0.07)';
+  ctx.fillRect(0, barY - barH / 2, width, barH);
+
+  const toX = (v) => (Math.log10(Math.max(0.1, v)) - Math.log10(0.1)) /
+    (Math.log10(view.max) - Math.log10(0.1)) * width;
+
+  const filled = Math.min(width, toX(view.value));
+  ctx.fillStyle = view.colour;
+  ctx.fillRect(0, barY - barH / 2, filled, barH);
+
+  const targetX = toX(view.target);
+  ctx.strokeStyle = INK;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(targetX, barY - barH / 2 - 5);
+  ctx.lineTo(targetX, barY + barH / 2 + 5);
+  ctx.stroke();
+
+  ctx.fillStyle = MUTED;
+  ctx.font = '10px ui-monospace, monospace';
+  ctx.textBaseline = 'top';
+  ctx.fillText(view.label, 0, 0);
+  ctx.textAlign = 'right';
+  ctx.fillText(`${view.max}x`, width, 0);
+  ctx.textAlign = 'left';
+}
+
+/**
+ * A rolling strip chart of one scalar per step. This is where each system's signature shows up:
+ * the bacterium's turn probability slamming between the 0 and 1 rails, and the optimizer's step
+ * length running away. Values are drawn oldest-left, newest-right.
+ *
+ * @param {HTMLCanvasElement} canvas
+ * @param {{ values: number[], max: number, colour: string, label: string, rail: number | null }} view
+ */
+export function drawTrace(canvas, view) {
+  const prepared = prepare(canvas);
+  if (!prepared) return;
+  const { ctx, width, height } = prepared;
+  const padT = 13;
+  const plotH = height - padT - 2;
+
+  ctx.fillStyle = 'rgba(232, 238, 245, 0.04)';
+  ctx.fillRect(0, padT, width, plotH);
+
+  const toY = (v) => padT + plotH - Math.min(1, Math.max(0, v / view.max)) * plotH;
+
+  if (view.rail !== null) {
+    ctx.strokeStyle = 'rgba(255, 122, 89, 0.55)';
+    ctx.setLineDash([4, 3]);
+    ctx.lineWidth = 1;
+    const y = toY(view.rail);
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(width, y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  if (view.values.length > 1) {
+    const dx = width / (view.values.length - 1);
+    ctx.strokeStyle = view.colour;
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    view.values.forEach((v, i) => {
+      const x = i * dx;
+      const y = toY(v);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(255, 122, 89, 0.9)';
+    view.values.forEach((v, i) => {
+      if (view.rail === null || v < view.rail) return;
+      ctx.fillRect(i * dx - 1, padT, 2, 3);
+    });
+  }
+
+  ctx.fillStyle = MUTED;
+  ctx.font = '10px ui-monospace, monospace';
+  ctx.textBaseline = 'top';
+  ctx.textAlign = 'left';
+  ctx.fillText(view.label, 0, 0);
+  ctx.textAlign = 'right';
+  ctx.fillText(view.max >= 10 ? `${view.max}` : view.max.toFixed(1), width, 0);
+  ctx.textAlign = 'left';
+}
+
+/**
+ * @typedef {object} Series
+ * @property {string} label
+ * @property {string} colour
+ * @property {boolean} dashed
+ * @property {{ x: number, y: number }[]} points
+ */
+
+/**
+ * Log-log chart. Used for both sweep figures, so the axes are labelled by the caller.
+ *
+ * @param {HTMLCanvasElement} canvas
+ * @param {{ series: Series[], xLabel: string, yLabel: string, yMin: number, yMax: number }} view
+ */
+export function drawLogLog(canvas, view) {
+  const prepared = prepare(canvas);
+  if (!prepared) return;
+  const { ctx, width, height } = prepared;
+  const padL = 52;
+  const padR = 12;
+  const padT = 14;
+  const padB = 34;
+  const plotW = width - padL - padR;
+  const plotH = height - padT - padB;
+
+  const xs = view.series.flatMap((s) => s.points.map((p) => p.x)).filter((v) => v > 0);
+  if (xs.length === 0) return;
+  const xMin = Math.min(...xs);
+  const xMax = Math.max(...xs);
+
+  const toX = (v) =>
+    padL + ((Math.log10(v) - Math.log10(xMin)) / (Math.log10(xMax) - Math.log10(xMin))) * plotW;
+  const toY = (v) =>
+    padT +
+    plotH -
+    ((Math.log10(Math.max(view.yMin, v)) - Math.log10(view.yMin)) /
+      (Math.log10(view.yMax) - Math.log10(view.yMin))) *
+      plotH;
+
+  ctx.strokeStyle = GRID;
+  ctx.lineWidth = 1;
+  ctx.fillStyle = MUTED;
+  ctx.font = '10px ui-monospace, monospace';
+  ctx.textBaseline = 'middle';
+  for (let d = Math.ceil(Math.log10(view.yMin)); d <= Math.log10(view.yMax); d += 1) {
+    const y = toY(Math.pow(10, d));
+    ctx.beginPath();
+    ctx.moveTo(padL, y);
+    ctx.lineTo(width - padR, y);
+    ctx.stroke();
+    ctx.textAlign = 'right';
+    ctx.fillText(formatDecade(d), padL - 6, y);
+  }
+  ctx.textBaseline = 'top';
+  ctx.textAlign = 'center';
+  for (const v of [0.25, 1, 4, 16]) {
+    if (v < xMin || v > xMax) continue;
+    const x = toX(v);
+    ctx.strokeStyle = GRID;
+    ctx.beginPath();
+    ctx.moveTo(x, padT);
+    ctx.lineTo(x, padT + plotH);
+    ctx.stroke();
+    ctx.fillStyle = MUTED;
+    ctx.fillText(String(v), x, padT + plotH + 6);
+  }
+
+  ctx.fillStyle = MUTED;
+  ctx.textAlign = 'center';
+  ctx.fillText(view.xLabel, padL + plotW / 2, height - 13);
+  ctx.save();
+  ctx.translate(11, padT + plotH / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  ctx.fillText(view.yLabel, 0, 0);
+  ctx.restore();
+
+  for (const s of view.series) {
+    ctx.strokeStyle = s.colour;
+    ctx.lineWidth = 2;
+    ctx.setLineDash(s.dashed ? [5, 4] : []);
+    ctx.beginPath();
+    let started = false;
+    for (const p of s.points) {
+      if (p.x <= 0 || p.y <= 0) continue;
+      const px = toX(p.x);
+      const py = toY(p.y);
+      if (!started) {
+        ctx.moveTo(px, py);
+        started = true;
+      } else {
+        ctx.lineTo(px, py);
+      }
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = s.colour;
+    for (const p of s.points) {
+      if (p.x <= 0 || p.y <= 0) continue;
+      ctx.beginPath();
+      ctx.arc(toX(p.x), toY(p.y), 2.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+}
+
+/** @param {number} d */
+function formatDecade(d) {
+  if (d === 0) return '1';
+  if (d > 0) return String(Math.pow(10, d));
+  return `0.${'0'.repeat(-d - 1)}1`;
+}
+
+/** Smooth pseudo-random vertical wander so the swim path reads as swimming rather than sliding. */
+function wiggle(t) {
+  return Math.sin(t * 0.11) * 9 + Math.sin(t * 0.041 + 1.7) * 14;
+}
+
+/** Chemoattractant concentration used only for shading. Increases to the right, bounded to [0,1]. */
+function concentrationAt(worldX) {
+  return 1 / (1 + Math.exp(-worldX / 220));
 }
 
 /**
  * @param {CanvasRenderingContext2D} ctx
  * @param {number} width
  * @param {number} height
- * @param {{positions:Float64Array, spacings:Float64Array}} state
+ * @param {number} camera
+ * @param {number} scaleWorld
  */
-export function drawRing(ctx, width, height, state) {
-  ctx.clearRect(0, 0, width, height);
-  const cx = width / 2;
-  const cy = height / 2;
-  const radius = Math.min(width, height) / 2 - 26;
-
-  ctx.strokeStyle = COLORS.track;
-  ctx.lineWidth = 16;
-  ctx.beginPath();
-  ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-  ctx.stroke();
-
-  for (let i = 0; i < state.positions.length; i++) {
-    const angle = state.positions[i] * Math.PI * 2 - Math.PI / 2;
-    const x = cx + Math.cos(angle) * radius;
-    const y = cy + Math.sin(angle) * radius;
-    ctx.fillStyle = gapColor(state.spacings[i]);
-    ctx.beginPath();
-    ctx.arc(x, y, 4.2, 0, Math.PI * 2);
-    ctx.fill();
+function drawFoodSpecks(ctx, width, height, camera, scaleWorld) {
+  ctx.fillStyle = 'rgba(240, 180, 41, 0.30)';
+  const spacing = 37;
+  const first = Math.floor(camera / spacing) * spacing;
+  for (let worldX = first; worldX < camera + width / scaleWorld + spacing; worldX += spacing) {
+    const density = concentrationAt(worldX);
+    const count = Math.round(density * 7);
+    for (let i = 0; i < count; i += 1) {
+      const px = (worldX - camera) * scaleWorld + ((i * 53) % spacing) * scaleWorld * 0.6;
+      const py = ((i * 97 + Math.abs(Math.round(worldX))) % Math.round(height));
+      ctx.beginPath();
+      ctx.arc(px, py, 1.3, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 }
 
@@ -74,180 +448,32 @@ export function drawRing(ctx, width, height, state) {
  * @param {CanvasRenderingContext2D} ctx
  * @param {number} x
  * @param {number} y
- * @param {number} width
- * @param {ArrayLike<number>} ticks
- * @param {number} span
- * @param {string} color
+ * @param {number} heading
+ * @param {number} step
  */
-function drawStrip(ctx, x, y, width, ticks, span, color) {
-  ctx.strokeStyle = COLORS.axis;
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(x, y + 46);
-  ctx.lineTo(x + width, y + 46);
-  ctx.stroke();
-
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  for (let i = 0; i < ticks.length; i++) {
-    const t = ticks[i];
-    if (t < 0 || t > span) continue;
-    const px = x + (t / span) * width;
-    ctx.moveTo(px, y + 6);
-    ctx.lineTo(px, y + 46);
-  }
-  ctx.stroke();
-}
-
-/**
- * @param {CanvasRenderingContext2D} ctx
- * @param {number} width
- * @param {number} height
- * @param {{busTicks:ArrayLike<number>, levelTicks:ArrayLike<number>, span:number,
- *   ensembleLabel:string, referenceReady:boolean}} state
- */
-export function drawLadders(ctx, width, height, state) {
-  ctx.clearRect(0, 0, width, height);
-  const pad = 16;
-  const inner = width - pad * 2;
-
-  ctx.font = '600 11px ui-monospace, Menlo, Consolas, monospace';
-  ctx.fillStyle = COLORS.text;
-  ctx.fillText('BUSES ON THE LOOP, CUT OPEN AND LAID FLAT', pad, 22);
-  drawStrip(ctx, pad, 30, inner, state.busTicks, state.span, COLORS.bus);
-
-  ctx.fillStyle = COLORS.text;
-  ctx.fillText(`ENERGY LEVELS OF A RANDOM NUCLEUS (${state.ensembleLabel})`, pad, 128);
-  if (state.referenceReady) {
-    drawStrip(ctx, pad, 136, inner, state.levelTicks, state.span, COLORS.level);
-  } else {
-    ctx.fillStyle = COLORS.axis;
-    ctx.fillRect(pad, 176, inner, 1);
-    ctx.fillStyle = COLORS.text;
-    ctx.font = '12px ui-sans-serif, system-ui, sans-serif';
-    ctx.fillText('diagonalising random matrices…', pad, 168);
-  }
-
-  ctx.fillStyle = COLORS.text;
-  ctx.font = '11px ui-sans-serif, system-ui, sans-serif';
-  ctx.fillText(`${state.span} average gaps across`, pad, height - 8);
-}
-
-/**
- * @param {CanvasRenderingContext2D} ctx
- * @param {number} width
- * @param {number} height
- * @param {{samples:ArrayLike<number>, reference:ArrayLike<number>, beta:number,
- *   referenceBeta:1|2, referenceReady:boolean}} state
- */
-export function drawHistogram(ctx, width, height, state) {
-  ctx.clearRect(0, 0, width, height);
-  const left = 66;
-  const right = width - 18;
-  const top = 18;
-  const bottom = height - 80;
-  const maxS = 3.6;
-  const maxY = 1.15;
-  const plotW = right - left;
-  const plotH = bottom - top;
-
-  /** @param {number} s @returns {number} */
-  const px = (s) => left + (s / maxS) * plotW;
-  /** @param {number} d @returns {number} */
-  const py = (d) => bottom - (Math.min(d, maxY) / maxY) * plotH;
-
-  ctx.strokeStyle = COLORS.axis;
-  ctx.lineWidth = 1;
-  ctx.font = '11px ui-monospace, Menlo, Consolas, monospace';
-  ctx.fillStyle = COLORS.text;
-  ctx.textAlign = 'right';
-  for (let g = 0; g <= 3; g++) {
-    const y = py((g * maxY) / 3);
-    ctx.beginPath();
-    ctx.moveTo(left, y);
-    ctx.lineTo(right, y);
-    ctx.stroke();
-    ctx.fillText(((g * maxY) / 3).toFixed(2), left - 10, y + 4);
-  }
-  ctx.textAlign = 'center';
-  for (let s = 0; s <= 3; s++) {
-    ctx.fillText(String(s), px(s), bottom + 20);
-  }
-  ctx.textAlign = 'left';
-  ctx.fillText('gap, in units of the average gap', left, bottom + 40);
+function drawCell(ctx, x, y, heading, step) {
   ctx.save();
-  ctx.translate(13, (top + bottom) / 2 + ctx.measureText('probability density').width / 2);
-  ctx.rotate(-Math.PI / 2);
-  ctx.fillText('probability density', 0, 0);
+  ctx.translate(x, y);
+  ctx.scale(heading, 1);
+
+  ctx.strokeStyle = 'rgba(240, 180, 41, 0.75)';
+  ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  for (let i = 0; i <= 22; i += 1) {
+    const fx = -11 - i * 1.05;
+    const fy = Math.sin(step * 0.55 + i * 0.55) * (1.1 + i * 0.20);
+    if (i === 0) ctx.moveTo(fx, fy);
+    else ctx.lineTo(fx, fy);
+  }
+  ctx.stroke();
+
+  ctx.fillStyle = BIO;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 12, 6.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+  ctx.beginPath();
+  ctx.ellipse(3.5, -2, 4, 2, 0, 0, Math.PI * 2);
+  ctx.fill();
   ctx.restore();
-
-  if (state.referenceReady && state.reference.length > 0) {
-    const ref = histogram(state.reference, { bins: 36, max: maxS });
-    ctx.fillStyle = 'rgba(110, 168, 254, 0.16)';
-    ctx.beginPath();
-    ctx.moveTo(px(0), py(0));
-    for (let i = 0; i < ref.centers.length; i++) ctx.lineTo(px(ref.centers[i]), py(ref.density[i]));
-    ctx.lineTo(px(ref.centers[ref.centers.length - 1]), py(0));
-    ctx.closePath();
-    ctx.fill();
-  }
-
-  if (state.samples.length > 0) {
-    const hist = histogram(state.samples, { bins: 36, max: maxS });
-    const barW = (plotW / maxS) * hist.width;
-    ctx.fillStyle = 'rgba(255, 181, 69, 0.72)';
-    for (let i = 0; i < hist.centers.length; i++) {
-      const h = bottom - py(hist.density[i]);
-      if (h <= 0) continue;
-      ctx.fillRect(px(hist.centers[i]) - barW / 2 + 0.5, py(hist.density[i]), barW - 1, h);
-    }
-  }
-
-  /**
-   * @param {(s:number)=>number} fn
-   * @param {string} color
-   * @param {number[]} dash
-   */
-  const curve = (fn, color, dash) => {
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 2;
-    ctx.setLineDash(dash);
-    ctx.beginPath();
-    for (let i = 0; i <= 260; i++) {
-      const s = (i / 260) * maxS;
-      const y = py(fn(s));
-      if (i === 0) ctx.moveTo(px(s), y);
-      else ctx.lineTo(px(s), y);
-    }
-    ctx.stroke();
-    ctx.setLineDash([]);
-  };
-
-  curve(poissonPdf, COLORS.poisson, [4, 4]);
-  curve((s) => gammaSpacingPdf(s, state.beta), COLORS.gamma, [2, 3]);
-  curve((s) => wignerPdf(s, state.referenceBeta), COLORS.wigner, []);
-
-  const legend = [
-    ['bars: buses now', 'rgba(255, 181, 69, 0.9)'],
-    ['nuclear levels', 'rgba(110, 168, 254, 0.55)'],
-    [`Wigner \u03b2=${state.referenceBeta}`, COLORS.wigner],
-    ['Poisson (no repulsion)', COLORS.poisson],
-    ['short-range gas', COLORS.gamma],
-  ];
-  ctx.font = '11px ui-sans-serif, system-ui, sans-serif';
-  let lx = left;
-  let ly = height - 26;
-  for (const [label, color] of legend) {
-    const advance = ctx.measureText(label).width + 40;
-    if (lx + advance > right + 30) {
-      lx = left;
-      ly += 15;
-    }
-    ctx.fillStyle = color;
-    ctx.fillRect(lx, ly - 4, 10, 3);
-    ctx.fillStyle = COLORS.text;
-    ctx.fillText(label, lx + 15, ly);
-    lx += advance;
-  }
 }
