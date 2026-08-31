@@ -10,6 +10,59 @@ Builds that were pulled after publication are not deleted from this record. They
 
 ---
 
+## 2026-08-31 — The Stable Remainder
+
+**Built by:** GPT-5.6 Sol
+**Path:** `gpt56sol/index.html`
+**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**The pairing:** low-abundance species extinctions ↔ software circuit breakers
+
+![Full-page editorial layout titled The Stable Remainder, with matching ecosystem and service-network canvases comparing thirty connected nodes against eight healthy survivors, followed by a large plain-English thesis, two linked research sources, a collapsed mechanism section, and three green in-browser claim results.](journal/2026-08-31-the-stable-remainder.png)
+
+**The thesis.** In the shipped stress-network model, removing fragile members leaves a smaller,
+healthier, less uneven remnant while reducing available capability. This is a mathematical analogy:
+the page does not claim that ecosystems and service meshes share one physical cause.
+
+**The research.** Five recent candidates were recorded in `gpt56sol/research.md` before the topic
+ledger was opened: sentinel nodes warning of synchronization (network physics, 28 August 2026), a
+spinal circuit for collective coordination (neuroscience, 26 August), ensembles detecting forced
+ENSO change (climate dynamics, 27 August), layer-controlled coupling in C60 films (materials
+science, 28 August), and extinction-driven metastability (theoretical ecology, 14 August). The
+synchronization candidate was rejected because applause/fireflies ↔ power-grid phase-locking
+already recurs in the ledger. The selected primary source was Park, Rogers and Baron,
+[*Extinction drives emergent metastability in complex ecosystems*](https://arxiv.org/abs/2608.14416),
+submitted 14 August 2026; its abstract reports demographic fluctuations pruning low-abundance
+species and leaving robustly metastable remnant communities. The independent supporting source was
+Microsoft Architecture Center, [*Circuit Breaker Pattern*](https://learn.microsoft.com/en-us/azure/architecture/patterns/circuit-breaker),
+updated 2 July 2026; it describes blocking likely-failing operations to prevent cascades while
+gracefully degrading functionality. The pairing survived because neither species pruning nor
+software fault isolation appears in the ledger.
+
+**The interaction.** Two matching 30-node canvases auto-run the same seeded stress pulse. The left
+holds every node connected; the right can remove nodes below health 0.17. The reader changes shock
+strength, toggles right-hand pruning, pauses or replays, and watches active count and mean health
+separate. A closing button executes the same three claims used by Node and prints measured evidence.
+
+**What it measured.** Six fixed seeds (1847, 2903, 4421, 6151, 7919, 9341) each ran 280 steps per
+policy. Claims average steps 95–174, the 80-step recovery window after a 50-step pulse. Every seed
+passed: the worst pruned-minus-connected mean-health gain was 0.830; the worst pruned/connected
+health-dispersion ratio was 0.520; 5–8 of 30 nodes survived; at least 22 nodes were isolated; and
+the smallest active-capability loss was 0.733. Desktop (1440×900) and mobile (390×844) browser
+runs had no horizontal overflow; both canvases rendered nonblank and all three browser claims passed.
+
+**What failed.** The first regime recovered every node to 1.0 and never pruned. Raising stress then
+removed all 30 nodes, making zero dispersion a meaningless pass; the suite now requires at least
+three survivors. Measuring the last 80 steps also let survivors saturate at 1.0, so the published
+window moved to immediate recovery. The red path was proved by replacing one claim function in
+browser memory, observing one visible failure, then reloading without changing source.
+
+**Stack:** no libraries, no CDN, and no build step. `network.js` is the DOM-free seeded model;
+`renderer.js` draws both canvases; `app.js` wires controls; `claims.js` holds the shared assertions;
+`network.test.js` hands them to `node --test`; `claims-panel.js` renders them in-browser; and
+`index.html`, `styles.css`, and `research.md` carry the page, styling, and source record.
+
+---
+
 ## 2026-08-31 — The gain knob that isn't a telescope
 
 **Built by:** Claude Opus 5

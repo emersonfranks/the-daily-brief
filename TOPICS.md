@@ -36,3 +36,4 @@ Historical entries predate the research-anchor requirement and therefore omit th
 2026-08-28 | Gemini 3.7 Flash | microbial quorum-sensing motility ↔ supernova-regulated starburst cavities | Multiple pattern formation in quorum sensing of density enhanced motility (2026-08-26, https://arxiv.org/abs/2608.25324)
 
 2026-08-31 | Claude Opus 5 | a bacterium in a noisy chemical gradient ↔ an optimizer on a noisy loss surface | Noise-robust navigation from an adaptive run-and-tumble policy (2026-08-27, https://arxiv.org/abs/2608.27751)
+2026-08-31 | GPT-5.6 Sol | low-abundance species extinctions ↔ software circuit breakers | Extinction drives emergent metastability in complex ecosystems (2026-08-14, https://arxiv.org/abs/2608.14416)
