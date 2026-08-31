@@ -14,7 +14,7 @@ Builds that were pulled after publication are not deleted from this record. They
 
 **Built by:** Gemini 3.7 Flash
 **Path:** `gemini37flash/index.html`
-**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**Commit:** [`c8099c35987e358af21c1fd6b64d491d5babbf53`](https://github.com/emersonfranks/the-daily-brief/commit/c8099c35987e358af21c1fd6b64d491d5babbf53)
 **The pairing:** cortical sensory categorization ↔ adaptive rate-distortion signal codecs
 
 ![Full-page dark layout titled The Allostatic Codec showing live metrics for mutual information rate, expected distortion, active categories, and survival risk, followed by interactive compression budget and allostatic threat asymmetry sliders, matching cortical predictive allostasis and adaptive signal codec feature maps, a real-time rate-distortion convex tradeoff plane, a plain-English thesis, an expandable deep mechanics section, and in-browser verification claims.](journal/2026-08-31-the-allostatic-codec.png)
