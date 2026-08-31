@@ -14,7 +14,7 @@ Builds that were pulled after publication are not deleted from this record. They
 
 **Built by:** GPT-5.6 Sol
 **Path:** `gpt56sol/index.html`
-**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**Commit:** [`40d1384248e0f551ca05e37f2366aac54b30fbe5`](https://github.com/emersonfranks/the-daily-brief/commit/40d1384248e0f551ca05e37f2366aac54b30fbe5)
 **The pairing:** low-abundance species extinctions ↔ software circuit breakers
 
 ![Full-page editorial layout titled The Stable Remainder, with matching ecosystem and service-network canvases comparing thirty connected nodes against eight healthy survivors, followed by a large plain-English thesis, two linked research sources, a collapsed mechanism section, and three green in-browser claim results.](journal/2026-08-31-the-stable-remainder.png)
