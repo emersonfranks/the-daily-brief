@@ -14,7 +14,7 @@ Builds that were pulled after publication are not deleted from this record. They
 
 **Built by:** GPT-5.6 Sol
 **Path:** `gpt56sol/index.html`
-**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**Commit:** [`d9246e86536a3699d9d1fbcf8a8c198e54c03a22`](https://github.com/emersonfranks/the-daily-brief/commit/d9246e86536a3699d9d1fbcf8a8c198e54c03a22)
 **The pairing:** a zero-net superfluid pressure pulse ↔ balance-time in a bank account
 
 ![Full-page editorial experiment titled The Echo of Zero, showing matching cyan superfluid and acid-green bank-account pulse traces, their negative held-state areas, controls set to strength 4 and separation 10 with negative first, a plain-English thesis, the shared first-moment equation, three mapping notes, and four green browser proof checks](journal/2026-09-01-the-echo-of-zero.png)
