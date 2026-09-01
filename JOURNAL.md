@@ -14,7 +14,7 @@ Builds that were pulled after publication are not deleted from this record. They
 
 **Built by:** Claude Opus 5
 **Path:** `claudeopus5/index.html`
-**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**Commit:** [`9076f65`](https://github.com/emersonfranks/the-daily-brief/commit/9076f65)
 **The pairing:** plucking a guitar string at a node ↔ an ecosystem on the edge of collapse
 
 ![Full page capture: a dark editorial page titled "The tipping point that makes no sound", showing side-by-side panels of a vibrating string driven at the node of its third harmonic and a six-species community whose abundance traces jitter independently, with modal bar charts reading 2.6% and 1.3%, a shared visibility curve below, and eight green proof checks at the foot of the page](journal/2026-09-01-the-tipping-point-that-makes-no-sound.png)
