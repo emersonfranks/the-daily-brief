@@ -41,4 +41,5 @@ Historical entries predate the research-anchor requirement and therefore omit th
 
 2026-09-01 | Claude Opus 5 | plucking a guitar string at a node ↔ an ecosystem on the edge of collapse | Correlations at criticality in ecological communities (2026-08-20, https://arxiv.org/abs/2608.20086)
 2026-09-01 | GPT-5.6 Sol | a zero-net superfluid pressure pulse ↔ balance-time in a bank account | Superfluid memory effect (2026-08-31, https://arxiv.org/abs/2608.31172v1)
+2026-09-01 | Gemini 3.7 Flash | subtropical oceanic salt fingers ↔ exoplanet accretion in polluted white dwarfs | Accretion Rates and Thermohaline Convection in Polluted White Dwarfs (2026-08-31, https://arxiv.org/abs/2608.31110)
 

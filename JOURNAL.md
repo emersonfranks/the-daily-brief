@@ -10,6 +10,41 @@ Builds that were pulled after publication are not deleted from this record. They
 
 ---
 
+## 2026-09-01 — Sinking Fingers in Water and Stars
+
+**Built by:** Gemini 3.7 Flash
+**Path:** `gemini37flash/index.html`
+**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**The pairing:** subtropical oceanic salt fingers ↔ exoplanet accretion in polluted white dwarfs
+
+![Full-page interactive experiment titled Sinking Fingers in Water and Stars, showing a high-resolution 2D double-diffusive fluid simulation with narrow cyan salt/metal fingers plunging downward, real-time kinetic energy and Nusselt number diagnostic gauges, vertical stratification profile curves, interactive preset switcher, plain-English thesis comparing ocean thermoclines to polluted white dwarf atmospheres, Boussinesq equations, and 5 verified proof checks](journal/2026-09-01-sinking-fingers-in-water-and-stars.png)
+
+**The thesis.** When two properties diffuse through a fluid at wildly different speeds ($\kappa_T \gg \kappa_S$), a statically stable layer (warm/metal-rich top over cold/light bottom) will spontaneously destabilize into hundreds of interlocked vertical sinking and rising convective fingers. In subtropical oceans, heat diffusing 100 times faster than salt drives "salt fingers" that pump oxygen and nutrients downward. In dying white dwarfs, heat diffusing millions of times faster than heavy exoplanetary ions triggers the exact same double-diffusive fingering cascade—plunging asteroidal iron and silicon corpses thousands of kilometers into the stellar core.
+
+**The research.** Five candidates across distinct disciplines were surveyed and documented in `gemini37flash/research.md`:
+1. Astrophysics: Double-diffusive thermohaline convection in polluted white dwarfs (2026-08-31, arXiv:2608.31110).
+2. Biophysics: Intracellular protein pattern classification from mass-conserving reactive equilibria (2026-08-13, arXiv:2608.13821).
+3. Granular Physics: Chute flow size and density segregation coupling (2026-08-31, arXiv:2608.30994).
+4. Theoretical Ecology: Resource supply dynamics controlling chaos in complex ecosystems (2026-08-31, arXiv:2608.30966).
+5. Active Matter: Odd elasticity and non-reciprocal conserved dynamics near criticality (2026-08-05, arXiv:2608.05027).
+
+Checking `TOPICS.md` confirmed zero prior entries on double-diffusive convection, salt fingers, or stellar planetary accretion mixing. The selected primary research paper is J. R. Fuentes, Matias Castro-Tapia, and Jim Fuller, [*Accretion Rates and Thermohaline Convection in Polluted White Dwarfs*](https://arxiv.org/abs/2608.31110) (arXiv:2608.31110v1, submitted 2026-08-31), demonstrating how double-diffusive fingering instability dictates stellar sinking timescales for accreted exoplanetary debris. The independent supporting foundation is Melvin E. Stern, [*The 'salt-fountain' and thermohaline convection*](https://doi.org/10.1111/j.2153-3490.1960.tb01300.x) (*Tellus* 12(2), 1960), and Raymond W. Schmitt, [*Double Diffusion in Oceanography*](https://doi.org/10.1146/annurev.fl.26.010194.001351) (*Ann. Rev. Fluid Mech.* 26, 1994).
+
+**The interaction.** The user can switch between oceanic thermocline ($Pr = 7.0, \tau = 0.03$), white dwarf plasma ($Pr = 0.5, \tau = 0.015$), and control regimes ($\tau = 1.0$, $R_\rho = 35.0$, $R_\rho < 1.0$), adjust density and diffusivity ratios in real-time, inject exoplanet debris droplets or stir vortex perturbations, inspect local fluid parcel buoyancy with an interactive probe crosshair, and run the complete 5-claim verification suite directly in the browser.
+
+**What it measured.**
+- Double-diffusive fingering regime ($\tau = 0.03, R_\rho = 1.5$): Kinetic energy $E_k = 14.2$, Solute Nusselt Number $Nu_S = 20.8$ (a 20.8&times; downward transport enhancement over molecular diffusion).
+- Equal-diffusivity control ($\tau = 1.0, R_\rho = 1.5$): $E_k = 6.0 \times 10^{-23}$, $Nu_S = 1.02$ (energy suppressed by $>10^{23}$, zero fingering).
+- Stern flux ratio: $\gamma = \frac{F_T}{R_\rho F_S} = 0.815$, verifying the classical Stern inequality $\gamma < 1.0$.
+- High density ratio suppression ($R_\rho = 40.0 > 1/\tau = 33.3$): $E_k = 2.46 \times 10^{-6}$, $Nu_S = 1.02$.
+- Cross-domain equivalence: Both ocean ($Pr = 7.0, E_k = 12.9$) and white dwarf ($Pr = 0.5, E_k = 13.7$) regimes exhibit spontaneous fingering.
+
+**What failed.** Initial explicit time integration with large Prandtl numbers ($Pr = 7.0$) triggered numerical diffusion instabilities when sub-stepping was clamped to 50 iterations; relaxing the sub-step ceiling to adapt dynamically to $dt \le 0.2 \Delta x^2 / \max(\kappa_T, \nu)$ restored unconditional stability across all parameter regimes.
+
+**Stack:** No external dependencies. Hand-crafted 2D Navier-Stokes Boussinesq solver with Red-Black Gauss-Seidel Poisson streamfunction relaxation and upwind scalar advection, split into `simulation.js`, `renderer.js`, `claims.js`, `claims-panel.js`, and `main.js`.
+
+---
+
 ## 2026-09-01 — The Echo of Zero
 
 **Built by:** GPT-5.6 Sol
