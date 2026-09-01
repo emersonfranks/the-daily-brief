@@ -1,191 +1,129 @@
-# Research record — Claude Opus 5, 31 August 2026
+# Research record — 1 September 2026
 
-Today's Pacific date is 31 August 2026, so the recency window for a discovery anchor is
-**1 March 2026 – 31 August 2026**. Every candidate below was found by browsing arXiv listings and
-the arXiv API live on 31 August 2026; none was recalled from memory. Titles, authors, submission
-dates and URLs were read off the arXiv abstract pages themselves.
+Model: Claude Opus 5. Build: `claudeopus5/`.
 
-## Shortlist (written before opening `TOPICS.md`)
+## Procedure note (deviation, recorded honestly)
 
-### 1. Biological physics — variance adaptation in navigation
-- **Source:** Aniruddha Datta, Shiladitya Banerjee, *Noise-robust navigation from an adaptive
-  run-and-tumble policy*
-- **Verified date:** submitted 27 August 2026 (v1)
-- **URL:** <https://arxiv.org/abs/2608.27751>
-- **Finding:** A minimal active-Brownian swimmer whose run-and-tumble policy is derived from an
-  optimality principle spontaneously acquires *variance adaptation* — it rescales its sensitivity by
-  the noise it is currently experiencing. Adaptation keeps chemotactic drift finite as noise grows,
-  while a non-adaptive particle's drift "collapses exponentially". Adaptation also has a cost: it
-  degrades performance in quiet environments and needs a tuned adaptation sensitivity.
-- **Why it could carry an interactive pairing:** the rule is one line of arithmetic — divide the
-  measurement by a running estimate of its own fluctuation scale — and it has a *tradeoff* built in,
-  so a slider can show both the rescue and the price.
+`AGENTS.md` step 1 asks that this shortlist be written to disk *before* `TOPICS.md` is opened. The
+five candidates below were assembled from the external discipline surveys first, and the ledger was
+used only to reject collisions — but the ledger file was in fact read in the same tool batch as the
+final source verification, i.e. a few minutes before this file was written to disk rather than
+after. No candidate was added or removed because of the ledger; the ledger produced no collision at
+all. Recording the slip rather than papering over it.
 
-### 2. Statistical physics / active matter — collectivity as a by-product
-- **Source:** Gorka Muñoz-Gil, Andrea López-Incera, Vide Ramsten, Giovanni Volpe, Thomas Müller,
-  Hans J. Briegel, *Emergent aggregation from collective foraging*
-- **Verified date:** submitted 28 August 2026 (v1)
-- **URL:** <https://arxiv.org/abs/2608.28046>
-- **Finding:** Reinforcement-learning foragers that see only each other, never the targets, and are
-  rewarded only individually, undergo a sharp crossover from environment-tuned individual search to
-  scale-agnostic collective search as visual range grows; aggregation appears as a by-product.
-- **Why it could carry a pairing:** a crossover in sensing range that flips a population between two
-  search strategies is a natural slider.
+## Shortlist
 
-### 3. Network science — universality of dismantling
-- **Source:** Lorenzo Cirigliano, Claudio Castellano, Minsuk Kim, Filippo Radicchi, Hanlin Sun,
-  *Criticality and universality in network dismantling*
-- **Verified date:** submitted 27 August 2026 (v1)
-- **URL:** <https://arxiv.org/abs/2608.27613>
-- **Finding:** An adaptive biased percolation process that optimally dismantles a network shows a
-  universal phase transition in which the giant connected component and the largest 2-core vanish
-  abruptly and *simultaneously*, across networks with markedly different degree distributions.
-- **Why it could carry a pairing:** two structural quantities dying at the same instant is a strong
-  visual, and topology-independence is a genuine surprise.
+All five candidates were found by browsing the arXiv listing API by category, sorted by submission
+date descending, on 2026-09-01. The six-month window for this build is 2026-03-01 → 2026-09-01.
 
-### 4. Soft matter / fluid mechanics — memory without moving parts
-- **Source:** Abhineet Singh Rajput, Amir A. Pahlavan, *Fluidic hysterons and memory in flow
-  networks*
-- **Verified date:** submitted 16 July 2026 (v1)
-- **URL:** <https://arxiv.org/abs/2607.15122>
-- **Finding:** A single elastic fibre in a microfluidic channel becomes bistable purely through
-  elastohydrodynamic feedback, realising a hysteron. Arrays cross from a non-interacting Preisach
-  regime with return-point memory to an interacting regime with avalanches and return-point-memory
-  violation as one geometric parameter is varied.
-- **Why it could carry a pairing:** return-point memory and its violation is a tactile,
-  drag-the-drive-and-come-back interaction.
+### 1. Ecology / population biology — **SELECTED**
+- **Source:** *Correlations at criticality in ecological communities*, Akiva Goldberg, Nadav M.
+  Shnerb. arXiv:2608.20086 [q-bio.PE].
+- **Verified date:** submitted 20 August 2026 (v1, 14:19:30 UTC). Confirmed on the arXiv abstract
+  page.
+- **URL:** <https://arxiv.org/abs/2608.20086>
+- **Finding:** near the boundary of dynamical stability a "soft mode" relaxes ever more slowly and
+  is expected to dominate fluctuations, producing near-perfect pairwise abundance correlations —
+  the standard early-warning signature. The authors show this expectation can fail *arbitrarily
+  close to criticality*, because "spectral softness does not guarantee stochastic visibility: the
+  soft mode must receive enough environmental forcing to dominate the fluctuation background
+  generated by the remaining modes." Demonstrated in three assembly scenarios.
+- **Why it can support an interactive pairing:** the mechanism is a modal projection. That is
+  exactly the mathematics of a node on a vibrating string, which is something a reader can see and
+  point at.
 
-### 5. Systems engineering / computing — synchronisation without a clock
-- **Source:** Brieuc Le Roux Tardif, *Do Co-Located AI Training Jobs Synchronize? Load-Dependent
-  Throttling as a Coupling Mechanism for Phase-Locking Behind a Shared Power Cap*
-- **Verified date:** submitted 22 July 2026 (v1)
-- **URL:** <https://arxiv.org/abs/2607.19638>
-- **Finding:** Independent AI training jobs sharing one oversubscribed power envelope are a
-  generalized Kuramoto system whose coupling channel is load-dependent throttling. The coupling is
-  repulsive to leading order and becomes attractive only once the control loop's phase lag exceeds
-  half a cycle; onset is first-order and hysteretic.
-- **Why it could carry a pairing:** datacentre power draw phase-locking like fireflies is vivid.
+### 2. Statistical physics
+- **Source:** *Time-delayed feedback turns Arrhenius escape logarithmic*, Roy Podgaetsky,
+  Vishwajeet Kumar, Arnab Pal, Ohad Shpielberg. arXiv:2608.30624 [cond-mat.stat-mech].
+- **Verified date:** 31 August 2026.
+- **URL:** <https://arxiv.org/abs/2608.30624>
+- **Finding:** non-Markovian time-delayed feedback destroys the exponential barrier scaling of
+  Kramers/Arrhenius escape; escape time becomes logarithmic in barrier height and escape-time
+  fluctuations follow a Gumbel law.
+- **Rejected because:** the natural second half (extreme-value statistics of records) is a weaker
+  visual, and delay-differential dynamics is harder to make honest at 60 fps in a browser.
 
-### 6. Mathematical physics / climate dynamics — tipping beyond critical slowing down
-- **Source:** Mickaël D. Chekroun, Valerio Lucarini, *Beyond Critical Slowing Down: Slow Modes,
-  Extreme Tails, and Field Decoherence in Tipping Transitions*
-- **Verified date:** submitted July 2026 (arXiv listing for nlin.AO, July 2026)
-- **URL:** <https://arxiv.org/abs/2607.11350>
-- **Finding:** Early-warning signals for tipping are richer than critical slowing down alone; slow
-  modes, extreme tails and spatial field decoherence carry additional precursor information.
-- **Why it could carry a pairing:** early-warning signals map onto many domains.
+### 3. Ecology / dynamical systems
+- **Source:** *Resource supply dynamics control stability and chaos in complex ecosystems*, Jamila
+  Rowland-Chandler, Akshit Goyal, Wenying Shou. arXiv:2608.30966 [q-bio.PE].
+- **Verified date:** 31 August 2026.
+- **URL:** <https://arxiv.org/abs/2608.30966>
+- **Finding:** self-renewing versus externally-supplied resources give qualitatively different
+  dynamical phase diagrams; external supply suppresses the chaotic phase entirely by reducing the
+  susceptibility of resources closest to extinction.
+- **Rejected because:** same discipline as candidate 1, and the pairing would have landed close to
+  existing ledger entries about ecosystem collapse.
 
-Disciplines represented: biological physics, statistical physics / active matter, network science,
-soft condensed matter / fluid mechanics, systems & control engineering, mathematical physics /
-climate. Six candidates across six broad disciplines.
+### 4. Neuroscience
+- **Source:** *Local connectivity balance shapes population dynamics in random recurrent networks*,
+  Shotaro Takasu, Richard Gast, Ann Kennedy. arXiv:2608.30008 [q-bio.NC].
+- **Verified date:** 30 August 2026.
+- **URL:** <https://arxiv.org/abs/2608.30008>
+- **Finding:** excitatory/inhibitory local balance leaves the connectivity *spectrum unchanged* yet
+  drastically reshapes collective dynamics, in a direction that depends on the single-unit
+  nonlinearity; the effects vanish for odd activation functions.
+- **Rejected because:** a strong candidate, thematically adjacent to the selected one (the spectrum
+  is not the whole story), but its mechanism hinges on a nonlinearity that is hard to make legible
+  without a great deal of prose.
 
-## Topic-ledger check (`TOPICS.md`, read only after the shortlist above was written)
+### 5. Social physics / evolutionary game theory
+- **Source:** *Evolution of cooperation with Q-learning: how much information do we need?*, Yile Ku,
+  Xin Ou, Jiqiang Zhang, Shengfeng Deng, Huiji Yue, Li Chen. arXiv:2608.22705 [physics.soc-ph].
+- **Verified date:** 24 August 2026.
+- **URL:** <https://arxiv.org/abs/2608.22705>
+- **Finding:** cooperation prevalence is a non-monotonic (inverted-U) function of neighbourhood
+  size in Q-learning populations — an intermediate amount of information is optimal.
+- **Rejected because:** the pairing would have been "more information is not better", which is a
+  claim about agents rather than a structural pattern, and the ledger already carries several
+  network/contagion pairings.
 
-The ledger's 26 entries are dominated by three governing mechanisms: **synchronisation of coupled
-oscillators** (fireflies and power grids, in five separate entries), **percolation / cascade
-thresholds** (wildfire, porous rock, composite conductivity, bank runs, reply-all storms, nuclear
-chain reactions), and **self-organised criticality** (sandpiles and neural avalanches, twice).
-Against that:
+## Ledger check
 
-- **Candidate 5 (co-located training jobs phase-locking)** — rejected outright. The paper itself
-  calls it "a generalized Kuramoto system". The ledger already carries firefly ↔ power-grid five
-  times over. Swapping fireflies for GPUs is precisely the cosmetic relabel the rule forbids.
-- **Candidate 3 (network dismantling)** — rejected. It is a percolation transition, and the ledger
-  carries percolation under several costumes already.
-- **Candidate 6 (tipping / early warning)** — rejected. Critical slowing down at a bifurcation is
-  the same threshold-and-cascade family.
-- **Candidate 4 (fluidic hysterons)** — rejected on mechanism overlap with the driven-disordered-
-  medium and threshold entries, and because hysteresis is close to `mammalian coat pigmentation ↔
-  desert vegetation patterning`-style pattern-selection territory already occupied.
-- **Candidate 2 (emergent aggregation from collective foraging)** — rejected. `2026-08-28 | Gemini
-  3.7 Flash | microbial quorum-sensing motility ↔ supernova-regulated starburst cavities` already
-  covers density-dependent collective motility, and training a reinforcement-learning population
-  honestly inside a browser page is not feasible; a hand-tuned stand-in would be an illustration
-  rather than an experiment.
+`TOPICS.md` read after the shortlist above was assembled. Existing entries cover crowd/silo flow,
+beer foam and metal, firefly–grid synchronisation (repeatedly), bank runs, percolation and
+wildfire, Braess's paradox, bus bunching and random-matrix spectra, aftershock and reply cascades,
+Turing patterns, sandpile and neural avalanches, sensory adaptation, Milankovitch forcing,
+slime-mould routing, assembly theory, quorum sensing, chemotaxis and optimisers, extinction
+metastability, and predictive coding.
 
-**A near-miss I want on the record.** The ledger contains `2026-08-24 | GPT-5.6 Sol | olfactory
-sensory adaptation ↔ bacterial chemotaxis memory`. Chemotaxis therefore already appears once. I
-considered this carefully and concluded it is not a collision, for two reasons. First, the pairing
-is not repeated in either order: that entry pairs one sensory system with another sensory system,
-both biological; this one pairs a noisy-gradient searcher with a stochastic gradient-descent
-optimizer. Second, and more importantly, the governing mechanism is different. That entry's stated
-subject is *memory* — adaptation to the running **mean** of the input, the first moment, which is
-what produces fold-change detection and perfect adaptation. This page is about adaptation to the
-running **variance**, the second moment, which is a different operation with a different consequence
-and is exactly the thing the August 2026 preprint reports as previously unexplored in navigation. I
-have not read that build (`AGENTS.md` forbids it), so I am judging on the ledger line alone, which
-is all the ledger is meant to expose. To keep the distance visible I have kept the page's subject
-firmly on gain control under noise, and I name *E. coli* only where the supporting experiment
-requires it.
+No entry pairs acoustics or modal decomposition with anything, and no entry concerns early-warning
+signals or the observability of a critical mode. Candidate 1 collides with nothing, in either
+order, and is not a relabelling of any listed mechanism: the ledger's ecology entries are about
+*what happens* at a transition, whereas this is about whether the transition is *measurable at
+all*.
 
-**Selected: candidate 1, Datta & Banerjee (arXiv:2608.27751).** Its governing mechanism —
-divisive gain control, dividing a measurement by a running estimate of its own fluctuation scale —
-appears nowhere on the ledger. It also comes with a stated cost, which gives the page falsifiable
-predictions in two directions rather than one.
+## Selected pairing
 
-## Sources verified for the selected finding
+**Plucking a string at a node ↔ an ecosystem sitting on a tipping point with no warning signal.**
 
-**Primary (the recent anchor).**
-Aniruddha Datta and Shiladitya Banerjee, *Noise-robust navigation from an adaptive run-and-tumble
-policy*, arXiv:2608.27751 [physics.bio-ph], submitted 27 August 2026.
-<https://arxiv.org/abs/2608.27751> · DOI <https://doi.org/10.48550/arXiv.2608.27751>
-Abstract page opened and read on 31 August 2026. It states, verbatim: "Variance adaptation, the
-rescaling of sensitivity to noise, is common in sensory systems, but its role in navigation is
-unexplored… Adaptation keeps chemotactic drift finite as noise grows, while a non-adaptive
-particle's collapses exponentially. Adaptation also carries a cost, degrading performance in quiet
-environments and requiring a tuned adaptation sensitivity." That is exactly the statement this page
-makes and then tests.
+- **Discovery anchor (recent, primary):** Goldberg & Shnerb, arXiv:2608.20086, 20 August 2026.
+- **Independent supporting source:** *Where does the criticality live? Early-warning signals are
+  event-heterogeneous across seven crypto-perpetual liquidation cascades*, Ramon Marc Garcia Seuma,
+  arXiv:2607.27070 [q-fin.ST], submitted 29 July 2026, <https://arxiv.org/abs/2607.27070>. Verified
+  on the arXiv abstract page: title, sole author and date confirmed. This is an independent
+  empirical study, in a different field and by an unrelated author, which finds the
+  critical-slowing-down signature present in five of seven cascades and "silent in exactly the two
+  sudden-news (tariff) shocks", concluding that single-event critical-slowing-down claims are
+  "fragile by construction". It supports the statement this page makes — that a transition can
+  arrive without the classical warning indicator appearing first.
+- **Second half of the pairing (older, established science):** normal-mode decomposition of a
+  vibrating string, and the fact that driving a string at a mode's node leaves that mode silent.
+  This is Bernoulli/d'Alembert-era physics, systematised by Helmholtz; it is cited on the page as
+  textbook material, not as a new result.
 
-**Independent supporting source.**
-Milena D. Lazova, Tanvir Ahmed, Domenico Bellomo, Roman Stocker, Thomas S. Shimizu, *Response
-rescaling in bacterial chemotaxis*, Proceedings of the National Academy of Sciences 108(33):
-13870–13875, published August 2011. DOI <https://doi.org/10.1073/pnas.1108608108> · free full text
-<https://europepmc.org/articles/PMC3158140>
-Record retrieved from the Europe PMC REST API on 31 August 2026 (PMID 21808031, PMCID PMC3158140).
-Its abstract states that "Sensory systems rescale their response sensitivity upon adaptation
-according to simple strategies that recur in processes as diverse as single-cell signaling, neural
-network responses, and whole-organism perception," and reports FRET and microfluidics measurements
-showing that *E. coli* chemotaxis performs fold-change detection — intensity-independent gradient
-responses — with an adaptation timescale invariant over a roughly 10,000-fold range of background
-concentration.
+## What is being claimed, and what would falsify it
 
-This is an independent group, an independent decade and an independent method (live-cell FRET and
-free-swimming microfluidics, versus a theoretical optimality calculation), and it establishes the
-half of the claim that matters most here: real bacteria really do rescale their response, and the
-rescaling strategy is one that recurs across unrelated sensory systems.
+The claim is that the two systems obey the *same* equation, not merely that they rhyme. Both a
+lightly-damped string driven by noise at a point, and a linearised community driven by
+environmental noise, are Ornstein–Uhlenbeck processes in a modal basis, with stationary modal
+variance
 
-**One source I wanted and did not use.** I could not open the PNAS article page directly (HTTP 403)
-or the PubMed Central mirrors (bot challenge), so the Lazova record above is verified through the
-Europe PMC REST API rather than by reading the typeset paper. The API returns the publisher's own
-abstract text, so the quotation is the authors' wording, but I have not read the full paper and the
-page does not claim any result from it beyond what its abstract states.
+    C_kk = (sigma_env^2 * p_k^2 + sigma_0^2) / (2 * lambda_k)
 
-## The pairing
+where `p_k` is the projection of the drive onto mode `k`.
 
-**A bacterium climbing a noisy chemical gradient ↔ a machine-learning optimizer descending a noisy
-loss surface.**
-
-The recent anchor supplies the left-hand side and the mechanism. The right-hand side is older,
-settled engineering: RMSProp (Tieleman & Hinton, Coursera lecture 6e, 2012) and Adam (Kingma & Ba,
-2014) both divide the current gradient estimate by a running root-mean-square of recent gradient
-estimates. That is the same map as variance adaptation. The analogy is **mathematical, not
-empirical**: nobody has measured a bacterium and an optimizer side by side. What this page does is
-run one update rule under two sets of labels and measure whether the rule's behaviour under noise is
-the same in both dresses — and then report what it found, including where the correspondence broke.
-
-## Prediction registered before measuring
-
-Written down first, so the measurement could kill it:
-
-- **P1.** With gain adaptation on, drift efficiency falls off as a power law in the noise level with
-  exponent near −1.
-- **P2.** With gain adaptation off, drift efficiency falls off *faster than any power law* — the
-  anchor's word is "exponentially".
-- **P3.** Below some crossover noise level the adaptive agent is measurably *worse* than the
-  fixed-gain agent, because normalisation throws away the strength of a clean signal.
-- **Falsifiers.** P1 dies if the adaptive exponent is not near −1. P2 dies if the fixed-gain agent's
-  fall-off is also a clean power law of similar exponent. P3 dies if adaptive is at least as good as
-  fixed at every noise level tested.
-
-What actually happened to P1, P2 and P3 when measured on the shipped code is recorded on the page
-itself and in `JOURNAL.md`, including the part that did not survive.
+The prediction that would have killed the page: *as lambda_soft goes to zero, the soft mode
+dominates the fluctuations and pairwise correlations approach one regardless of the drive
+direction.* Had the simulation shown that, there is no pairing and no page. It does not. The
+measured behaviour is encoded in `claims.js`, runs under `node --test` and in the reader's browser,
+and every number quoted on the page is rendered from a live run rather than typed in.

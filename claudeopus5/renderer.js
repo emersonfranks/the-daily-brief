@@ -1,479 +1,259 @@
 // @ts-check
 
 /**
- * All canvas drawing. Knows about pixels and colours and nothing about the physics: it is handed
- * plain numbers by `main.js` and paints them. Keeping it separate is what lets `policy.js` be run
- * headlessly by `node --test`.
+ * Canvas drawing. Every function here takes numbers and paints them; none of them knows what a
+ * mode means or how one is computed.
  */
 
-const BIO = '#f0b429';
-const BIO_DIM = 'rgba(240, 180, 41, 0.28)';
-const MACHINE = '#4cc9f0';
-const MACHINE_DIM = 'rgba(76, 201, 240, 0.28)';
-const INK = '#e8eef5';
-const MUTED = 'rgba(232, 238, 245, 0.42)';
-const GRID = 'rgba(232, 238, 245, 0.10)';
-
-export const PALETTE = { BIO, MACHINE, INK, MUTED };
+export const AMBER = '#f0c368';
+export const STEEL = '#7f9dc4';
+const INK = '#e9e6df';
+const DIM = '#565b66';
+const GRID = '#1c212b';
 
 /**
- * Size a canvas for the device pixel ratio and return a context scaled to CSS pixels.
+ * Resize a canvas to its CSS box at device resolution and return a context in CSS pixels.
+ *
  * @param {HTMLCanvasElement} canvas
- * @returns {{ ctx: CanvasRenderingContext2D, width: number, height: number } | null}
+ * @returns {{ ctx: CanvasRenderingContext2D, w: number, h: number } | null}
  */
 export function prepare(canvas) {
-  const rect = canvas.getBoundingClientRect();
-  const width = Math.max(1, Math.round(rect.width));
-  const height = Math.max(1, Math.round(rect.height));
-  const ratio = Math.min(2, window.devicePixelRatio || 1);
-  if (canvas.width !== width * ratio || canvas.height !== height * ratio) {
-    canvas.width = width * ratio;
-    canvas.height = height * ratio;
-  }
   const ctx = canvas.getContext('2d');
   if (!ctx) return null;
-  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-  ctx.clearRect(0, 0, width, height);
-  return { ctx, width, height };
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = canvas.clientWidth;
+  const h = canvas.clientHeight;
+  if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
+    canvas.width = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
+  }
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  return { ctx, w, h };
 }
 
 /**
- * @typedef {object} TrailPoint
- * @property {number} x   World position along the search axis.
- * @property {number} t   Step index when it was recorded.
- * @property {boolean} event  Swimmer: did it tumble here? Optimizer: unused.
- */
-
-/**
- * The bacterium panel: a chemical gradient that brightens to the right, and a cell swimming in it.
- * One horizontal pixel is one unit of the search axis; one dot on the trail is one step.
+ * The string itself: its instantaneous shape, where it is being driven, and where the third
+ * harmonic's nodes sit.
  *
  * @param {HTMLCanvasElement} canvas
- * @param {{ x: number, heading: number, trail: TrailPoint[], step: number, scaleWorld: number }} view
+ * @param {number[]} amplitudes modal amplitudes
+ * @param {number} scale divisor bringing the displacement into view
+ * @param {number} driveX drive position in (0, 1)
  */
-export function drawSwimmer(canvas, view) {
-  const prepared = prepare(canvas);
-  if (!prepared) return;
-  const { ctx, width, height } = prepared;
-  const midY = height * 0.55;
-  const camera = view.x - width / (2 * view.scaleWorld);
-
-  const gradient = ctx.createLinearGradient(0, 0, width, 0);
-  const left = concentrationAt(camera);
-  const right = concentrationAt(camera + width / view.scaleWorld);
-  gradient.addColorStop(0, `rgba(240, 180, 41, ${0.03 + 0.20 * left})`);
-  gradient.addColorStop(1, `rgba(240, 180, 41, ${0.03 + 0.20 * right})`);
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, width, height);
-
-  drawFoodSpecks(ctx, width, height, camera, view.scaleWorld);
+export function drawString(canvas, amplitudes, scale, driveX) {
+  const p = prepare(canvas);
+  if (!p) return;
+  const { ctx, w, h } = p;
+  const mid = h / 2;
+  const pad = 18;
+  const span = w - pad * 2;
+  const amp = h * 0.34;
 
   ctx.strokeStyle = GRID;
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(0, midY);
-  ctx.lineTo(width, midY);
+  ctx.moveTo(pad, mid);
+  ctx.lineTo(w - pad, mid);
   ctx.stroke();
 
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = BIO_DIM;
-  ctx.beginPath();
-  let started = false;
-  for (const point of view.trail) {
-    const px = (point.x - camera) * view.scaleWorld;
-    const py = midY + wiggle(point.t);
-    if (!started) {
-      ctx.moveTo(px, py);
-      started = true;
-    } else {
-      ctx.lineTo(px, py);
-    }
-  }
-  ctx.stroke();
-
-  ctx.fillStyle = 'rgba(255, 122, 89, 0.85)';
-  for (const point of view.trail) {
-    if (!point.event) continue;
-    const px = (point.x - camera) * view.scaleWorld;
+  for (const nodeX of [1 / 3, 2 / 3]) {
+    const px = pad + nodeX * span;
+    ctx.strokeStyle = 'rgba(240,195,104,0.30)';
+    ctx.setLineDash([3, 4]);
     ctx.beginPath();
-    ctx.arc(px, midY + wiggle(point.t), 2.6, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  const cellX = (view.x - camera) * view.scaleWorld;
-  const cellY = midY + wiggle(view.step);
-  drawCell(ctx, cellX, cellY, view.heading, view.step);
-}
-
-/**
- * The optimizer panel: a loss curve falling to the right, and a point descending it.
- * @param {HTMLCanvasElement} canvas
- * @param {{ x: number, trail: TrailPoint[], step: number, scaleWorld: number, lastStep: number }} view
- */
-export function drawOptimizer(canvas, view) {
-  const prepared = prepare(canvas);
-  if (!prepared) return;
-  const { ctx, width, height } = prepared;
-  const camera = view.x - width / (2 * view.scaleWorld);
-
-  const backdrop = ctx.createLinearGradient(0, 0, 0, height);
-  backdrop.addColorStop(0, 'rgba(76, 201, 240, 0.02)');
-  backdrop.addColorStop(1, 'rgba(76, 201, 240, 0.10)');
-  ctx.fillStyle = backdrop;
-  ctx.fillRect(0, 0, width, height);
-
-  const lossY = (worldX) => {
-    const relative = worldX - view.x;
-    return height * 0.42 + relative * 0.34 * view.scaleWorld;
-  };
-
-  ctx.strokeStyle = GRID;
-  ctx.lineWidth = 1;
-  for (let i = 1; i < 5; i += 1) {
-    const y = (height * i) / 5;
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(width, y);
-    ctx.stroke();
-  }
-
-  ctx.strokeStyle = 'rgba(76, 201, 240, 0.55)';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  for (let px = 0; px <= width; px += 4) {
-    const worldX = camera + px / view.scaleWorld;
-    const y = lossY(worldX);
-    if (px === 0) ctx.moveTo(px, y);
-    else ctx.lineTo(px, y);
-  }
-  ctx.stroke();
-
-  ctx.fillStyle = 'rgba(76, 201, 240, 0.07)';
-  ctx.lineTo(width, height);
-  ctx.lineTo(0, height);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.strokeStyle = MACHINE_DIM;
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  let started = false;
-  for (const point of view.trail) {
-    const px = (point.x - camera) * view.scaleWorld;
-    const py = lossY(point.x) - 9;
-    if (!started) {
-      ctx.moveTo(px, py);
-      started = true;
-    } else {
-      ctx.lineTo(px, py);
-    }
-  }
-  ctx.stroke();
-
-  const ballX = (view.x - camera) * view.scaleWorld;
-  const ballY = lossY(view.x) - 9;
-
-  const strideWidth = Math.min(width * 0.45, Math.abs(view.lastStep) * view.scaleWorld);
-  if (strideWidth > 1) {
-    ctx.strokeStyle = 'rgba(255, 122, 89, 0.75)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(ballX, ballY - 18);
-    ctx.lineTo(ballX + Math.sign(view.lastStep) * strideWidth, ballY - 18);
-    ctx.stroke();
-  }
-
-  ctx.fillStyle = MACHINE;
-  ctx.beginPath();
-  ctx.arc(ballX, ballY, 7, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = 'rgba(76, 201, 240, 0.20)';
-  ctx.beginPath();
-  ctx.arc(ballX, ballY, 14, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-/**
- * A horizontal meter with a marked target value. Used for the response-amplitude dial, which is
- * the quantity the whole page turns on.
- *
- * @param {HTMLCanvasElement} canvas
- * @param {{ value: number, max: number, target: number, colour: string, label: string }} view
- */
-export function drawMeter(canvas, view) {
-  const prepared = prepare(canvas);
-  if (!prepared) return;
-  const { ctx, width, height } = prepared;
-  const barY = height * 0.55;
-  const barH = Math.max(8, height * 0.30);
-
-  ctx.fillStyle = 'rgba(232, 238, 245, 0.07)';
-  ctx.fillRect(0, barY - barH / 2, width, barH);
-
-  const toX = (v) => (Math.log10(Math.max(0.1, v)) - Math.log10(0.1)) /
-    (Math.log10(view.max) - Math.log10(0.1)) * width;
-
-  const filled = Math.min(width, toX(view.value));
-  ctx.fillStyle = view.colour;
-  ctx.fillRect(0, barY - barH / 2, filled, barH);
-
-  const targetX = toX(view.target);
-  ctx.strokeStyle = INK;
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(targetX, barY - barH / 2 - 5);
-  ctx.lineTo(targetX, barY + barH / 2 + 5);
-  ctx.stroke();
-
-  ctx.fillStyle = MUTED;
-  ctx.font = '10px ui-monospace, monospace';
-  ctx.textBaseline = 'top';
-  ctx.fillText(view.label, 0, 0);
-  ctx.textAlign = 'right';
-  ctx.fillText(`${view.max}x`, width, 0);
-  ctx.textAlign = 'left';
-}
-
-/**
- * A rolling strip chart of one scalar per step. This is where each system's signature shows up:
- * the bacterium's turn probability slamming between the 0 and 1 rails, and the optimizer's step
- * length running away. Values are drawn oldest-left, newest-right.
- *
- * @param {HTMLCanvasElement} canvas
- * @param {{ values: number[], max: number, colour: string, label: string, rail: number | null }} view
- */
-export function drawTrace(canvas, view) {
-  const prepared = prepare(canvas);
-  if (!prepared) return;
-  const { ctx, width, height } = prepared;
-  const padT = 13;
-  const plotH = height - padT - 2;
-
-  ctx.fillStyle = 'rgba(232, 238, 245, 0.04)';
-  ctx.fillRect(0, padT, width, plotH);
-
-  const toY = (v) => padT + plotH - Math.min(1, Math.max(0, v / view.max)) * plotH;
-
-  if (view.rail !== null) {
-    ctx.strokeStyle = 'rgba(255, 122, 89, 0.55)';
-    ctx.setLineDash([4, 3]);
-    ctx.lineWidth = 1;
-    const y = toY(view.rail);
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(width, y);
+    ctx.moveTo(px, mid - amp);
+    ctx.lineTo(px, mid + amp);
     ctx.stroke();
     ctx.setLineDash([]);
   }
 
-  if (view.values.length > 1) {
-    const dx = width / (view.values.length - 1);
-    ctx.strokeStyle = view.colour;
-    ctx.lineWidth = 1.4;
-    ctx.beginPath();
-    view.values.forEach((v, i) => {
-      const x = i * dx;
-      const y = toY(v);
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    });
-    ctx.stroke();
-
-    ctx.fillStyle = 'rgba(255, 122, 89, 0.9)';
-    view.values.forEach((v, i) => {
-      if (view.rail === null || v < view.rail) return;
-      ctx.fillRect(i * dx - 1, padT, 2, 3);
-    });
+  ctx.strokeStyle = 'rgba(240,195,104,0.16)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let i = 0; i <= 160; i++) {
+    const x = i / 160;
+    const y = mid - Math.sin(3 * Math.PI * x) * amp * 0.55;
+    if (i === 0) ctx.moveTo(pad + x * span, y);
+    else ctx.lineTo(pad + x * span, y);
   }
+  ctx.stroke();
 
-  ctx.fillStyle = MUTED;
-  ctx.font = '10px ui-monospace, monospace';
-  ctx.textBaseline = 'top';
-  ctx.textAlign = 'left';
-  ctx.fillText(view.label, 0, 0);
-  ctx.textAlign = 'right';
-  ctx.fillText(view.max >= 10 ? `${view.max}` : view.max.toFixed(1), width, 0);
-  ctx.textAlign = 'left';
+  ctx.strokeStyle = INK;
+  ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  for (let i = 0; i <= 220; i++) {
+    const x = i / 220;
+    let y = 0;
+    for (let k = 0; k < amplitudes.length; k++) {
+      y += amplitudes[k] * Math.SQRT2 * Math.sin((k + 1) * Math.PI * x);
+    }
+    const py = mid - Math.max(-1.4, Math.min(1.4, y / scale)) * amp;
+    if (i === 0) ctx.moveTo(pad + x * span, py);
+    else ctx.lineTo(pad + x * span, py);
+  }
+  ctx.stroke();
+
+  const dx = pad + driveX * span;
+  ctx.fillStyle = AMBER;
+  ctx.beginPath();
+  ctx.arc(dx, mid, 5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(240,195,104,0.18)';
+  ctx.beginPath();
+  ctx.arc(dx, mid, 12, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 /**
- * @typedef {object} Series
- * @property {string} label
- * @property {string} colour
- * @property {boolean} dashed
- * @property {{ x: number, y: number }[]} points
- */
-
-/**
- * Log-log chart. Used for both sweep figures, so the axes are labelled by the caller.
+ * Scrolling abundance traces, one per species.
  *
  * @param {HTMLCanvasElement} canvas
- * @param {{ series: Series[], xLabel: string, yLabel: string, yMin: number, yMax: number }} view
+ * @param {number[][]} history history[t][species], oldest first
+ * @param {number} scale
  */
-export function drawLogLog(canvas, view) {
-  const prepared = prepare(canvas);
-  if (!prepared) return;
-  const { ctx, width, height } = prepared;
-  const padL = 52;
-  const padR = 12;
+export function drawTraces(canvas, history, scale) {
+  const p = prepare(canvas);
+  if (!p) return;
+  const { ctx, w, h } = p;
+  if (history.length < 2) return;
+  const pad = 10;
+  const species = history[0].length;
+  const lane = (h - pad * 2) / species;
+
+  for (let s = 0; s < species; s++) {
+    const base = pad + lane * (s + 0.5);
+    ctx.strokeStyle = GRID;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, base);
+    ctx.lineTo(w, base);
+    ctx.stroke();
+
+    ctx.strokeStyle = STEEL;
+    ctx.globalAlpha = 0.55 + 0.45 * (1 - s / species);
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    for (let t = 0; t < history.length; t++) {
+      const x = (t / (history.length - 1)) * w;
+      const v = Math.max(-1.3, Math.min(1.3, history[t][s] / scale));
+      const y = base - v * lane * 0.44;
+      if (t === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+}
+
+/**
+ * Share of the fluctuation carried by each mode, with the near-critical one picked out.
+ *
+ * @param {HTMLCanvasElement} canvas
+ * @param {number[]} shares
+ * @param {number} soft index to highlight
+ * @param {string} accent
+ */
+export function drawBars(canvas, shares, soft, accent) {
+  const p = prepare(canvas);
+  if (!p) return;
+  const { ctx, w, h } = p;
+  const pad = 16;
+  const n = shares.length;
+  const slot = (w - pad * 2) / n;
+  const barW = Math.min(slot * 0.56, 26);
+  const top = 10;
+  const floor = h - 20;
+
+  ctx.strokeStyle = GRID;
+  ctx.beginPath();
+  ctx.moveTo(pad, floor + 0.5);
+  ctx.lineTo(w - pad, floor + 0.5);
+  ctx.stroke();
+
+  for (let k = 0; k < n; k++) {
+    const cx = pad + slot * (k + 0.5);
+    const hgt = Math.max(1, shares[k] * (floor - top));
+    ctx.fillStyle = k === soft ? accent : 'rgba(233,230,223,0.26)';
+    ctx.fillRect(cx - barW / 2, floor - hgt, barW, hgt);
+    ctx.fillStyle = k === soft ? accent : DIM;
+    ctx.font = '600 10px ui-monospace, Menlo, Consolas, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(String(k + 1), cx, h - 6);
+  }
+}
+
+/**
+ * The shared law: visibility against reduced drive, with a live marker for each system.
+ *
+ * @param {HTMLCanvasElement} canvas
+ * @param {{ g: number, visibility: number, colour: string, label: string }[]} markers
+ */
+export function drawLaw(canvas, markers) {
+  const p = prepare(canvas);
+  if (!p) return;
+  const { ctx, w, h } = p;
+  const padL = 46;
+  const padR = 16;
   const padT = 14;
-  const padB = 34;
-  const plotW = width - padL - padR;
-  const plotH = height - padT - padB;
+  const padB = 30;
+  const lo = -7;
+  const hi = 7;
 
-  const xs = view.series.flatMap((s) => s.points.map((p) => p.x)).filter((v) => v > 0);
-  if (xs.length === 0) return;
-  const xMin = Math.min(...xs);
-  const xMax = Math.max(...xs);
-
-  const toX = (v) =>
-    padL + ((Math.log10(v) - Math.log10(xMin)) / (Math.log10(xMax) - Math.log10(xMin))) * plotW;
-  const toY = (v) =>
-    padT +
-    plotH -
-    ((Math.log10(Math.max(view.yMin, v)) - Math.log10(view.yMin)) /
-      (Math.log10(view.yMax) - Math.log10(view.yMin))) *
-      plotH;
+  /** @param {number} g */
+  const gx = (g) => {
+    const l = Math.max(lo, Math.min(hi, Math.log10(Math.max(g, 1e-12))));
+    return padL + ((l - lo) / (hi - lo)) * (w - padL - padR);
+  };
+  /** @param {number} v */
+  const vy = (v) => padT + (1 - v) * (h - padT - padB);
 
   ctx.strokeStyle = GRID;
   ctx.lineWidth = 1;
-  ctx.fillStyle = MUTED;
-  ctx.font = '10px ui-monospace, monospace';
-  ctx.textBaseline = 'middle';
-  for (let d = Math.ceil(Math.log10(view.yMin)); d <= Math.log10(view.yMax); d += 1) {
-    const y = toY(Math.pow(10, d));
+  for (const v of [0, 0.5, 1]) {
     ctx.beginPath();
-    ctx.moveTo(padL, y);
-    ctx.lineTo(width - padR, y);
+    ctx.moveTo(padL, vy(v));
+    ctx.lineTo(w - padR, vy(v));
     ctx.stroke();
+    ctx.fillStyle = DIM;
+    ctx.font = '600 10px ui-monospace, Menlo, Consolas, monospace';
     ctx.textAlign = 'right';
-    ctx.fillText(formatDecade(d), padL - 6, y);
+    ctx.fillText(v.toFixed(1), padL - 8, vy(v) + 3);
   }
-  ctx.textBaseline = 'top';
-  ctx.textAlign = 'center';
-  for (const v of [0.25, 1, 4, 16]) {
-    if (v < xMin || v > xMax) continue;
-    const x = toX(v);
+  for (let l = lo; l <= hi; l += 2) {
+    const x = gx(Math.pow(10, l));
     ctx.strokeStyle = GRID;
     ctx.beginPath();
     ctx.moveTo(x, padT);
-    ctx.lineTo(x, padT + plotH);
+    ctx.lineTo(x, h - padB);
     ctx.stroke();
-    ctx.fillStyle = MUTED;
-    ctx.fillText(String(v), x, padT + plotH + 6);
+    ctx.fillStyle = DIM;
+    ctx.textAlign = 'center';
+    ctx.fillText(`1e${l}`, x, h - padB + 14);
   }
 
-  ctx.fillStyle = MUTED;
-  ctx.textAlign = 'center';
-  ctx.fillText(view.xLabel, padL + plotW / 2, height - 13);
-  ctx.save();
-  ctx.translate(11, padT + plotH / 2);
-  ctx.rotate(-Math.PI / 2);
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'top';
-  ctx.fillText(view.yLabel, 0, 0);
-  ctx.restore();
-
-  for (const s of view.series) {
-    ctx.strokeStyle = s.colour;
-    ctx.lineWidth = 2;
-    ctx.setLineDash(s.dashed ? [5, 4] : []);
-    ctx.beginPath();
-    let started = false;
-    for (const p of s.points) {
-      if (p.x <= 0 || p.y <= 0) continue;
-      const px = toX(p.x);
-      const py = toY(p.y);
-      if (!started) {
-        ctx.moveTo(px, py);
-        started = true;
-      } else {
-        ctx.lineTo(px, py);
-      }
-    }
-    ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.fillStyle = s.colour;
-    for (const p of s.points) {
-      if (p.x <= 0 || p.y <= 0) continue;
-      ctx.beginPath();
-      ctx.arc(toX(p.x), toY(p.y), 2.5, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-}
-
-/** @param {number} d */
-function formatDecade(d) {
-  if (d === 0) return '1';
-  if (d > 0) return String(Math.pow(10, d));
-  return `0.${'0'.repeat(-d - 1)}1`;
-}
-
-/** Smooth pseudo-random vertical wander so the swim path reads as swimming rather than sliding. */
-function wiggle(t) {
-  return Math.sin(t * 0.11) * 9 + Math.sin(t * 0.041 + 1.7) * 14;
-}
-
-/** Chemoattractant concentration used only for shading. Increases to the right, bounded to [0,1]. */
-function concentrationAt(worldX) {
-  return 1 / (1 + Math.exp(-worldX / 220));
-}
-
-/**
- * @param {CanvasRenderingContext2D} ctx
- * @param {number} width
- * @param {number} height
- * @param {number} camera
- * @param {number} scaleWorld
- */
-function drawFoodSpecks(ctx, width, height, camera, scaleWorld) {
-  ctx.fillStyle = 'rgba(240, 180, 41, 0.30)';
-  const spacing = 37;
-  const first = Math.floor(camera / spacing) * spacing;
-  for (let worldX = first; worldX < camera + width / scaleWorld + spacing; worldX += spacing) {
-    const density = concentrationAt(worldX);
-    const count = Math.round(density * 7);
-    for (let i = 0; i < count; i += 1) {
-      const px = (worldX - camera) * scaleWorld + ((i * 53) % spacing) * scaleWorld * 0.6;
-      const py = ((i * 97 + Math.abs(Math.round(worldX))) % Math.round(height));
-      ctx.beginPath();
-      ctx.arc(px, py, 1.3, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-}
-
-/**
- * @param {CanvasRenderingContext2D} ctx
- * @param {number} x
- * @param {number} y
- * @param {number} heading
- * @param {number} step
- */
-function drawCell(ctx, x, y, heading, step) {
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.scale(heading, 1);
-
-  ctx.strokeStyle = 'rgba(240, 180, 41, 0.75)';
-  ctx.lineWidth = 1.6;
+  ctx.strokeStyle = 'rgba(233,230,223,0.55)';
+  ctx.lineWidth = 1.8;
   ctx.beginPath();
-  for (let i = 0; i <= 22; i += 1) {
-    const fx = -11 - i * 1.05;
-    const fy = Math.sin(step * 0.55 + i * 0.55) * (1.1 + i * 0.20);
-    if (i === 0) ctx.moveTo(fx, fy);
-    else ctx.lineTo(fx, fy);
+  for (let i = 0; i <= 300; i++) {
+    const l = lo + (i / 300) * (hi - lo);
+    const g = Math.pow(10, l);
+    const x = gx(g);
+    const y = vy(g / (1 + g));
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
   }
   ctx.stroke();
 
-  ctx.fillStyle = BIO;
-  ctx.beginPath();
-  ctx.ellipse(0, 0, 12, 6.5, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
-  ctx.beginPath();
-  ctx.ellipse(3.5, -2, 4, 2, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
+  for (const m of markers) {
+    const x = gx(m.g);
+    const y = vy(m.visibility);
+    ctx.fillStyle = m.colour;
+    ctx.beginPath();
+    ctx.arc(x, y, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#06070a';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
 }

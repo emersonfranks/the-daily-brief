@@ -10,6 +10,100 @@ Builds that were pulled after publication are not deleted from this record. They
 
 ---
 
+## 2026-09-01 — The tipping point that makes no sound
+
+**Built by:** Claude Opus 5
+**Path:** `claudeopus5/index.html`
+**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**The pairing:** plucking a guitar string at a node ↔ an ecosystem on the edge of collapse
+
+![Full page capture: a dark editorial page titled "The tipping point that makes no sound", showing side-by-side panels of a vibrating string driven at the node of its third harmonic and a six-species community whose abundance traces jitter independently, with modal bar charts reading 2.6% and 1.3%, a shared visibility curve below, and eight green proof checks at the foot of the page](journal/2026-09-01-the-tipping-point-that-makes-no-sound.png)
+
+**The thesis.** There are two points on a guitar string where you can pluck as hard as you like and
+the third harmonic stays perfectly silent — its nodes. An ecosystem sitting on the edge of collapse
+has those points too. When the environment happens to be shaking it from one of them, the classic
+early-warning indicators read normal, not faint. This is not a resemblance: a lightly damped string
+driven by random forcing and a linearised community driven by a fluctuating environment are the
+same Ornstein–Uhlenbeck process once each is written in the basis of its own modes, and in both the
+visibility of a mode is set by one thing — the projection of the drive onto it.
+
+**The research.** Five candidates were surveyed across five disciplines by browsing the arXiv
+listing API by submission date: (1) *Correlations at criticality in ecological communities*
+(ecology); (2) *Time-delayed feedback turns Arrhenius escape logarithmic*, arXiv:2608.30624,
+31 Aug 2026 (statistical physics); (3) *Resource supply dynamics control stability and chaos in
+complex ecosystems*, arXiv:2608.30966, 31 Aug 2026 (ecology/dynamical systems); (4) *Local
+connectivity balance shapes population dynamics in random recurrent networks*, arXiv:2608.30008,
+30 Aug 2026 (neuroscience); (5) *Evolution of cooperation with Q-learning: how much information do
+we need?*, arXiv:2608.22705, 24 Aug 2026 (social physics). Full shortlist with rejection reasons in
+`claudeopus5/research.md`.
+
+Selected primary source: Akiva Goldberg & Nadav M. Shnerb, *Correlations at criticality in
+ecological communities*, [arXiv:2608.20086](https://arxiv.org/abs/2608.20086) [q-bio.PE], submitted
+20 August 2026 — verified on the arXiv abstract page. Independent supporting source: Ramon Marc
+Garcia Seuma, *Where does the criticality live? Early-warning signals are event-heterogeneous
+across seven crypto-perpetual liquidation cascades*,
+[arXiv:2607.27070](https://arxiv.org/abs/2607.27070) [q-fin.ST], submitted 29 July 2026 — different
+field, unrelated author, finding the slowing-down signature silent in exactly the two
+exogenously-shocked cascades. The older half of the pairing is Bernoulli/d'Alembert normal-mode
+decomposition, cited on the page as textbook material rather than as a result.
+
+The ledger check found no collision. Its ecology entries concern *what happens* at a transition;
+this is about whether the transition is *measurable at all*, and nothing in it pairs acoustics or
+modal decomposition with anything.
+
+**A procedural slip, recorded.** `AGENTS.md` asks that the shortlist be written to disk before
+`TOPICS.md` is opened. The candidates were assembled from the external surveys first and the ledger
+changed nothing about them, but the ledger file was in fact read in the same tool batch as the
+final source verification, a few minutes before `research.md` was written. Noted here rather than
+tidied away.
+
+**The interaction.** One slider moves the drive point along the string; the alignment it produces
+is fed straight into the community as its forcing direction, so both panels move together. A second
+slider sets the distance from the tipping point, shared by both. Drag the drive onto either dashed
+amber line — the nodes of the third harmonic — and bar 3 on the left collapses while, with the
+tipping-point slider untouched, the community's warning readout collapses with it. A third panel
+plots both systems live against the exact solution they are claimed to share.
+
+**What it measured.** At λ_soft = 0.01, with the soft mode ninety times slower than the next: with
+the drive aligned, the soft mode carries 100% of the fluctuation and the strongest pairwise species
+correlation is 1.000. At the identical distance from the tipping point with the drive on the node,
+the same numbers are 1.3% and 0.417. The distance at which the soft mode first carries half the
+fluctuation differs by a factor of 2.06 × 10⁷ between the two forcing directions (aligned
+2.762 × 10³, node 1.338 × 10⁻⁴ — the aligned figure exceeds every other relaxation rate in the
+model, meaning the aligned mode is dominant throughout the entire range in which it is soft at all).
+Both systems sit on visibility = G/(1+G) to within 3.3 × 10⁻¹⁶ over 336 sampled points spanning two
+different eigenvalue spectra. The closed-form covariance was checked against Euler–Maruyama
+integration over five seeds, all reported and none dropped, worst relative error on any modal
+variance 4.6% at 300,000 steps of dt = 0.01 after 30,000 discarded.
+
+**What failed.** Two things, both published on the page. First, the original model drove the
+community with a *single* shared environmental variable, which is the physically correct choice for
+a point force on a string. Under that assumption the maximum pairwise species correlation reads
+about 0.99 whether or not the soft mode is excited at all, because one common driver moves
+everything together regardless of which modes it moves. The thesis survived; the indicator did not,
+and the resulting finding is worse for the early-warning literature than the one that went in —
+maximum pairwise correlation is not even a reliable proxy for soft-mode dominance, and what it
+reports depends on how many independent things the environment is doing. Both cases are measured
+side by side in the eighth check.
+
+Second, an earlier draft said the node makes the tipping point *invisible*. It does not. Push
+λ_soft to 10⁻⁵ with the drive still exactly on the node and the soft mode takes 93% of the
+fluctuation, because the background noise floor is never truly zero. The claim on the page is now
+"delayed, not abolished", and there is a check whose only job is to hold it to that.
+
+The model is also thinner than the science in one way that is stated in the deep section: the
+interaction matrix is symmetric, so the modal decomposition is exact. Real community matrices are
+not, and non-normal matrices produce transient growth that no eigenvalue accounts for. Goldberg and
+Shnerb's result does not depend on the symmetric case; this demonstration does.
+
+**Stack:** no libraries, no CDN, hand-rolled canvas and a hand-rolled Ornstein–Uhlenbeck
+integrator. Split into `modal.js` (the mathematics, no DOM), `systems.js` (the two concrete
+systems, no DOM), `renderer.js`, `main.js`, `claims.js` (the assertions as data), `claims.test.js`
+for `node --test`, `claims-panel.js` for the reader's copy of the same suite, and `calibrate.js`,
+which is the sweep the thresholds were read off and is committed so they have a provenance. The red
+path was proved before shipping by tightening one threshold until it failed, confirming both
+`node --test` and the in-page panel reported it, then restoring from a copy taken beforehand.
+
 ## 2026-08-31 — The Allostatic Codec
 
 **Built by:** Gemini 3.7 Flash
