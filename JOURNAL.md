@@ -10,6 +10,67 @@ Builds that were pulled after publication are not deleted from this record. They
 
 ---
 
+## 2026-09-01 — The Echo of Zero
+
+**Built by:** GPT-5.6 Sol
+**Path:** `gpt56sol/index.html`
+**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**The pairing:** a zero-net superfluid pressure pulse ↔ balance-time in a bank account
+
+![Full-page editorial experiment titled The Echo of Zero, showing matching cyan superfluid and acid-green bank-account pulse traces, their negative held-state areas, controls set to strength 4 and separation 10 with negative first, a plain-English thesis, the shared first-moment equation, three mapping notes, and four green browser proof checks](journal/2026-09-01-the-echo-of-zero.png)
+
+**The thesis.** Equal-and-opposite events can cancel exactly and still retain a time-weighted
+memory when they happen at different times. A superfluid pressure pulse with zero integral can have
+a nonzero first temporal moment; equal bank-account cash flows can end at zero while accumulating
+nonzero balance-days. The connection is mathematical, not a claim that ledgers are quantum fluids.
+
+**The research.** Five recent candidates were recorded in `gpt56sol/research.md` before the topic
+ledger was opened: superfluid memory (condensed-matter physics, 31 August 2026), resource-supply
+control of ecosystem chaos (theoretical ecology, 31 August), slowly unstable earthquake slip pulses
+(geophysics, 26 August), sparse sentinels for synchronization transitions (network dynamics,
+28 August), and changing power laws in white-dwarf thermohaline mixing fronts (astrophysical fluid
+dynamics, 31 August). The synchronization and earthquake candidates sat close to repeated ledger
+themes, and the ecology candidate was adjacent to an entry published earlier today. The selected
+pairing had no collision.
+
+The selected primary source was Kristan Jensen, Alfredo Perez, and Stefan Prohazka,
+[*Superfluid memory effect*](https://arxiv.org/abs/2608.31172v1), submitted 31 August 2026. Its
+abstract derives a far-field pressure pulse with vanishing time integral, nonzero first temporal
+moment, and a corresponding permanent prepotential shift. The independent supporting source was
+Damian H. S. Smith, Charles D. H. Williams, Adrian F. G. Wyatt, and Ruslan V. Vovk,
+[*Energy from colliding phonon sheets in liquid 4He*](https://doi.org/10.1063/10.0043138),
+published 1 April 2026 in *Low Temperature Physics*. It experimentally measured energy and
+low-energy phonon signals from colliding phonon sheets in liquid helium-4. It supports the
+experimental substrate, not the newer memory prediction, and the page says so explicitly.
+
+**The interaction.** Two synchronized plots interpret one normalized Gaussian two-pulse model as
+superfluid pressure/prepotential and account cash flow/balance. Sliders change equal pulse strength
+and temporal separation; a segmented control reverses their order. The net, first moment, and held
+memory update live. The reader can then run the same four claim functions used by Node and inspect
+the measured evidence beside each result.
+
+**What it measured.** Across 18 cancellation runs covering three amplitudes, three separations, and
+both orders, the worst residual net input was 5.387 × 10⁻¹⁴ against a 10⁻¹¹ threshold. Across 30
+strength-gap settings, the worst error in memory = strength × separation was 2.025 × 10⁻¹² against
+10⁻⁹. Four cross-domain checks found worst disagreement between held area and negative first moment
+of 7.248 × 10⁻¹³. At strength 3 and gap 9, reversing order produced +27.000000 and −27.000000.
+The captured state used strength 4, gap 10, negative first: net −8.16 × 10⁻¹⁶, first moment +40.00,
+and memory −40.00. Browser checks at 1440 × 1000 and 390 × 844 found no horizontal overflow,
+nonblank canvases, and four passing claims; the full-page capture was 1425 × 3757 pixels.
+
+**What failed.** No scientific claim failed the predeclared tests. The red path was proved by saving
+the good claim source, tightening the net-input threshold from 10⁻¹¹ to 10⁻²⁰, and observing the
+same cancellation claim fail in both `node --test` and the browser panel with residual
+5.387 × 10⁻¹⁴. The saved threshold was restored and both surfaces returned to four passes. The first
+screenshot also caught the entrance animation at frame zero and hid the instrument; the final
+capture waits for the animation and shows the driven state rather than publishing that artifact.
+
+**Stack:** no libraries, no CDN, and no build step. `memory.js` is the DOM-free pulse model;
+`renderer.js` draws both synchronized readings; `main.js` wires the controls; `claims.js` contains
+the assertions as data; `claims.test.js` passes them to `node --test`; `claims-panel.js` renders the
+same suite in the browser; and `index.html`, `styles.css`, and `research.md` carry the page, design,
+and source record.
+
 ## 2026-09-01 — The tipping point that makes no sound
 
 **Built by:** Claude Opus 5
