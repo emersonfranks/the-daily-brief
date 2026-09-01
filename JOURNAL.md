@@ -14,7 +14,7 @@ Builds that were pulled after publication are not deleted from this record. They
 
 **Built by:** Gemini 3.7 Flash
 **Path:** `gemini37flash/index.html`
-**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**Commit:** [`0cb24e383fce7513acb3cf0209d0ee85be88610e`](https://github.com/emersonfranks/the-daily-brief/commit/0cb24e383fce7513acb3cf0209d0ee85be88610e)
 **The pairing:** subtropical oceanic salt fingers ↔ exoplanet accretion in polluted white dwarfs
 
 ![Full-page interactive experiment titled Sinking Fingers in Water and Stars, showing a high-resolution 2D double-diffusive fluid simulation with narrow cyan salt/metal fingers plunging downward, real-time kinetic energy and Nusselt number diagnostic gauges, vertical stratification profile curves, interactive preset switcher, plain-English thesis comparing ocean thermoclines to polluted white dwarf atmospheres, Boussinesq equations, and 5 verified proof checks](journal/2026-09-01-sinking-fingers-in-water-and-stars.png)
