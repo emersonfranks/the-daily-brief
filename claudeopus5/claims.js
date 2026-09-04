@@ -1,268 +1,212 @@
 // @ts-check
-/**
- * Every assertion this page makes, as data.
- *
- * No DOM and no `node:test` in here, so the exact same file is imported by
- * `network.test.js` under `node --test` in CI and by `claims-panel.js` in the
- * reader's browser. One source of truth, executed twice.
- *
- * Each `verify()` either returns the evidence it measured or throws. Thresholds
- * are set from the calibration run in `calibrate.js` over five graph seeds:
- * take the worst value observed, then leave headroom. The worst observed value
- * is written next to every threshold below.
- */
-
-import { CONFIG, standardGraph, sweep, meanDegree, attentionCascade } from './network.js';
-
-/** @typedef {import('./network.js').SweepRow} SweepRow */
-
-/** @type {Map<number, SweepRow[]>} */
-const cache = new Map();
 
 /**
- * @param {number} seed
- * @returns {SweepRow[]}
+ * Every claim this page makes, as data.
+ *
+ * Each claim carries the sentence it is defending, the failure it is designed to catch, and a
+ * `verify()` that re-measures the thing from scratch and either returns the evidence it found or
+ * throws with the numbers that contradicted it. No DOM and no `node:test` in here, because both
+ * `hysterons.test.js` and the browser panel import this same file. One source of truth, run twice.
+ *
+ * Thresholds are set from the headless runs in `measure.js`, `measure2.js` and `measure3.js`,
+ * always from the worst observed value with headroom, and the observed value is written next to
+ * each one.
  */
-export function sweepFor(seed) {
-  const hit = cache.get(seed);
-  if (hit) return hit;
-  const rows = sweep(standardGraph(seed), [...CONFIG.capacities], CONFIG.a, CONFIG.controlSeed);
-  cache.set(seed, rows);
-  return rows;
+
+import {
+  createEnsemble, sweepTo, saturateDown, snapshot, mismatch, returnPointExcursion, limitCyclePeriod,
+} from './hysterons.js';
+import { magnetisation, flowRate } from './observables.js';
+
+/**
+ * @typedef {Object} Claim
+ * @property {string} id
+ * @property {string} title      the sentence being defended, in the page's own words
+ * @property {string} catches    what a failure here would mean
+ * @property {() => string} verify returns the evidence measured, or throws
+ */
+
+/** @param {string} message @returns {never} */
+function fail(message) {
+  throw new Error(message);
 }
-
-/** @param {number} x */
-const f3 = (x) => x.toFixed(3);
-
-/**
- * Capacity at or above which the network is comfortably provisioned. Claims 4
- * and 5 split the sweep here; the split is stated in the prose on the page
- * because it is a post-hoc choice, and the full curve is drawn either way.
- */
-const COMFORTABLE_CAPACITY = 14;
-
-/**
- * @typedef {{ id: string, title: string, catches: string, verify: () => string }} Claim
- */
 
 /** @type {Claim[]} */
 export const claims = [
   {
-    id: 'cascade-converges',
-    title: 'The simulation actually settles',
-    catches:
-      'A model whose "result" is only wherever the iteration limit cut it off. Every number on this page is read off a fixed point, not a snapshot mid-cascade.',
+    id: 'uncoupled-return-point-memory',
+    title: 'With the switches ignoring each other, a closed excursion returns the system to exactly the state it left.',
+    catches: 'The central claim. If a single switch out of sixty came back in the wrong position, return point memory would not be exact and the page would be overselling it.',
     verify() {
-      /** @type {string[]} */
-      const notes = [];
-      let worstRounds = 0;
-      for (const seed of CONFIG.auditSeeds) {
-        const rows = sweepFor(seed);
-        const bad = rows.filter((r) => !r.converged);
-        if (bad.length > 0) {
-          throw new Error(
-            `seed ${seed}: ${bad.length} capacities never reached a fixed point ` +
-              `(first: capacity ${bad[0].capacity})`,
-          );
+      let worst = 0;
+      for (let seed = 1; seed <= 40; seed += 1) {
+        const ensemble = createEnsemble({ n: 60, seed, kind: 'none' });
+        const turningPoint = 0.15 + 0.5 * ((seed % 7) / 7);
+        const bottom = -0.35 - 0.4 * ((seed % 5) / 5);
+        const { mismatched } = returnPointExcursion(ensemble, turningPoint, bottom, 0.01);
+        worst = Math.max(worst, mismatched);
+      }
+      if (worst !== 0) fail(`${worst} of 60 switches came back in the wrong state`);
+      return '40 random ensembles of 60 switches, each taken up to a turning point, down on a random excursion and back: 0 switches out of 60 differed, on every seed.';
+    },
+  },
+  {
+    id: 'memory-survives-cooperation',
+    title: 'Turning the switches into a strongly cooperating crowd does not destroy the memory, even when single steps set off system-spanning avalanches.',
+    catches: 'The intuitive story — "interaction scrambles memory" — is wrong, and this is the test that says so. It fails if any positively coupled ensemble loses its turning point, or if the coupling being tested is too weak to be called strong.',
+    verify() {
+      let worst = 0;
+      let largestAvalanche = 0;
+      for (let seed = 1; seed <= 20; seed += 1) {
+        const ensemble = createEnsemble({ n: 60, seed, kind: 'ferro', couplingStrength: 0.9 });
+        const { mismatched } = returnPointExcursion(ensemble, 0.2 + 0.4 * ((seed % 7) / 7), -0.5, 0.01);
+        worst = Math.max(worst, mismatched);
+
+        const sweeper = createEnsemble({ n: 60, seed, kind: 'ferro', couplingStrength: 0.9 });
+        saturateDown(sweeper);
+        largestAvalanche = Math.max(largestAvalanche, sweepTo(sweeper, 1.4, 0.01).maxAvalanche);
+      }
+      if (worst !== 0) fail(`positive coupling lost the turning point: ${worst} of 60 switches differed`);
+      // Measured: every seed produced a 60-switch avalanche, i.e. the whole ensemble in one step.
+      if (largestAvalanche < 30) fail(`coupling of 0.9 was not strong enough to be interesting: largest avalanche only ${largestAvalanche} switches`);
+      return `20 ensembles at coupling 0.9 with every interaction positive: 0 of 60 switches differed after the excursion, while the largest single-step avalanche reached ${largestAvalanche} of 60 switches.`;
+    },
+  },
+  {
+    id: 'frustration-breaks-memory',
+    title: 'Mixed-sign interactions — where switching one element helps some neighbours and hinders others — do break the memory.',
+    catches: 'If nothing ever broke return point memory, the page would be describing a property of the model rather than a property with a boundary. This fails if frustrated ensembles never lose their turning point.',
+    verify() {
+      let failing = 0;
+      let worst = 0;
+      for (let seed = 1; seed <= 40; seed += 1) {
+        const ensemble = createEnsemble({ n: 60, seed, kind: 'frustrated', couplingStrength: 1.4 });
+        const { mismatched } = returnPointExcursion(ensemble, 0.15 + 0.5 * ((seed % 7) / 7), -0.35 - 0.4 * ((seed % 5) / 5), 0.01);
+        if (mismatched > 0) failing += 1;
+        worst = Math.max(worst, mismatched);
+      }
+      // Measured at coupling 1.4: 10 of 40 seeds failed, worst mismatch 9 switches. Threshold set
+      // well below that, because the point is that the failure exists, not that it is common.
+      if (failing < 3) fail(`only ${failing} of 40 frustrated ensembles lost their turning point; expected the memory to break`);
+      return `At coupling 1.4 with mixed-sign interactions, ${failing} of 40 ensembles failed to return to their turning point, the worst by ${worst} switches out of 60.`;
+    },
+  },
+  {
+    id: 'wiping-out',
+    title: 'A small excursion is erased the moment a larger one passes over it: two different histories end on one identical state.',
+    catches: 'The system is supposed to remember turning points, not everything that ever happened to it. This fails if the erased detour leaves any trace at all.',
+    verify() {
+      let worst = 0;
+      for (let seed = 1; seed <= 30; seed += 1) {
+        const withDetour = createEnsemble({ n: 60, seed, kind: 'none' });
+        saturateDown(withDetour);
+        sweepTo(withDetour, 0.35, 0.01);
+        sweepTo(withDetour, -0.2, 0.01);
+        sweepTo(withDetour, 0.95, 0.01);
+        sweepTo(withDetour, 0, 0.01);
+
+        const without = createEnsemble({ n: 60, seed, kind: 'none' });
+        saturateDown(without);
+        sweepTo(without, 0.95, 0.01);
+        sweepTo(without, 0, 0.01);
+
+        worst = Math.max(worst, mismatch(snapshot(withDetour), snapshot(without)));
+      }
+      if (worst !== 0) fail(`the wiped-out detour left a trace on ${worst} of 60 switches`);
+      return '30 seeds, each driven twice — once with an inner excursion to 0.35 and back, once without — then both taken over the top at 0.95 and down to 0: the two states matched on all 60 switches, every time.';
+    },
+  },
+  {
+    id: 'cascades-need-interaction',
+    title: 'Avalanches — many switches flipping from one nudge — are a product of interaction, not of the drive being stepped coarsely.',
+    catches: 'This one caught a mistake. The first measurement showed avalanches of up to five switches with the interaction switched off, which looked like a cascade and was not: it was two thresholds falling inside one drive step. A real cascade does not shrink when the step shrinks. A coincidence does.',
+    verify() {
+      /** @param {import('./hysterons.js').CouplingKind} kind @param {number} strength @param {number} increment */
+      const meanAvalanche = (kind, strength, increment) => {
+        let total = 0;
+        let count = 0;
+        for (let seed = 1; seed <= 8; seed += 1) {
+          const ensemble = createEnsemble({ n: 60, seed, kind, couplingStrength: strength });
+          saturateDown(ensemble);
+          for (const f of sweepTo(ensemble, 1.4, increment).flips) { total += f; count += 1; }
         }
-        worstRounds = Math.max(worstRounds, ...rows.map((r) => r.rounds));
-        notes.push(`${seed}: ok`);
-      }
-      return `all ${CONFIG.auditSeeds.length} seeds x ${CONFIG.capacities.length} capacities reached a fixed point; slowest took ${worstRounds} rounds`;
+        return count === 0 ? 0 : total / count;
+      };
+      const coarseAlone = meanAvalanche('none', 0, 0.02);
+      const fineAlone = meanAvalanche('none', 0, 0.0005);
+      const fineCoupled = meanAvalanche('ferro', 0.6, 0.0005);
+      // Measured over 40 seeds: uncoupled mean fell 1.576 -> 1.006 as the step went 0.02 -> 0.00025,
+      // while positively coupled stayed at 12.4. Thresholds carry headroom on both sides.
+      if (fineAlone > 1.1) fail(`uncoupled avalanches did not vanish at fine resolution: mean ${fineAlone.toFixed(3)}`);
+      if (fineCoupled < 5) fail(`coupled avalanches did not survive at fine resolution: mean ${fineCoupled.toFixed(3)}`);
+      return `Uncoupled mean avalanche fell from ${coarseAlone.toFixed(3)} switches at a drive step of 0.02 to ${fineAlone.toFixed(3)} at 0.0005 — it was an artefact of the step. Positively coupled at the same fine step: ${fineCoupled.toFixed(2)} switches.`;
     },
   },
-
   {
-    id: 'quiet-starts-at-the-hubs',
-    title: 'The silence begins at the busiest people',
-    catches:
-      'A cascade that is really just generic dilution. If the first people to fall silent were not the high-degree ones, nothing about this page would have anything to do with hubs.',
+    id: 'subharmonics-need-asymmetry',
+    title: 'Repeating exactly the same drive cycle does not always give the same result twice — but only when the influence between switches is one-way.',
+    catches: 'Two predictions died here. Symmetric interactions, frustrated or not, never produced anything but a period-1 response in this model. Only when i pushes j without j pushing back does the system need two or three identical cycles to repeat itself. This fails if asymmetry stops producing longer periods, or if symmetry starts.',
     verify() {
-      /** @type {number[]} */
-      const ratios = [];
-      for (const seed of CONFIG.auditSeeds) {
-        const graph = standardGraph(seed);
-        const rows = sweepFor(seed);
-        const row = rows.find((r) => r.overCapacityCount >= 5);
-        if (!row) throw new Error(`seed ${seed}: sweep never put five people over capacity`);
-        const c = attentionCascade(graph, row.capacity, CONFIG.a);
-        const degs = c.firstRoundLosers.map((i) => graph.degree[i]);
-        const ratio = meanDegree(degs) / meanDegree(graph.degree);
-        // Every first-round loser must be over the limit, by definition of the rule.
-        for (const i of c.firstRoundLosers) {
-          if (graph.degree[i] <= row.capacity) {
-            throw new Error(`seed ${seed}: node ${i} fell silent at or below capacity`);
-          }
+      /** @param {import('./hysterons.js').CouplingKind} kind */
+      const survey = (kind) => {
+        let longer = 0;
+        let largest = 1;
+        for (let seed = 1; seed <= 200; seed += 1) {
+          const ensemble = createEnsemble({ n: 6, seed, kind, couplingStrength: 2.5 });
+          const { period } = limitCyclePeriod(ensemble, -0.6, 0.6, 16, 0.01);
+          if (period > 1) longer += 1;
+          largest = Math.max(largest, period);
         }
-        ratios.push(ratio);
-      }
-      const worst = Math.min(...ratios);
-      // Worst observed over the audit seeds: 3.9x. Threshold 3.0x.
-      if (worst < 3.0) {
-        throw new Error(
-          `first-round degree ratio fell to ${f3(worst)}x the network mean, below the 3.0x threshold`,
-        );
-      }
-      return `first to fall silent are ${f3(worst)}x to ${f3(Math.max(...ratios))}x the mean degree across ${ratios.length} seeds (threshold 3.0x)`;
+        return { longer, largest };
+      };
+      const asymmetric = survey('asymmetric');
+      const symmetric = survey('frustrated');
+      // Measured at n=6, coupling 2.5, 200 seeds: asymmetric 20 seeds with period > 1, longest 3;
+      // symmetric 0 seeds, longest 1.
+      if (asymmetric.longer < 8) fail(`only ${asymmetric.longer} of 200 asymmetric ensembles broke period 1`);
+      if (symmetric.longer !== 0) fail(`${symmetric.longer} symmetric ensembles broke period 1, which this model was not supposed to do`);
+      return `200 six-switch ensembles at coupling 2.5: with one-way influence, ${asymmetric.longer} needed more than one identical cycle to repeat, the longest taking ${asymmetric.largest} cycles. With mutual influence, ${symmetric.longer} did.`;
     },
   },
-
   {
-    id: 'plenty-looks-like-bad-luck',
-    title: 'With attention to spare, the damage is indistinguishable from bad luck',
-    catches:
-      'The thesis this page started with, which was wrong. It predicted attack-like collapse across the whole range. Where capacity is comfortable, the attention network sits on top of the random-dropout control, not the targeted-attack one.',
+    id: 'both-instruments-see-it',
+    title: 'The memory is visible from either side of the pairing: the flow meter on the chip and the magnetometer on the iron both come back to the reading they left.',
+    catches: 'The two panels are one state vector read through two different instruments, and the flow rate is a product of pressure and conductance rather than a rescaled magnetisation. This fails if the shared state fails to show up identically in two unlike observables.',
     verify() {
-      /** @type {number[]} */
-      const worstPerSeed = [];
-      for (const seed of CONFIG.auditSeeds) {
-        const rows = sweepFor(seed).filter(
-          (r) => r.capacity >= COMFORTABLE_CAPACITY && r.attackLikeness !== null,
-        );
-        if (rows.length === 0) throw new Error(`seed ${seed}: no comparable rows above capacity ${COMFORTABLE_CAPACITY}`);
-        worstPerSeed.push(Math.max(...rows.map((r) => /** @type {number} */ (r.attackLikeness))));
+      let worstFlow = 0;
+      let worstMagnetisation = 0;
+      for (let seed = 1; seed <= 20; seed += 1) {
+        const ensemble = createEnsemble({ n: 60, seed, kind: 'none' });
+        const turningPoint = 0.2 + 0.5 * ((seed % 7) / 7);
+        saturateDown(ensemble);
+        sweepTo(ensemble, turningPoint, 0.01);
+        const flowBefore = flowRate(ensemble.state, ensemble.drive);
+        const magnetisationBefore = magnetisation(ensemble.state);
+        sweepTo(ensemble, -0.45, 0.01);
+        sweepTo(ensemble, turningPoint, 0.01);
+        worstFlow = Math.max(worstFlow, Math.abs(flowRate(ensemble.state, ensemble.drive) - flowBefore));
+        worstMagnetisation = Math.max(worstMagnetisation, Math.abs(magnetisation(ensemble.state) - magnetisationBefore));
       }
-      const worst = Math.max(...worstPerSeed);
-      // Worst observed over the audit seeds: 0.074. Threshold 0.15.
-      if (worst > 0.15) {
-        throw new Error(
-          `attack-likeness reached ${f3(worst)} at comfortable capacity, above the 0.15 threshold`,
-        );
+      if (worstFlow > 1e-12 || worstMagnetisation > 1e-12) {
+        fail(`readings drifted: flow by ${worstFlow}, magnetisation by ${worstMagnetisation}`);
       }
-      return `attack-likeness stays at or below ${f3(worst)} for every capacity >= ${COMFORTABLE_CAPACITY} across ${worstPerSeed.length} seeds (0 = random dropout, 1 = targeted attack; threshold 0.15)`;
-    },
-  },
-
-  {
-    id: 'scarcity-looks-like-an-attack',
-    title: 'With attention scarce, the same network collapses like a targeted strike',
-    catches:
-      'The central claim. If attention scarcity never got closer to the hub-attack curve than to the random one, the pairing on this page would be dead.',
-    verify() {
-      /** @type {number[]} */
-      const peaks = [];
-      for (const seed of CONFIG.auditSeeds) {
-        const rows = sweepFor(seed).filter((r) => r.attackLikeness !== null);
-        peaks.push(Math.max(...rows.map((r) => /** @type {number} */ (r.attackLikeness))));
-      }
-      const worst = Math.min(...peaks);
-      // Worst observed over the audit seeds: 0.642. Threshold 0.55.
-      if (worst < 0.55) {
-        throw new Error(
-          `peak attack-likeness only reached ${f3(worst)} on the worst seed, below the 0.55 threshold`,
-        );
-      }
-      return `peak attack-likeness is ${f3(worst)} to ${f3(Math.max(...peaks))} across ${peaks.length} seeds (threshold 0.55)`;
-    },
-  },
-
-  {
-    id: 'crossover-is-abrupt',
-    title: 'The switch between the two behaviours is sudden, not gradual',
-    catches:
-      'A slow drift that would make "crossover" the wrong word. The gap between the last comfortable-looking capacity and the first attack-looking one has to be narrow.',
-    verify() {
-      /** @type {number[]} */
-      const widths = [];
-      /** @type {number[]} */
-      const crossings = [];
-      for (const seed of CONFIG.auditSeeds) {
-        const rows = sweepFor(seed).filter((r) => r.attackLikeness !== null);
-        const cross = rows.find((r) => /** @type {number} */ (r.attackLikeness) >= 0.5);
-        if (!cross) throw new Error(`seed ${seed}: attack-likeness never reached 0.5`);
-        const before = rows.filter(
-          (r) => r.capacity > cross.capacity && /** @type {number} */ (r.attackLikeness) <= 0.15,
-        );
-        if (before.length === 0) throw new Error(`seed ${seed}: no low-alpha capacity above the crossing`);
-        const lastLow = Math.min(...before.map((r) => r.capacity));
-        widths.push(lastLow - cross.capacity);
-        crossings.push(cross.capacity);
-      }
-      const worst = Math.max(...widths);
-      // Worst observed over the audit seeds: 2 capacity steps. Threshold 4.
-      if (worst > 4) {
-        throw new Error(`crossover took ${worst} capacity steps, above the 4-step threshold`);
-      }
-      return `alpha goes from <=0.15 to >=0.5 within ${Math.min(...widths)}-${worst} capacity steps; crossings at capacity ${Math.min(...crossings)}-${Math.max(...crossings)} (threshold 4 steps)`;
-    },
-  },
-
-  {
-    id: 'molloy-reed-brackets-the-collapse',
-    title: 'The collapse is a percolation transition, by the Molloy-Reed number',
-    catches:
-      'Attributing the collapse to the wrong mechanism. If kappa = <k^2>/<k> of the surviving active ties did not cross 2 exactly where the giant component died, this would be some other phenomenon wearing percolation as a costume.',
-    verify() {
-      /** @type {string[]} */
-      const lines = [];
-      for (const seed of CONFIG.auditSeeds) {
-        const rows = sweepFor(seed);
-        const dead = rows.filter((r) => r.attention < 0.1 && r.kappaAttention > 0);
-        const alive = rows.filter((r) => r.attention >= 0.3);
-        if (dead.length === 0 || alive.length === 0) throw new Error(`seed ${seed}: sweep did not span the transition`);
-        const highestDead = dead.reduce((a, b) => (a.capacity > b.capacity ? a : b));
-        const lowestAlive = alive.reduce((a, b) => (a.capacity < b.capacity ? a : b));
-        if (highestDead.kappaAttention >= 2) {
-          throw new Error(
-            `seed ${seed}: giant component gone at capacity ${highestDead.capacity} but kappa = ${f3(highestDead.kappaAttention)} still above 2`,
-          );
-        }
-        if (lowestAlive.kappaAttention <= 2) {
-          throw new Error(
-            `seed ${seed}: giant component alive at capacity ${lowestAlive.capacity} but kappa = ${f3(lowestAlive.kappaAttention)} already below 2`,
-          );
-        }
-        lines.push(
-          `${seed}: kappa ${f3(lowestAlive.kappaAttention)} (S=${f3(lowestAlive.attention)}) -> ${f3(highestDead.kappaAttention)} (S=${f3(highestDead.attention)})`,
-        );
-      }
-      return `kappa crosses 2 exactly where the giant component dies, on every seed. ${lines.join('; ')}`;
-    },
-  },
-
-  {
-    id: 'cascade-outruns-the-cutoff-attack',
-    title: 'Published failure: going quiet does more damage than being deleted',
-    catches:
-      'The comfortable version of this page. The source preprint describes the coupled network as the original one with its degree sequence truncated at a critical degree. Deleting exactly the over-capacity people outright is far gentler than letting them fall silent, so the truncation alone does not reproduce what this simulation does.',
-    verify() {
-      /** @type {number[]} */
-      const gaps = [];
-      for (const seed of CONFIG.auditSeeds) {
-        const rows = sweepFor(seed);
-        gaps.push(Math.max(...rows.map((r) => r.cutoffAttack - r.attention)));
-      }
-      const worst = Math.min(...gaps);
-      // Worst observed over the audit seeds: 0.603. Threshold 0.40.
-      if (worst < 0.4) {
-        throw new Error(
-          `largest gap was only ${f3(worst)} of the network on the mildest seed, below the 0.40 threshold`,
-        );
-      }
-      return `deleting the over-capacity people outright leaves ${f3(worst * 100)}-${f3(Math.max(...gaps) * 100)}% more of the network connected than letting them fall silent does (threshold 40 percentage points)`;
-    },
-  },
-
-  {
-    id: 'monotone-in-capacity',
-    title: 'Less attention never helps',
-    catches:
-      'A non-monotone artifact of the update order. Whatever else the cascade does, giving people less capacity must never leave more ties alive.',
-    verify() {
-      /** @type {number[]} */
-      const violations = [];
-      for (const seed of CONFIG.auditSeeds) {
-        const rows = [...sweepFor(seed)].sort((a, b) => b.capacity - a.capacity);
-        for (let i = 1; i < rows.length; i++) {
-          if (rows[i].quietCount < rows[i - 1].quietCount - 1e-9) {
-            throw new Error(
-              `seed ${seed}: capacity ${rows[i].capacity} left ${rows[i].quietCount} people silent, fewer than the ${rows[i - 1].quietCount} at capacity ${rows[i - 1].capacity}`,
-            );
-          }
-        }
-        violations.push(0);
-      }
-      return `the number of people falling silent is non-decreasing as capacity falls, across all ${CONFIG.auditSeeds.length} seeds and ${CONFIG.capacities.length} capacity steps`;
+      return `20 seeds: after the closed excursion the flow rate differed by at most ${worstFlow.toExponential(1)} microlitres per second and the magnetisation by at most ${worstMagnetisation.toExponential(1)}.`;
     },
   },
 ];
+
+/**
+ * Run every claim and collect the outcome. Used by the browser panel; the Node suite runs them one
+ * per test so a failure names itself.
+ * @returns {{ id: string, title: string, catches: string, passed: boolean, evidence: string }[]}
+ */
+export function runAllClaims() {
+  return claims.map((claim) => {
+    try {
+      return { id: claim.id, title: claim.title, catches: claim.catches, passed: true, evidence: claim.verify() };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return { id: claim.id, title: claim.title, catches: claim.catches, passed: false, evidence: message };
+    }
+  });
+}

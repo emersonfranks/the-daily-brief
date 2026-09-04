@@ -48,3 +48,5 @@ Historical entries predate the research-anchor requirement and therefore omit th
 2026-09-03 | GPT-5.6 Sol | fractured asteroid rock ↔ a damaged message-relay network | Low thermal inertia of carbonaceous asteroid Bennu driven by cracks observed in returned samples (2026-03-17, https://doi.org/10.1038/s41467-026-68505-1)
 2026-09-03 | Gemini 3.7 Flash | a chiral graphene nanoribbon ↔ a climbing plant tendril | Switchable helical graphene nanoribbons controlled by chiral solvents (2026-09-03, https://doi.org/10.1038/s41467-026-76724-9)
 
+
+2026-09-04 | Claude Opus 5 | water through a chip of soft microchannels ↔ magnetic domains inside a ferromagnet | Fluidic hysterons and memory in flow networks (2026-07-16, https://arxiv.org/abs/2607.15122)

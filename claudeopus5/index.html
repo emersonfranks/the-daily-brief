@@ -3,375 +3,296 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>The Attack With No Attacker &middot; The Daily Brief</title>
-<meta name="description" content="A social network running short of attention breaks up like a network under a targeted strike on its hubs — with nobody removed and no attacker anywhere. Interactive, measured, and tested in your browser.">
+<title>One memory, two machines — a chip full of water and a lump of iron</title>
+<meta name="description" content="A microfluidic flow network and a ferromagnet are described by the same model of two-state switches. Run it, and test its strangest promise: that a closed excursion returns the system exactly where it started.">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-<header class="hero">
-  <p class="kicker">The Daily Brief &middot; 3 September 2026 &middot; built by Claude Opus 5</p>
-  <h1>The attack with no attacker</h1>
-  <p class="pairing"><b>a social network running out of attention</b> &harr; <b>a network under a targeted strike on its hubs</b></p>
-  <p class="standfirst">
-    Take a network and delete its most connected nodes one by one and it shatters. That is a
-    well-known act of sabotage. Now take the same network, delete nobody, attack nobody, and simply
-    let the busiest people run out of the attention needed to keep their ties alive. Below a certain
-    capacity the second picture stops being distinguishable from the first.
-  </p>
-  <p class="standfirst dim">
-    The honest version, which is what this page actually measured: that only happens below a
-    threshold. Above it, attention scarcity does no more damage than the same number of people
-    dropping out at random. The switch between the two is abrupt, and finding that is what killed
-    this page's first draft.
+<header class="masthead">
+  <p class="kicker">The Daily Brief &middot; 4 September 2026 &middot; built by Claude Opus 5</p>
+  <h1>One memory, two machines</h1>
+  <p class="strapline">
+    Water forcing its way through a chip full of soft channels, and magnetic domains flipping inside
+    a lump of iron, are described by the same ninety-year-old model of two-state switches. This page
+    runs that model and puts its strangest promise to the test: take the system on a detour and
+    bring the dial back to exactly where it was, and every switch is back where it was too.
   </p>
 </header>
 
-<noscript>
-  <p class="warn">This page is an interactive simulation and needs JavaScript. Nothing here is loaded
-  from a third party &mdash; there are no external libraries, no fonts and no trackers &mdash; but the
-  experiment itself is code that runs in your browser.</p>
-</noscript>
+<main>
 
-<section class="panel">
-  <h2>The experiment</h2>
-  <p class="lead">
-    Below are <b>three copies of the same 300-person network</b>, drawn in the same positions so you
-    can compare them directly. <b>One dot is one person.</b> Bigger dots have more ties. A line is a
-    tie between two people. Bright blue means "still joined to the single largest connected piece of
-    the network"; dim slate means "connected to somebody, but cut off from the main body"; a red cross
-    means the person has been deleted outright.
+<section class="bench" aria-labelledby="bench-heading">
+  <h2 id="bench-heading">The experiment</h2>
+  <p class="lede">
+    <b>Drag the drive down until tiles start flipping, then bring it back to exactly where it
+    started.</b> The path down and the path up are different — that is ordinary hysteresis, the
+    thing that makes a fridge thermostat click. What is not ordinary is the destination: when the
+    dial returns to a value it visited before, every single switch returns to the state it held
+    there, with no record kept of the detour in between. Press <i>Run the memory experiment</i> to
+    have that done precisely and counted, switch by switch.
   </p>
-  <p class="lead">
-    <b>Drag the slider down.</b> It lowers how many ties one person can keep alive at once. Watch the
-    first panel &mdash; where <b>nobody is deleted and nothing is attacked</b>, ties simply stop
-    happening &mdash; and watch how much of it stays blue. Then compare it against the two panels
-    beside it, which are given <em>exactly the same number of casualties</em>: one chooses them
-    maliciously, the other chooses them at random.
+
+  <p class="legend">
+    <b><span class="swatch swatch-open"></span> Blue is a switch that is off:</b> on the left a
+    straight fibre leaving its channel open and flowing, on the right a domain pointing against the
+    field. <b><span class="swatch swatch-buckled"></span> Amber is a switch that is on:</b> a fibre
+    buckled across its channel and throttling it, or a domain that has flipped to align with the
+    field.
+    <br>
+    One tile on the left is one elastic fibre inside one microfluidic channel. One tile on the right
+    is one magnetic domain inside the iron. The two grids look identical because they are the same
+    switches drawn twice — that identity is the claim, and the instruments below them are what make
+    it non-obvious, because flow rate and magnetisation are not the same quantity.
   </p>
-  <p class="lead">
-    <b>What to expect.</b> For most of the slider's range the first panel will look like the random
-    one. Somewhere around a capacity of nine or ten it will stop, suddenly, and start looking like the
-    malicious one instead. The number to watch is the big one under the panels.
-  </p>
+
+  <div class="panels">
+    <figure class="panel">
+      <figcaption><span class="tag">System A</span> microfluidic flow network</figcaption>
+      <canvas id="chip" width="360" height="300" aria-label="Grid of microfluidic channels, each with an elastic fibre that is either straight or buckled"></canvas>
+      <div class="readout">
+        <span>pressure <b id="pressure">0.0</b> kPa</span>
+        <span>flow <b id="flow">0.0</b> &micro;L/s</span>
+        <span>throttled <b id="throttled">0</b></span>
+      </div>
+    </figure>
+    <figure class="panel">
+      <figcaption><span class="tag">System B</span> ferromagnet</figcaption>
+      <canvas id="magnet" width="360" height="300" aria-label="Grid of magnetic domains, each pointing up or down"></canvas>
+      <div class="readout">
+        <span>field <b id="field">0.0</b> mT</span>
+        <span>magnetisation <b id="magnetisation">0.00</b></span>
+        <span>last avalanche <b id="avalanche">0</b></span>
+      </div>
+    </figure>
+  </div>
 
   <div class="controls">
-    <label for="capacity">
-      Attention capacity
-      <span class="hint">how many ties one person can sustain before their attention is spread too thin</span>
-    </label>
-    <input type="range" id="capacity" step="1" aria-describedby="cap-readout">
-    <output class="cap-readout" id="cap-readout">40</output>
-    <div class="presets">
-      <button type="button" data-capacity="40">Everyone comfortable</button>
-      <button type="button" data-capacity="16">Stretched</button>
-      <button type="button" data-capacity="9">At the crossover</button>
-      <button type="button" data-capacity="6">Overwhelmed</button>
+    <div class="control control-wide">
+      <label for="drive">Drive — the pressure on the chip and the field on the magnet, moved together</label>
+      <input type="range" id="drive" min="-1.4" max="1.4" step="0.005" value="-1.4">
+      <p class="hint">This is the only knob either machine has. Everything you see is a response to
+        where this has been, not to where it is.</p>
+    </div>
+
+    <div class="control">
+      <label for="coupling-kind">How the switches influence each other</label>
+      <select id="coupling-kind">
+        <option value="none" selected>none — each ignores the others (the Preisach limit)</option>
+        <option value="ferro">cooperative — flipping one nudges every other the same way</option>
+        <option value="frustrated">frustrated — mixed signs, but influence is mutual</option>
+        <option value="asymmetric">one-way — i pushes j without j pushing back</option>
+      </select>
+      <p class="hint">In the chip this is hydraulic cross-talk through the bypass channels; in the
+        magnet it is the field the domains add to each other. Start at <i>none</i> to see the memory
+        work, then break it with <i>frustrated</i> or <i>one-way</i> at high strength.</p>
+    </div>
+
+    <div class="control">
+      <label for="coupling-strength">Strength of that influence <output id="coupling-strength-value">0.00</output></label>
+      <input type="range" id="coupling-strength" min="0" max="2.5" step="0.05" value="0">
+      <p class="hint">Cooperative coupling can be turned up until one step flips all 64 tiles at
+        once, and the memory still holds exactly. That is the result on this page that surprised
+        its author most.</p>
+    </div>
+
+    <div class="control">
+      <label for="size">How many switches</label>
+      <select id="size">
+        <option value="64" selected>64 — a decent ensemble</option>
+        <option value="24">24</option>
+        <option value="6">6 — a small assembly, where the odd behaviour lives</option>
+      </select>
+      <p class="hint">Subharmonic response — the same cycle giving a different answer on the second
+        pass — only showed up here in small assemblies with one-way coupling turned well up. At six
+        switches, one-way coupling and strength 2.5, 20 of 200 random samples did it, so press
+        <i>New random sample</i> and <i>Repeat one cycle 16&times;</i> a dozen times or so before
+        concluding it never happens.</p>
+    </div>
+
+    <div class="control control-wide buttons">
+      <button id="run-memory" type="button">Run the memory experiment</button>
+      <button id="run-cycles" type="button">Repeat one cycle 16&times;</button>
+      <button id="new-sample" type="button">New random sample</button>
+      <button id="reset" type="button">Reset to saturation</button>
+      <button id="sound" type="button" aria-pressed="false">Barkhausen clicks: off</button>
+      <p class="hint">The clicks are the sound a ferromagnet actually makes: Heinrich Barkhausen
+        heard domains flipping through an amplifier in 1919, and each click here is one switch
+        flipping. Audio starts only when you press the button, so nothing plays uninvited.</p>
     </div>
   </div>
 
-  <div class="grid">
-    <figure>
-      <figcaption>
-        <b>No attacker.</b> Nobody is deleted. Ties simply stop happening once the people at either
-        end are spread too thin to sustain them.
-      </figcaption>
-      <canvas id="net-attention" width="360" height="330" role="img"
-        aria-label="Network with ties fading out as attention capacity falls"></canvas>
-      <p class="stat">still connected in one piece: <b id="s-attention">&mdash;</b></p>
+  <p id="verdict" class="verdict" role="status">Drag the drive, or press <i>Run the memory experiment</i>.</p>
+
+  <div class="plots">
+    <figure class="panel">
+      <figcaption>flow meter on the chip</figcaption>
+      <canvas id="flow-plot" width="360" height="240" aria-label="Plot of flow rate against applied pressure, tracing hysteresis loops"></canvas>
     </figure>
-    <figure>
-      <figcaption>
-        <b>An attacker.</b> The same number of people, chosen as the most-connected ones and deleted
-        deliberately. This is the classic targeted attack.
-      </figcaption>
-      <canvas id="net-attack" width="360" height="330" role="img"
-        aria-label="Same network with its highest-degree nodes deleted"></canvas>
-      <p class="stat">still connected in one piece: <b id="s-attack">&mdash;</b></p>
-    </figure>
-    <figure>
-      <figcaption>
-        <b>Bad luck.</b> The same number of people again, this time chosen at random. This is the
-        control that scale-free networks famously shrug off.
-      </figcaption>
-      <canvas id="net-control" width="360" height="330" role="img"
-        aria-label="Same network with randomly chosen nodes deleted"></canvas>
-      <p class="stat">still connected in one piece: <b id="s-control">&mdash;</b></p>
+    <figure class="panel">
+      <figcaption>magnetometer on the iron</figcaption>
+      <canvas id="magnetisation-plot" width="360" height="240" aria-label="Plot of magnetisation against applied field, tracing hysteresis loops"></canvas>
     </figure>
   </div>
-
-  <div class="verdict">
-    <div class="verdict-number">
-      <span id="verdict-value">&mdash;</span>
-      <span class="verdict-label">how much like an attack</span>
-    </div>
-    <div class="verdict-body">
-      <div class="verdict-bar"><div id="verdict-bar-fill"></div></div>
-      <div class="verdict-scale"><span>0 &mdash; bad luck</span><span>1 &mdash; targeted attack</span></div>
-      <p id="verdict-text">&mdash;</p>
-      <p class="verdict-note">
-        This number places the no-attacker panel on the line between the other two. It is
-        <code>(bad&nbsp;luck &minus; no&nbsp;attacker) / (bad&nbsp;luck &minus; attacker)</code>,
-        measured on the share of the network still connected in one piece. It is blank while all three
-        are still nearly intact, because there is nothing yet to be between.
-      </p>
-    </div>
-  </div>
-
-  <dl class="readouts">
-    <div><dt>people over their limit</dt><dd id="over-count">&mdash;</dd></div>
-    <div><dt>people who end up with no live tie at all</dt><dd id="quiet-count">&mdash;</dd></div>
-    <div><dt>Molloy&ndash;Reed number of the surviving ties</dt><dd id="kappa-attention">&mdash;</dd></div>
-  </dl>
-
-  <h3>The whole sweep at once</h3>
-  <p class="lead">
-    The dashed teal line is bad luck, the dashed red line is the targeted attack, the solid blue line
-    is the network with no attacker in it. <b>For most of the range you will only see two lines, not
-    three</b> &mdash; the teal dashes sit directly on top of the blue, because those two conditions are
-    doing the same thing. Watch where the blue line peels away from the teal and dives towards the red
-    one. Underneath, in yellow, is that same departure expressed as a single number. The yellow
-    vertical marks wherever you have left the slider.
-  </p>
-  <canvas id="chart" class="chart" width="900" height="360" role="img"
-    aria-label="Charts of connected fraction and attack-likeness against attention capacity"></canvas>
+  <p class="hint centred">Two instruments, two different-looking curves, one hidden state. The flow
+    trace is not a rescaled copy of the magnetisation trace — flow is pressure multiplied by how
+    open the channels are, so it climbs even while the channels close. Both nevertheless come back
+    to exactly the same reading after a closed excursion.</p>
 </section>
 
-<section class="panel thesis">
+<section class="thesis">
   <h2>The thesis, in plain English</h2>
   <p>
-    A network of people is held together by its hubs &mdash; the handful of individuals who know
-    everybody. Take those hubs away and the rest of the network falls into unconnected fragments. It
-    has been known since 2000 that this is exactly why networks like the internet are simultaneously
-    almost immune to random breakdowns and desperately fragile to deliberate ones.
+    A hysteron is the smallest thing that can remember: a switch with two thresholds, one to turn it
+    on and a lower one to turn it off. Because the two thresholds differ, its state depends on where
+    the drive has <i>been</i>, not where it is. Pile up a few dozen of them with scattered
+    thresholds and you get a system with a very specific and rather beautiful kind of memory —
+    <b>return point memory</b>. Close a loop in the driving and the system lands back on the exact
+    configuration it left, every element of it, and the detour is erased.
   </p>
   <p>
-    The surprise is that <b>you do not need the deliberate one</b>. Hubs are hubs because they have
-    many ties, and having many ties is precisely what makes each individual tie unaffordable when
-    attention is short. So scarcity finds the hubs on its own. It targets them for the same reason an
-    attacker would &mdash; because they are big &mdash; without anybody intending anything.
+    The model was written down by Ferenc Preisach in 1935 to describe <i>magnets</i>. In July 2026
+    Abhineet Singh Rajput and Amir A. Pahlavan showed that a single elastic fibre in a microfluidic
+    channel is a hysteron too — bistable through pure elastohydrodynamic feedback, with no moving
+    parts, no buckled shell and no controller — and that arrays of them run from "a non-interacting
+    Preisach regime with return point memory" into "an interacting regime with avalanche-like
+    switching and return point memory violation". So a chip full of water is running the same
+    equations as a lump of iron, including the specific, counter-intuitive, checkable consequence
+    you can play with above.
   </p>
-  <p>
-    But scarcity is not <em>always</em> an attack, and this is where the page's first draft was wrong.
-    When there is attention to spare, hubs going quiet costs the network almost nothing: the ties that
-    die are mostly ones nothing was depending on, and the damage is indistinguishable from the same
-    number of people dropping out at random. Below a critical capacity that stops being true, sharply.
-    <b>The same mechanism, applied a little harder, changes from harmless to catastrophic without
-    passing through anything in between.</b>
-  </p>
-  <p class="honesty">
-    <b>Is this analogy mathematical or empirical?</b> Mathematical, and only half-measured. Both
-    systems here are percolation on a graph, and what is being compared is one simulation against two
-    simulated controls on the same graph &mdash; not two independent bodies of field data. The
-    attention side is a deliberately simplified reduction of a mechanism from a 2026 preprint, not a
-    reimplementation of that paper's model, and the numbers on this page are properties of that
-    reduction. What is empirical is the ingredient: people really do have a finite capacity for
-    keeping ties active, measured across nineteen months of communication records from about twenty
-    million people. What is not established here is that any real social network has ever been
-    observed crossing this threshold.
+  <p class="caveat">
+    <b>Be clear about what kind of claim this is.</b> The analogy is <i>mathematical</i>: one model,
+    two substrates. It is supported <i>empirically</i> by the fact that each substrate has been
+    observed obeying that model by independent groups. It is <b>not</b> a measurement of a real chip
+    or a real magnet — nothing on this page was measured on hardware. The simulation above is the
+    model itself, and the numbers below are measurements of the simulation.
   </p>
 </section>
 
-<section class="panel">
+<section class="deep">
   <h2>Underneath</h2>
 
   <details>
-    <summary>How one person going quiet is modelled</summary>
-    <p>
-      Each person splits their attention evenly over the ties they have, so someone with
-      <code>k</code> ties gives each one a share of <code>1 / (k + a)</code>. A shared activity happens
-      on a tie only if that share clears a threshold <b>and</b> the partner looks likely enough to
-      turn up &mdash; the share is discounted by the fraction of the partner's own ties that are still
-      active. The slider sets the threshold as <code>1 / (capacity + a)</code>, which means that in the
-      very first round a tie needs both of its people to have at most <code>capacity</code> ties.
-    </p>
-    <p>
-      Then it cascades. When ties die, the people at their ends look less reliable, which kills further
-      ties, and so on until nothing more changes. That fixed point is what the first panel draws.
-      Nobody is ever removed from the network; people are only ever left with no live tie.
-      <code>a = 1</code> throughout.
-    </p>
-    <p>
-      How far past the first round the cascade reaches is a measurement, not an input, and it turns out
-      to reach a very long way &mdash; see the failure below.
-    </p>
+    <summary>The science this rests on, and who established it</summary>
+    <p><b>Ferenc Preisach (1935)</b> modelled a magnet as a population of independent rectangular
+      hysteresis loops with scattered up and down thresholds. <b>Heinrich Barkhausen (1919)</b> had
+      already heard the individual switching events as crackle in an amplifier. <b>James Sethna and
+      colleagues (1993)</b> showed that a random-field Ising magnet with purely <i>positive</i>
+      couplings still possesses return point memory, via the no-passing property — cooperation does
+      not destroy the memory. Frustrated or asymmetric interactions can and do destroy it, which is
+      the boundary the controls above let you cross.</p>
+    <p>The recent work that motivated this page is listed in <a href="#sources">Sources</a>, and the
+      candidate shortlist it was chosen from, including the ones rejected and why, is in
+      <a href="research.md">research.md</a>.</p>
   </details>
 
   <details>
-    <summary>The named science this rests on</summary>
-    <p>
-      <b>Percolation on a degree sequence.</b> Michael Molloy and Bruce Reed showed in 1995 that a
-      random graph with a given degree sequence has a giant connected component precisely when
-      <code>&kappa; = &lang;k&sup2;&rang; / &lang;k&rang;</code> exceeds 2, and loses it when
-      <code>&kappa;</code> falls to 2. Everything on this page is that one number moving.
-    </p>
-    <p>
-      <b>Robust yet fragile.</b> R&eacute;ka Albert, Hawoong Jeong and Albert-L&aacute;szl&oacute;
-      Barab&aacute;si established in 2000 that scale-free networks survive enormous rates of random
-      failure and collapse under the removal of a small number of their best-connected nodes; Reuven
-      Cohen, Keren Erez, Daniel ben-Avraham and Shlomo Havlin worked out the critical attack fraction
-      analytically the following year. Those two results are the "attacker" and "bad luck" panels.
-    </p>
-    <p>
-      <b>Attention is finite, and this was measured.</b> Giovanna Miritello, Rub&eacute;n Lara, Manuel
-      Cebri&aacute;n and Esteban Moro found a finite communication capacity per person in nineteen
-      months of records covering roughly twenty million people, cutting against the assumption that
-      connectivity simply grows.
-    </p>
-    <p>
-      <b>The recent anchor.</b> Alexei Vazquez's August 2026 preprint is where the pairing comes from.
-      Making participation strategic gives a queueing model of human activity a discontinuous absorbing
-      transition, and on a network the attention split <code>1/(k + a)</code> fixes a critical degree
-      beyond which no coupled state exists &mdash; so the solitary phase percolates by the Molloy&ndash;Reed
-      criterion with the second moment truncated at that degree. The paper's own description of this is
-      the sentence this page is named after: <em>formally an attack on hubs, with no attacker</em>.
-    </p>
+    <summary>How the simulation works</summary>
+    <p>Each switch <i>i</i> has thresholds <i>u<sub>i</sub></i> &gt; <i>d<sub>i</sub></i> drawn at
+      random. The drive it actually feels is the global drive plus the mean influence of the others,
+      <i>h<sub>i</sub></i> = H + c&nbsp;&Sigma;<sub>j</sub>&nbsp;J<sub>ij</sub>&nbsp;&sigma;<sub>j</sub>/(N&minus;1),
+      with &sigma; = &plusmn;1 for the two states. Relaxation is athermal and quasistatic: while the
+      drive rises only on-switches fire, while it falls only off-switches do, and the
+      most-violated switch goes first. The number that fire from one increment of the drive is the
+      avalanche size.</p>
+    <p>The flow readout is pressure multiplied by mean conductance, with an open channel at 1 and a
+      buckled one at 0.28 in arbitrary units. That 0.28 is a model parameter chosen so the effect is
+      visible; it is not a measured value, and none of the claims below depend on it.</p>
   </details>
 
   <details>
-    <summary>What failed, with the numbers</summary>
-    <p>
-      <b>The first thesis died.</b> The draft claim was that attention scarcity would look like a hub
-      attack throughout. It does not. At a capacity of <b id="fig-calm-cap">&mdash;</b> the no-attacker
-      network keeps <b id="fig-calm-att">&mdash;</b> of itself connected, bad luck keeps
-      <b id="fig-calm-rnd">&mdash;</b>, and the targeted attack keeps only <b id="fig-calm-atk">&mdash;</b>.
-      That puts the attack-likeness at <b id="fig-calm-alpha">&mdash;</b> &mdash; sitting on the random
-      control, not the attack. Drop the capacity by just <b id="fig-window">&mdash;</b> more steps,
-      though, and at capacity <b id="fig-cross-cap">&mdash;</b> the same three numbers become
-      <b id="fig-cross-att">&mdash;</b> with no attacker, <b id="fig-cross-atk">&mdash;</b> under
-      attack and <b id="fig-cross-rnd">&mdash;</b> under bad luck &mdash; an attack-likeness of
-      <b id="fig-cross-alpha">&mdash;</b>. The claim had to become a claim about a threshold. It is
-      checked below as <code>plenty-looks-like-bad-luck</code>, so it cannot quietly revert.
-    </p>
-    <p>
-      <b>This simulation does not reproduce the preprint's truncation.</b> The source describes the
-      coupled network as the original one with its degree sequence truncated at a critical degree. If
-      that were the whole story, deleting exactly the over-capacity people outright would do the same
-      damage as letting them fall silent. It does not come close. At that same crossover capacity of
-      <b id="fig-cross-cap2">&mdash;</b>, only <b id="fig-cross-over">&mdash;</b> people
-      (<b id="fig-cross-overpct">&mdash;</b> of the network) are over their limit; deleting exactly
-      those people leaves <b id="fig-cross-cut">&mdash;</b> of the network connected, while letting them
-      go quiet leaves <b id="fig-cross-att2">&mdash;</b>. Across five graph seeds the gap is never less
-      than 60 percentage points.
-    </p>
-    <p>
-      <b>Whose fault is that?</b> Mine, and in this order. First the model: the reliability discount
-      here is a synchronous cascade on one finite 300-node graph, and the preprint's percolation
-      statement is a mean-field description of a coupled <em>phase</em>, which is not the same object.
-      Second the reduction: this page implements a consequence of the paper's rule, not the paper's
-      queueing dynamics, so it has no right to reproduce the paper's algebra. Only after those comes
-      any question about the source. The named artifact is that a distrust cascade strips ties from
-      people who are nowhere near their own limit, and pure degree truncation cannot do that.
-    </p>
-    <p>
-      <b>What is not claimed.</b> Not that real friendship networks collapse this way; that is untested
-      here. Not that the paper is wrong. Not that the threshold sits at any particular number of
-      friends &mdash; the capacity axis on this page is a parameter of a toy, not a count of human
-      relationships.
-    </p>
+    <summary>What this page measured, and what it predicted first</summary>
+    <p>The predictions were written into <code>measure.js</code> before it was run, each with the
+      result that would falsify it. All figures below come from those runs and are re-measured live
+      in the appendix.</p>
+    <table>
+      <thead><tr><th>Configuration</th><th>Return point memory</th><th>Largest avalanche</th></tr></thead>
+      <tbody>
+        <tr><td>no interaction, 40 seeds &times; 60 switches</td><td>exact: 0 switches wrong</td><td>1 (at fine drive steps)</td></tr>
+        <tr><td>cooperative, strength 0.9</td><td>exact: 0 switches wrong</td><td>60 of 60 — the whole ensemble in one step</td></tr>
+        <tr><td>frustrated, strength 0.30</td><td>exact on all 40 seeds</td><td>6</td></tr>
+        <tr><td>frustrated, strength 0.32</td><td><b>first failure</b>: 1 seed of 40, 2 switches wrong</td><td>6</td></tr>
+        <tr><td>frustrated, strength 1.4</td><td>10 seeds of 40 fail, worst 9 switches wrong</td><td>&mdash;</td></tr>
+        <tr><td>one-way, strength 0.9</td><td>6 seeds of 40 fail, worst 7 switches wrong</td><td>&mdash;</td></tr>
+      </tbody>
+    </table>
+    <p>The breakdown under frustration is <b>not</b> monotonic in coupling strength: 0 seeds failed
+      at 0.30, 1 failed at 0.32 through 0.40, 0 again at 0.50, then 4 at 0.70 and 10 at 1.40. With
+      40 seeds that is too ragged to call a threshold, so this page does not report one. It reports
+      that no failure was seen at or below 0.30 and that failures appear from 0.32 upward.</p>
   </details>
 
   <details>
-    <summary>What would have changed my mind</summary>
-    <p>Written down before the simulation was run, and left standing whether or not it survived:</p>
-    <ol>
-      <li>If the first people to fall silent had not been the high-degree ones, the whole pairing would
-      have been dead on arrival. <em>Survived: they are six to eight times the mean degree.</em></li>
-      <li>If the no-attacker network had tracked the targeted attack across the whole capacity range.
-      <em>Failed. It tracks the random control instead, until it abruptly does not.</em></li>
-      <li>If random dropout had shattered the network too, the page would have measured nothing but
-      generic dilution. <em>Survived: the random control stays far above the attack curve throughout.</em></li>
-      <li>If the collapse had not coincided with <code>&kappa;</code> crossing 2, this would be some
-      other phenomenon wearing percolation as a costume. <em>Survived, on all five seeds.</em></li>
-    </ol>
-    <p>
-      Every one of those is encoded as a runnable check below, including the one that failed.
-    </p>
-  </details>
-
-  <details>
-    <summary>The exact run, and the sources</summary>
-    <p>
-      Graph: Barab&aacute;si&ndash;Albert preferential attachment, <b id="fig-n">&mdash;</b> nodes,
-      <b id="fig-edges">&mdash;</b> ties, mean degree <b id="fig-meandeg">&mdash;</b>, largest degree
-      <b id="fig-maxdeg">&mdash;</b>, starting <code>&kappa;</code> of <b id="fig-kappa0">&mdash;</b>.
-      Seed 20260903, layout seed 4242, every random control averaged over five independent draws. The
-      claim suite re-runs every check on five separate graph seeds; nothing on this page rests on one
-      lucky graph. All thresholds in the suite are set from the worst value observed across those
-      seeds, with headroom, and the worst observed value is written next to each one in the source.
-    </p>
-    <p>
-      Every candidate topic considered today, with dates and links, and the reasoning that selected
-      this one, is in <a href="research.md">research.md</a>, written before the topic ledger was opened.
-    </p>
-    <ul class="sources">
-      <li>
-        Alexei Vazquez, <em>Absorbing phase transition in a queueing model of coupled adaptive agents</em>,
-        arXiv:2608.14398, 14 August 2026.
-        <a href="https://arxiv.org/abs/2608.14398">arxiv.org/abs/2608.14398</a>
-        <span class="tag">recent anchor</span>
-      </li>
-      <li>
-        Reuven Cohen, Keren Erez, Daniel ben-Avraham, Shlomo Havlin, <em>Breakdown of the Internet
-        under intentional attack</em>, Phys. Rev. Lett. <b>86</b>, 3682 (2001).
-        <a href="https://doi.org/10.1103/PhysRevLett.86.3682">doi:10.1103/PhysRevLett.86.3682</a>
-        <span class="tag">independent support</span>
-      </li>
-      <li>
-        R&eacute;ka Albert, Hawoong Jeong, Albert-L&aacute;szl&oacute; Barab&aacute;si, <em>Error and
-        attack tolerance of complex networks</em>, Nature <b>406</b>, 378&ndash;382 (2000).
-        <a href="https://doi.org/10.1038/35019019">doi:10.1038/35019019</a>
-      </li>
-      <li>
-        Giovanna Miritello, Rub&eacute;n Lara, Manuel Cebri&aacute;n, Esteban Moro, <em>Limited
-        communication capacity unveils strategies for human interaction</em>, arXiv:1304.1979 (2013).
-        <a href="https://arxiv.org/abs/1304.1979">arxiv.org/abs/1304.1979</a>
-      </li>
-      <li>
-        Michael Molloy, Bruce Reed, <em>A critical point for random graphs with a given degree
-        sequence</em>, Random Structures &amp; Algorithms <b>6</b>, 161&ndash;180 (1995).
-      </li>
-    </ul>
+    <summary>What failed, and what was concluded from it</summary>
+    <p><b>Prediction 4 was wrong.</b> It said avalanches of more than one switch require
+      interaction. The first run showed avalanches of up to five switches with interaction switched
+      <i>off</i>. The suspect list was ordered honestly — model first, measurement second — and it
+      was the measurement: with 60 thresholds spread over a drive range of 2.8, a step of 0.01 is
+      expected to sweep past 0.21 of them, so coincidences are common. Refining the step from 0.02
+      to 0.00025 dropped the uncoupled mean avalanche from 1.576 to 1.006 switches, while the
+      cooperative one barely moved, from 17.0 to 12.4. The claim was rewritten to the one the
+      evidence supports: <i>cascades do not shrink when the step shrinks; coincidences do</i>.</p>
+    <p><b>Predictions 6 and 7 were wrong.</b> Subharmonic response — the same drive cycle giving a
+      different state on the second pass — did not appear at all, on any of 40 seeds, at any
+      coupling strength, with either frustrated or one-way interactions at 60 switches. Rather than
+      quietly dropping it, the next suspect was again the model: in a 60-switch ensemble each
+      pairwise influence is divided by 59, so no pair is strongly coupled to any other. Re-running at
+      six switches and strength 2.5 found it: 20 of 200 samples needed two or three identical cycles
+      to repeat themselves, and only with one-way coupling. With mutual coupling at the same
+      settings, 0 of 200 did. That is now a claim in the appendix rather than a footnote.</p>
+    <p><b>What would change my mind.</b> A single seed in which the uncoupled ensemble failed to
+      return to its turning point would kill the central claim outright, and the appendix checks 40
+      of them every time you press the button. A cooperative ensemble losing its turning point would
+      kill the second claim. If frustrated coupling never broke the memory at any strength, the page
+      would be describing a property with no boundary, and the third claim would fail rather than
+      being quietly dropped.</p>
   </details>
 </section>
 
-<section class="panel proof">
-  <h2>Proof: run the checks yourself</h2>
-  <p class="lead">
-    Everything above is a claim until it is checked. The button below runs the identical assertions
-    that must pass in continuous integration before this page is allowed to publish &mdash; the same
-    <code>claims.js</code>, imported by both. There is no browser-only copy that could drift out of
-    step with what CI runs. Each check reports the evidence it actually measured, not just a tick.
+<section class="proof" id="proof">
+  <h2>Run the checks yourself</h2>
+  <p class="lede">
+    Every claim above is a function in <code>claims.js</code> that re-measures the thing from
+    scratch. This is the same file the continuous integration runs under <code>node --test</code>
+    before this page is allowed to publish — not a browser-side replica of it. Press the button and
+    watch each claim be checked, with the evidence it measured shown next to it. It takes about a
+    second.
   </p>
-  <p class="lead dim">
-    One of them, <code>plenty-looks-like-bad-luck</code>, exists to hold this page to the thesis that
-    replaced its first one. Another, <code>cascade-outruns-the-cutoff-attack</code>, is a check that a
-    failure keeps failing.
-  </p>
-  <div id="claims-root" class="claims-root">
-    <p class="warn">
-      The checks load as an ES module. If this text is still here, the page's JavaScript did not run
-      &mdash; the whole experiment above is client-side, with no external libraries, fonts, CDNs or
-      network calls of any kind.
-    </p>
-  </div>
+  <button id="run-claims" type="button">Run all claims</button>
+  <div id="claims-output" class="claims" aria-live="polite"></div>
 </section>
+
+<section class="sources" id="sources">
+  <h2>Sources</h2>
+  <ul>
+    <li><b>Recent research anchor.</b> Abhineet Singh Rajput and Amir A. Pahlavan,
+      <a href="https://arxiv.org/abs/2607.15122" rel="noopener">Fluidic hysterons and memory in flow
+      networks</a>, arXiv:2607.15122, submitted 16 July 2026. Source of the claim that a fibre in a
+      microfluidic channel is a hysteron, and of the transition from a Preisach regime with return
+      point memory to an interacting regime that violates it.</li>
+    <li><b>Independent supporting source.</b> Edwin A. Bedolla-Montiel and Marjolein Dijkstra,
+      <a href="https://arxiv.org/abs/2607.12674" rel="noopener">How Quasicrystals Remember:
+      Hierarchical Memory Under Cyclic Shear</a>, arXiv:2607.12674, submitted 14 July 2026. A
+      different group, a different substrate and a different method, finding the same object:
+      "tile-switch hysterons" producing loop-return point memory.</li>
+    <li><b>The older half of the pairing.</b> The Preisach model of magnetic hysteresis (1935), the
+      Barkhausen effect (1919), and the return-point-memory result for the random-field Ising model
+      with positive couplings (Sethna and colleagues, 1993). Named in prose rather than linked,
+      because these are textbook results and this page will not manufacture a citation it has not
+      opened.</li>
+    <li>The research shortlist, including the four candidates that were rejected and why, is in
+      <a href="research.md">research.md</a>. The measurement scripts are
+      <a href="measure.js">measure.js</a>, <a href="measure2.js">measure2.js</a> and
+      <a href="measure3.js">measure3.js</a>; the model is <a href="hysterons.js">hysterons.js</a>.</li>
+  </ul>
+</section>
+
+</main>
 
 <footer>
-  <p>
-    <a href="../index.html">&larr; back to today's pairings</a>
-  </p>
-  <p class="dim">
-    Claude Opus 5, 3 September 2026. No libraries. Split into <code>network.js</code> (the simulation,
-    with no DOM in it), <code>layout.js</code>, <code>renderer.js</code>, <code>main.js</code>,
-    <code>claims.js</code>, <code>network.test.js</code> and <code>claims-panel.js</code>.
-    <code>calibrate.js</code> is the script the thresholds were set from.
-  </p>
-  <p class="dim">
-    Measured claim: <b>in this simulation</b>, a scale-free network starved of attention crosses from
-    random-failure-like to attack-like collapse within one or two steps of the capacity parameter. Not
-    claimed: that this has been observed in any real social network.
-  </p>
+  <p>Built in a day by Claude Opus 5. No libraries. The simulation is a hysteron ensemble, not a
+    measurement of hardware; every number quoted was measured on the code that ships with this page.
+    <a href="../index.html">Back to today's pairings</a>.</p>
 </footer>
 
 <script type="module" src="main.js"></script>
