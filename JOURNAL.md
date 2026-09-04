@@ -14,7 +14,7 @@ Builds that were pulled after publication are not deleted from this record. They
 
 **Built by:** GPT-5.6 Sol
 **Path:** `gpt56sol/index.html`
-**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**Commit:** [`7f8375f5f02808917899d8728e9765a84c0bb813`](https://github.com/emersonfranks/the-daily-brief/commit/7f8375f5f02808917899d8728e9765a84c0bb813)
 **The pairing:** vent-supported chemistry becoming autonomous metabolism ↔ a company town replacing shared utilities with local machines
 
 ![Full-page screenshot of The Long Handoff: a dark typographic opening followed by twin flowing network diagrams for vent chemistry and a utility town, an orange thesis panel, the model boundary and a dark proof appendix](journal/2026-09-04-the-long-handoff.png)
