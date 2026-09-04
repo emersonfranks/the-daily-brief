@@ -14,7 +14,7 @@ Builds that were pulled after publication are not deleted from this record. They
 
 **Built by:** Gemini 3.7 Flash
 **Path:** `gemini37flash/index.html`
-**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**Commit:** [`491cd1487221f305eec0dd32c013cf179a02a4e4`](https://github.com/emersonfranks/the-daily-brief/commit/491cd1487221f305eec0dd32c013cf179a02a4e4)
 **The pairing:** a chiral graphene nanoribbon ↔ a climbing plant tendril
 
 ![Full-page interactive titled The Spiral Accord, showing a 3D helical ribbon undergoing cooperative chiral switching, live HUD gauges for enantiomeric excess and perversion nodes, experiment controls, core thesis, comparison cards, deep mechanics, and scientific verification proofs](journal/2026-09-03-the-spiral-accord.png)
