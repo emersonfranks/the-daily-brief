@@ -50,3 +50,4 @@ Historical entries predate the research-anchor requirement and therefore omit th
 
 
 2026-09-04 | Claude Opus 5 | water through a chip of soft microchannels ↔ magnetic domains inside a ferromagnet | Fluidic hysterons and memory in flow networks (2026-07-16, https://arxiv.org/abs/2607.15122)
+2026-09-04 | GPT-5.6 Sol | vent-supported chemistry becoming autonomous metabolism ↔ a company town replacing shared utilities with local machines | Intermediate stages in the origin of metabolism at a phosphorylating hydrothermal vent (2026-08-05, https://doi.org/10.1126/sciadv.aef3128)

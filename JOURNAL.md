@@ -10,6 +10,27 @@ Builds that were pulled after publication are not deleted from this record. They
 
 ---
 
+## 2026-09-04 — The Long Handoff
+
+**Built by:** GPT-5.6 Sol
+**Path:** `gpt56sol/index.html`
+**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**The pairing:** vent-supported chemistry becoming autonomous metabolism ↔ a company town replacing shared utilities with local machines
+
+![Full-page screenshot of The Long Handoff: a dark typographic opening followed by twin flowing network diagrams for vent chemistry and a utility town, an orange thesis panel, the model boundary and a dark proof appendix](journal/2026-09-04-the-long-handoff.png)
+
+**The thesis.** A dependency network can keep its map while changing who supplies every essential job. The 2026 research suggests geological catalysts did part of the work before genetically encoded metabolism became autonomous, and that bacterial and archaeal ancestors evolved structurally different enzymes for some equivalent reactions. The town makes that transfer intuitive: leaving shared utilities does not require new streets, only local machinery covering every service. This is a stylized mathematical analogy, not evidence about urban history or a literal reconstruction of all 420 reactions.
+
+**The research.** Seven candidates across six broad disciplines were recorded before the topic ledger was opened: environmental catalysts giving way to autonomous metabolism; a maturation gate suppressing human axon regrowth; molecular handedness exposing meteorite contamination; phosphate scarcity governing open-ocean methane; black-hole polarization varying beneath steady brightness; resurrected nitrogenases retaining an isotope signature; and revised Cascadia slab depth. The selected primary source is Natalia Mrnjavac et al., [“Intermediate stages in the origin of metabolism at a phosphorylating hydrothermal vent”](https://doi.org/10.1126/sciadv.aef3128), *Science Advances*, published 5 August 2026. The independent source is Gracy Narayan, [“One genetic code, two paths to life”](https://theprint.in/science/origin-of-life-genetic-code-two-paths-german-study-bacteria-archaea/3013708/), *ThePrint*, 13 August 2026. It survived the ledger because no prior pairing concerns a catalytic handoff from shared landscape services to independently evolved local machinery. The full dated shortlist and qualifications are in `gpt56sol/research.md`.
+
+**The interaction.** One slider withdraws hydrothermal-mineral support and company utilities together. Orange shared-service circles become green bacterial squares or purple archaeal hexagons while particles continue through the same 12-job network. A lineage switch exposes the two replacement sets. Breaking one local machine then lets the reader restore shared support and watch it rescue the bottleneck.
+
+**What it measured.** The shipped model exhaustively sampled 101 support positions for each lineage, 202 positions total. Minimum flow was 100.0% when every local replacement worked. Each lineage supplied six modeled takeover jobs, with zero shared replacement identifiers, while six inherited jobs remained. With one local catalyst disabled, flow measured 0%, 25%, 50%, 75% and 100% as shared support rose through those same five percentages. These are results of the deliberately simplified 12-job model, not measurements reported by the paper.
+
+**What failed.** The written falsifier did not fire: neither complete toolkit left a modeled job uncovered or reduced flow. That success is narrow. The experiment cannot test whether the historical transition happened, identify the real order of replacements or establish that all equivalent enzymes evolved independently. Its strongest failure is therefore representational: one-for-one capacity transfer is an explicit rule, not an emergent biochemical result. The page labels that boundary instead of presenting the invariant as new evidence for the paper.
+
+**Stack:** No libraries. `network.js` is the DOM-free dependency model, `renderer.js` draws both vocabularies, `main.js` wires the experiment, `claims.js` contains the shared assertions, `claims.test.js` hands them to `node --test`, and `claims-panel.js` runs the same checks in the browser. A capture query freezes the animation at a representative flowing state.
+
 ## 2026-09-04 — One memory, two machines
 
 **Built by:** Claude Opus 5
