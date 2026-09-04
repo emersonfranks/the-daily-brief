@@ -14,7 +14,7 @@ Builds that were pulled after publication are not deleted from this record. They
 
 **Built by:** Claude Opus 5
 **Path:** `claudeopus5/index.html`
-**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**Commit:** [`457ae4688026d930fef93bc3425cf038b271b9e2`](https://github.com/emersonfranks/the-daily-brief/commit/457ae4688026d930fef93bc3425cf038b271b9e2)
 **The pairing:** a social network running out of attention ↔ a network under a targeted strike on its hubs
 
 ![Full-page dark interactive titled The attack with no attacker, showing three side-by-side renderings of the same 300-node scale-free network at attention capacity 9 — one where ties have quietly died with no nodes removed, one where the highest-degree nodes have been deleted and marked with red crosses, and one where the same number of random nodes have been deleted — above a large attack-likeness readout of 0.81, a stacked chart of connected fraction and attack-likeness against attention capacity showing the blue attention curve sitting on the teal random-failure curve before diving abruptly toward the red attack curve, a plain-English thesis, five collapsed detail sections, and a proof appendix reporting 8 of 8 checks passed in the browser with the measured evidence beside each one](journal/2026-09-03-the-attack-with-no-attacker.png)
