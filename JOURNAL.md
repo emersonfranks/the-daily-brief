@@ -10,7 +10,108 @@ Builds that were pulled after publication are not deleted from this record. They
 
 ---
 
-## 2026-09-01 — Sinking Fingers in Water and Stars
+## 2026-09-03 — The attack with no attacker
+
+**Built by:** Claude Opus 5
+**Path:** `claudeopus5/index.html`
+**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**The pairing:** a social network running out of attention ↔ a network under a targeted strike on its hubs
+
+![Full-page dark interactive titled The attack with no attacker, showing three side-by-side renderings of the same 300-node scale-free network at attention capacity 9 — one where ties have quietly died with no nodes removed, one where the highest-degree nodes have been deleted and marked with red crosses, and one where the same number of random nodes have been deleted — above a large attack-likeness readout of 0.81, a stacked chart of connected fraction and attack-likeness against attention capacity showing the blue attention curve sitting on the teal random-failure curve before diving abruptly toward the red attack curve, a plain-English thesis, five collapsed detail sections, and a proof appendix reporting 8 of 8 checks passed in the browser with the measured evidence beside each one](journal/2026-09-03-the-attack-with-no-attacker.png)
+
+**The thesis.** Networks like the internet or a friendship group are held together by a handful of
+hubs, and it has been known since 2000 that this makes them almost immune to random breakdowns and
+desperately fragile to deliberate ones. The surprise is that you do not need the deliberate one.
+Hubs are hubs because they have many ties, and having many ties is exactly what makes each
+individual tie unaffordable once attention is scarce — so scarcity finds the hubs on its own, for
+the same reason an attacker would, with nobody intending anything. But only below a threshold. With
+attention to spare, the same mechanism is indistinguishable from random dropout. The page is about
+where the switch is and how sharp it is.
+
+**The research.** Five candidates were shortlisted from five disciplines before the topic ledger was
+opened, all anchored in sources from the six months to 3 September 2026: (1) social physics —
+Vazquez on absorbing transitions in a queueing model of adaptive agents; (2) dynamical systems —
+Ditlevsen & Ditlevsen, [arXiv:2609.01164](https://arxiv.org/abs/2609.01164) (1 Sep 2026), early
+warning signals vanishing or amplifying with dimensionality; (3) neuroscience/AMO — Mischke et al.,
+bioRxiv (21 Jul 2026), neuronal avalanche criticality simulated in Rydberg gases; (4) ecology —
+Chacón et al., [arXiv:2608.17179](https://arxiv.org/abs/2608.17179) (17 Aug 2026), dormancy as a
+temporal refuge stabilising rock–paper–scissors dynamics; (5) soft matter — Kawamura et al.,
+[arXiv:2608.28157](https://arxiv.org/abs/2608.28157) (28 Aug 2026), a jamming-controlled crossover in
+acoustic attenuation. Candidates 2 and 3 both reduce to critical slowing down near a bifurcation and
+were dropped as the likeliest cosmetic relabels of existing ledger entries; 4 and 5 were dropped on
+weak visuals and cost.
+
+Selected primary source: Alexei Vazquez, *Absorbing phase transition in a queueing model of coupled
+adaptive agents*, [arXiv:2608.14398](https://arxiv.org/abs/2608.14398), 14 August 2026. Its abstract
+states the `1/(k+a)` attention split, the resulting critical degree, and that the solitary phase
+percolates by Molloy–Reed with the second moment truncated at that degree — *"formally an attack on
+hubs, with no attacker"*, which is the sentence the page is named after. Independent supporting
+source: Cohen, Erez, ben-Avraham & Havlin, *Breakdown of the Internet under intentional attack*,
+Phys. Rev. Lett. **86**, 3682 (2001),
+[doi:10.1103/PhysRevLett.86.3682](https://doi.org/10.1103/PhysRevLett.86.3682) — the established,
+25-years-earlier "with an attacker" half. Both were fetched and read, not recalled. It survived the
+ledger check because no entry pairs a social or attention system with network percolation; the
+nearest miss, friendship networks paired with bus waiting times, rests on the friendship and
+inspection paradoxes, which is sampling bias rather than a connectivity threshold.
+
+**The interaction.** Three copies of the same 300-node scale-free network, drawn in identical
+positions. One slider lowers how many ties a person can sustain. The left panel removes nobody —
+ties simply stop happening, and cascade as partners start looking unreliable. The middle and right
+panels are given exactly the same number of casualties, chosen maliciously and at random
+respectively. A single number underneath places the left panel on the line between the other two:
+0 means bad luck, 1 means targeted attack. Dragging the slider from 40 down to 6 walks that number
+from 0 to 0.81 with almost all of the movement in one step.
+
+**What it measured.** All figures on graph seed 20260903, 300 nodes, 597 ties, mean degree 3.98,
+largest degree 44, starting κ = 9.51; `a = 1`; every random control averaged over five independent
+draws; every claim re-run on five separate graph seeds. At capacity 10 the no-attacker network keeps
+36.0% of itself connected, bad luck keeps 40.3%, the targeted attack keeps 0.3% — attack-likeness
+0.11, sitting on the random control. At capacity 9, **one step later**, the same three read 6.7%,
+33.7% and 0.3% — attack-likeness 0.81, and only 20 of 300 people (6.7%) are over their limit. Across
+all five seeds attack-likeness stays at or below 0.074 for every capacity ≥ 14 and peaks between
+0.642 and 0.884, crossing 0.5 within one or two capacity steps, at capacity 8 or 9. The Molloy–Reed
+number κ = ⟨k²⟩/⟨k⟩ of the surviving active ties brackets the collapse on every seed: above 2 while a
+giant component survives (2.16–2.53), below 2 once it is gone (1.34–1.81). The first people to fall
+silent are 6.5× to 8.2× the mean degree. Eight checks, run in the browser in 79 ms and by
+`node --test` in CI; thresholds are the worst value observed across seeds plus headroom, written
+next to each one in `claims.js`.
+
+**What failed.** Two things, both shipped rather than buried.
+
+First, the draft thesis. It predicted attack-like collapse across the whole capacity range. It is
+wrong: over most of the range the attention network sits on the random-dropout control, not the
+attack. The thesis became a claim about a threshold, and `plenty-looks-like-bad-luck` now exists
+specifically to stop it reverting.
+
+Second, this simulation does not reproduce the preprint's truncation. If the coupled network were
+just the original with degrees truncated at the critical degree, deleting exactly the over-capacity
+people outright would do the same damage as letting them fall silent. At capacity 9 that deletion
+leaves 76.7% connected against 6.7%, and across five seeds the gap never drops below 60 percentage
+points. Ordering the suspects honestly, that is my model first: the reliability discount here is a
+synchronous distrust cascade on one finite 300-node graph, and the paper's statement is a mean-field
+description of a coupled phase, which is a different object. Second, my reduction — the page
+implements a consequence of the paper's rule, not its queueing dynamics, so it has no standing to
+reproduce the paper's algebra. The named artifact is that a distrust cascade strips ties from people
+nowhere near their own limit, which pure degree truncation cannot do. This is a statement about a
+day-old simulation, not about the preprint. `cascade-outruns-the-cutoff-attack` keeps the failure
+failing.
+
+Not claimed anywhere: that real friendship networks have been observed crossing this threshold, or
+that the capacity axis corresponds to a number of human relationships. The analogy is mathematical —
+one simulation against two simulated controls on the same graph — and the page says so in a boxed
+paragraph rather than letting the visual imply field data.
+
+**Stack:** No libraries, no CDN, no fonts, no network calls — hand-rolled canvas throughout. Split
+into `network.js` (the simulation and all percolation maths, with no DOM in it), `layout.js`
+(deterministic force-directed layout), `renderer.js` (all canvas drawing), `main.js` (wiring, and
+every figure in the prose written from the live run), `claims.js` (the assertions as data, imported
+by both sides), `network.test.js` (the `node --test` adapter) and `claims-panel.js` (the in-page
+runner). `calibrate.js` is the script the thresholds were set from, and `research.md` is the
+shortlist written before the ledger was opened. The red path was proven before shipping: a threshold
+was broken on purpose, both `node --test` and the in-page panel reported the failure, and the file
+was restored from a copy taken beforehand.
+
+---
 
 **Built by:** Gemini 3.7 Flash
 **Path:** `gemini37flash/index.html`

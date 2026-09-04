@@ -1,259 +1,240 @@
 // @ts-check
-
 /**
- * Canvas drawing. Every function here takes numbers and paints them; none of them knows what a
- * mode means or how one is computed.
+ * All canvas drawing. Knows nothing about the simulation beyond the arrays it
+ * is handed, so the domain module can be run headlessly without any of this.
  */
 
-export const AMBER = '#f0c368';
-export const STEEL = '#7f9dc4';
-const INK = '#e9e6df';
-const DIM = '#565b66';
-const GRID = '#1c212b';
+/** @typedef {import('./network.js').Graph} Graph */
+/** @typedef {import('./network.js').SweepRow} SweepRow */
+
+const PALETTE = {
+  bg: '#0d1117',
+  edgeLive: 'rgba(126, 231, 255, 0.30)',
+  edgeGiant: 'rgba(126, 231, 255, 0.62)',
+  edgeDead: 'rgba(120, 132, 150, 0.07)',
+  nodeGiant: '#7ee7ff',
+  nodeFringe: '#4a6272',
+  nodeGone: '#ff5c7a',
+  grid: 'rgba(148, 163, 184, 0.16)',
+  text: '#94a3b8',
+};
 
 /**
- * Resize a canvas to its CSS box at device resolution and return a context in CSS pixels.
- *
  * @param {HTMLCanvasElement} canvas
- * @returns {{ ctx: CanvasRenderingContext2D, w: number, h: number } | null}
+ * @returns {{ ctx: CanvasRenderingContext2D, w: number, h: number }}
  */
 export function prepare(canvas) {
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return null;
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  const w = canvas.clientWidth;
-  const h = canvas.clientHeight;
-  if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
-    canvas.width = Math.round(w * dpr);
-    canvas.height = Math.round(h * dpr);
+  const rect = canvas.getBoundingClientRect();
+  const w = Math.max(1, Math.round(rect.width));
+  const h = Math.max(1, Math.round(rect.height));
+  if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
   }
+  const ctx = /** @type {CanvasRenderingContext2D} */ (canvas.getContext('2d'));
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = PALETTE.bg;
+  ctx.fillRect(0, 0, w, h);
   return { ctx, w, h };
 }
 
 /**
- * The string itself: its instantaneous shape, where it is being driven, and where the third
- * harmonic's nodes sit.
+ * Draw one network panel.
  *
  * @param {HTMLCanvasElement} canvas
- * @param {number[]} amplitudes modal amplitudes
- * @param {number} scale divisor bringing the displacement into view
- * @param {number} driveX drive position in (0, 1)
+ * @param {Graph} graph
+ * @param {{ x: Float64Array, y: Float64Array }} pos
+ * @param {{
+ *   edgeAlive: (edgeIndex: number) => boolean,
+ *   nodeGone: (nodeIndex: number) => boolean,
+ *   inGiant: (nodeIndex: number) => boolean,
+ * }} state
  */
-export function drawString(canvas, amplitudes, scale, driveX) {
-  const p = prepare(canvas);
-  if (!p) return;
-  const { ctx, w, h } = p;
-  const mid = h / 2;
-  const pad = 18;
-  const span = w - pad * 2;
-  const amp = h * 0.34;
+export function drawNetwork(canvas, graph, pos, state) {
+  const { ctx, w, h } = prepare(canvas);
+  const pad = 14;
+  const size = Math.min(w, h) - pad * 2;
+  const ox = (w - size) / 2;
+  const oy = (h - size) / 2;
+  /** @param {number} i */
+  const px = (i) => ox + pos.x[i] * size;
+  /** @param {number} i */
+  const py = (i) => oy + pos.y[i] * size;
 
-  ctx.strokeStyle = GRID;
   ctx.lineWidth = 1;
+  ctx.strokeStyle = PALETTE.edgeDead;
   ctx.beginPath();
-  ctx.moveTo(pad, mid);
-  ctx.lineTo(w - pad, mid);
+  for (let e = 0; e < graph.edges.length; e++) {
+    if (state.edgeAlive(e)) continue;
+    const [u, v] = graph.edges[e];
+    ctx.moveTo(px(u), py(u));
+    ctx.lineTo(px(v), py(v));
+  }
   ctx.stroke();
 
-  for (const nodeX of [1 / 3, 2 / 3]) {
-    const px = pad + nodeX * span;
-    ctx.strokeStyle = 'rgba(240,195,104,0.30)';
-    ctx.setLineDash([3, 4]);
+  for (const giantPass of [false, true]) {
+    ctx.strokeStyle = giantPass ? PALETTE.edgeGiant : PALETTE.edgeLive;
+    ctx.lineWidth = giantPass ? 1.15 : 1;
     ctx.beginPath();
-    ctx.moveTo(px, mid - amp);
-    ctx.lineTo(px, mid + amp);
+    for (let e = 0; e < graph.edges.length; e++) {
+      if (!state.edgeAlive(e)) continue;
+      const [u, v] = graph.edges[e];
+      if (state.nodeGone(u) || state.nodeGone(v)) continue;
+      const isGiant = state.inGiant(u) && state.inGiant(v);
+      if (isGiant !== giantPass) continue;
+      ctx.moveTo(px(u), py(u));
+      ctx.lineTo(px(v), py(v));
+    }
+    ctx.stroke();
+  }
+
+  const maxDeg = Math.max(1, ...graph.degree);
+  for (let i = 0; i < graph.n; i++) {
+    const r = 1.5 + 3.4 * Math.sqrt(graph.degree[i] / maxDeg);
+    const cx = px(i);
+    const cy = py(i);
+    if (state.nodeGone(i)) {
+      ctx.strokeStyle = PALETTE.nodeGone;
+      ctx.lineWidth = 1.1;
+      const s = r * 0.95;
+      ctx.beginPath();
+      ctx.moveTo(cx - s, cy - s);
+      ctx.lineTo(cx + s, cy + s);
+      ctx.moveTo(cx + s, cy - s);
+      ctx.lineTo(cx - s, cy + s);
+      ctx.stroke();
+      continue;
+    }
+    ctx.fillStyle = state.inGiant(i) ? PALETTE.nodeGiant : PALETTE.nodeFringe;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+/**
+ * The two stacked charts: connected fraction against capacity for all three
+ * conditions, and the attack-likeness curve underneath it.
+ *
+ * @param {HTMLCanvasElement} canvas
+ * @param {SweepRow[]} rows descending capacity
+ * @param {number} currentCapacity
+ */
+export function drawCharts(canvas, rows, currentCapacity) {
+  const { ctx, w, h } = prepare(canvas);
+  const left = 68;
+  const right = w - 14;
+  const gap = 26;
+  const topH = (h - gap - 54) * 0.58;
+  const botH = h - gap - 54 - topH;
+  const topY = 16;
+  const botY = topY + topH + gap;
+
+  const caps = rows.map((r) => r.capacity);
+  const minCap = Math.min(...caps);
+  const maxCap = Math.max(...caps);
+  /** @param {number} c */
+  const cx = (c) => left + ((maxCap - c) / (maxCap - minCap)) * (right - left);
+
+  ctx.font = '11px ui-monospace, SFMono-Regular, Menlo, monospace';
+  ctx.fillStyle = PALETTE.text;
+
+  // ---- top chart: connected fraction ----
+  /** @param {number} v */
+  const ty = (v) => topY + (1 - v) * topH;
+  ctx.strokeStyle = PALETTE.grid;
+  ctx.lineWidth = 1;
+  for (const v of [0, 0.25, 0.5, 0.75, 1]) {
+    ctx.beginPath();
+    ctx.moveTo(left, ty(v));
+    ctx.lineTo(right, ty(v));
+    ctx.stroke();
+    ctx.textAlign = 'right';
+    ctx.fillText(`${Math.round(v * 100)}%`, left - 6, ty(v) + 3);
+  }
+  ctx.textAlign = 'left';
+  ctx.fillText('share of the network still connected in one piece', left + 2, topY - 4);
+
+  /**
+   * @param {(r: SweepRow) => number | null} pick
+   * @param {string} colour
+   * @param {number} width
+   * @param {number[]} [dash]
+   * @param {(v: number) => number} [scaleY]
+   */
+  const line = (pick, colour, width, dash = [], scaleY = ty) => {
+    ctx.strokeStyle = colour;
+    ctx.lineWidth = width;
+    ctx.setLineDash(dash);
+    ctx.beginPath();
+    let started = false;
+    for (const r of rows) {
+      const v = pick(r);
+      if (v === null || Number.isNaN(v)) {
+        started = false;
+        continue;
+      }
+      const X = cx(r.capacity);
+      const Y = scaleY(v);
+      if (started) ctx.lineTo(X, Y);
+      else ctx.moveTo(X, Y);
+      started = true;
+    }
     ctx.stroke();
     ctx.setLineDash([]);
-  }
-
-  ctx.strokeStyle = 'rgba(240,195,104,0.16)';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  for (let i = 0; i <= 160; i++) {
-    const x = i / 160;
-    const y = mid - Math.sin(3 * Math.PI * x) * amp * 0.55;
-    if (i === 0) ctx.moveTo(pad + x * span, y);
-    else ctx.lineTo(pad + x * span, y);
-  }
-  ctx.stroke();
-
-  ctx.strokeStyle = INK;
-  ctx.lineWidth = 1.8;
-  ctx.beginPath();
-  for (let i = 0; i <= 220; i++) {
-    const x = i / 220;
-    let y = 0;
-    for (let k = 0; k < amplitudes.length; k++) {
-      y += amplitudes[k] * Math.SQRT2 * Math.sin((k + 1) * Math.PI * x);
-    }
-    const py = mid - Math.max(-1.4, Math.min(1.4, y / scale)) * amp;
-    if (i === 0) ctx.moveTo(pad + x * span, py);
-    else ctx.lineTo(pad + x * span, py);
-  }
-  ctx.stroke();
-
-  const dx = pad + driveX * span;
-  ctx.fillStyle = AMBER;
-  ctx.beginPath();
-  ctx.arc(dx, mid, 5, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = 'rgba(240,195,104,0.18)';
-  ctx.beginPath();
-  ctx.arc(dx, mid, 12, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-/**
- * Scrolling abundance traces, one per species.
- *
- * @param {HTMLCanvasElement} canvas
- * @param {number[][]} history history[t][species], oldest first
- * @param {number} scale
- */
-export function drawTraces(canvas, history, scale) {
-  const p = prepare(canvas);
-  if (!p) return;
-  const { ctx, w, h } = p;
-  if (history.length < 2) return;
-  const pad = 10;
-  const species = history[0].length;
-  const lane = (h - pad * 2) / species;
-
-  for (let s = 0; s < species; s++) {
-    const base = pad + lane * (s + 0.5);
-    ctx.strokeStyle = GRID;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(0, base);
-    ctx.lineTo(w, base);
-    ctx.stroke();
-
-    ctx.strokeStyle = STEEL;
-    ctx.globalAlpha = 0.55 + 0.45 * (1 - s / species);
-    ctx.lineWidth = 1.4;
-    ctx.beginPath();
-    for (let t = 0; t < history.length; t++) {
-      const x = (t / (history.length - 1)) * w;
-      const v = Math.max(-1.3, Math.min(1.3, history[t][s] / scale));
-      const y = base - v * lane * 0.44;
-      if (t === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    }
-    ctx.stroke();
-    ctx.globalAlpha = 1;
-  }
-}
-
-/**
- * Share of the fluctuation carried by each mode, with the near-critical one picked out.
- *
- * @param {HTMLCanvasElement} canvas
- * @param {number[]} shares
- * @param {number} soft index to highlight
- * @param {string} accent
- */
-export function drawBars(canvas, shares, soft, accent) {
-  const p = prepare(canvas);
-  if (!p) return;
-  const { ctx, w, h } = p;
-  const pad = 16;
-  const n = shares.length;
-  const slot = (w - pad * 2) / n;
-  const barW = Math.min(slot * 0.56, 26);
-  const top = 10;
-  const floor = h - 20;
-
-  ctx.strokeStyle = GRID;
-  ctx.beginPath();
-  ctx.moveTo(pad, floor + 0.5);
-  ctx.lineTo(w - pad, floor + 0.5);
-  ctx.stroke();
-
-  for (let k = 0; k < n; k++) {
-    const cx = pad + slot * (k + 0.5);
-    const hgt = Math.max(1, shares[k] * (floor - top));
-    ctx.fillStyle = k === soft ? accent : 'rgba(233,230,223,0.26)';
-    ctx.fillRect(cx - barW / 2, floor - hgt, barW, hgt);
-    ctx.fillStyle = k === soft ? accent : DIM;
-    ctx.font = '600 10px ui-monospace, Menlo, Consolas, monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText(String(k + 1), cx, h - 6);
-  }
-}
-
-/**
- * The shared law: visibility against reduced drive, with a live marker for each system.
- *
- * @param {HTMLCanvasElement} canvas
- * @param {{ g: number, visibility: number, colour: string, label: string }[]} markers
- */
-export function drawLaw(canvas, markers) {
-  const p = prepare(canvas);
-  if (!p) return;
-  const { ctx, w, h } = p;
-  const padL = 46;
-  const padR = 16;
-  const padT = 14;
-  const padB = 30;
-  const lo = -7;
-  const hi = 7;
-
-  /** @param {number} g */
-  const gx = (g) => {
-    const l = Math.max(lo, Math.min(hi, Math.log10(Math.max(g, 1e-12))));
-    return padL + ((l - lo) / (hi - lo)) * (w - padL - padR);
   };
-  /** @param {number} v */
-  const vy = (v) => padT + (1 - v) * (h - padT - padB);
 
-  ctx.strokeStyle = GRID;
-  ctx.lineWidth = 1;
+  // Order matters: the teal control goes on last so that where it coincides with
+  // the attention curve — which is most of the range, and is the whole finding —
+  // its dashes stay visible on top rather than being painted over.
+  line((r) => r.attack, '#ff5c7a', 1.6, [5, 4]);
+  line((r) => r.attention, '#7ee7ff', 2.8);
+  line((r) => r.control, '#5eead4', 1.5, [4, 5]);
+
+  // ---- bottom chart: attack-likeness ----
+  /** @param {number} v */
+  const alphaY = (v) => {
+    const clamped = Math.max(-0.3, Math.min(1.2, v));
+    return botY + (1.2 - clamped) / 1.5 * botH;
+  };
+  ctx.strokeStyle = PALETTE.grid;
   for (const v of [0, 0.5, 1]) {
     ctx.beginPath();
-    ctx.moveTo(padL, vy(v));
-    ctx.lineTo(w - padR, vy(v));
+    ctx.moveTo(left, alphaY(v));
+    ctx.lineTo(right, alphaY(v));
     ctx.stroke();
-    ctx.fillStyle = DIM;
-    ctx.font = '600 10px ui-monospace, Menlo, Consolas, monospace';
-    ctx.textAlign = 'right';
-    ctx.fillText(v.toFixed(1), padL - 8, vy(v) + 3);
   }
-  for (let l = lo; l <= hi; l += 2) {
-    const x = gx(Math.pow(10, l));
-    ctx.strokeStyle = GRID;
-    ctx.beginPath();
-    ctx.moveTo(x, padT);
-    ctx.lineTo(x, h - padB);
-    ctx.stroke();
-    ctx.fillStyle = DIM;
-    ctx.textAlign = 'center';
-    ctx.fillText(`1e${l}`, x, h - padB + 14);
-  }
+  ctx.textAlign = 'right';
+  ctx.fillStyle = '#5eead4';
+  ctx.fillText('bad luck', left - 6, alphaY(0) + 3);
+  ctx.fillStyle = '#ff5c7a';
+  ctx.fillText('attack', left - 6, alphaY(1) + 3);
+  ctx.fillStyle = PALETTE.text;
+  ctx.textAlign = 'left';
+  ctx.fillText('which of the two the attention network is behaving like', left + 2, botY - 4);
 
-  ctx.strokeStyle = 'rgba(233,230,223,0.55)';
-  ctx.lineWidth = 1.8;
+  line((r) => r.attackLikeness, '#facc15', 2.4, [], alphaY);
+
+  // ---- shared x axis and the capacity marker ----
+  ctx.strokeStyle = 'rgba(250, 204, 21, 0.55)';
+  ctx.lineWidth = 1.4;
+  ctx.setLineDash([3, 3]);
   ctx.beginPath();
-  for (let i = 0; i <= 300; i++) {
-    const l = lo + (i / 300) * (hi - lo);
-    const g = Math.pow(10, l);
-    const x = gx(g);
-    const y = vy(g / (1 + g));
-    if (i === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
-  }
+  ctx.moveTo(cx(currentCapacity), topY);
+  ctx.lineTo(cx(currentCapacity), botY + botH);
   ctx.stroke();
+  ctx.setLineDash([]);
 
-  for (const m of markers) {
-    const x = gx(m.g);
-    const y = vy(m.visibility);
-    ctx.fillStyle = m.colour;
-    ctx.beginPath();
-    ctx.arc(x, y, 6, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#06070a';
-    ctx.lineWidth = 2;
-    ctx.stroke();
+  ctx.fillStyle = PALETTE.text;
+  ctx.textAlign = 'center';
+  for (const c of [maxCap, 30, 20, 14, 10, 6, minCap]) {
+    if (c > maxCap || c < minCap) continue;
+    ctx.fillText(String(c), cx(c), botY + botH + 16);
   }
+  ctx.fillText('attention capacity  (fewer ties each person can sustain  \u2192)', (left + right) / 2, botY + botH + 31);
+  ctx.textAlign = 'left';
 }
+
+export { PALETTE };

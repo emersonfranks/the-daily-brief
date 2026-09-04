@@ -1,116 +1,62 @@
 // @ts-check
-
 /**
- * Threshold calibration. Run with `node calibrate.js` from this directory. Nothing on the page
- * imports it; it exists so the numbers in claims.js have a visible provenance.
+ * Calibration. Run with `node claudeopus5/calibrate.js` from the repo root.
+ * Prints the measurements the page's prose and the claim thresholds are set
+ * from. Nothing here is imported by the page or by the test suite.
  */
 
-import {
-  modalCovariance,
-  softVisibility,
-  reducedDrive,
-  visibilityLaw,
-  observableCovariance,
-  correlationMatrix,
-  maxAbsPairCorrelation,
-  sampleModalCovariance,
-} from './modal.js';
-import {
-  stringSystem,
-  communitySystem,
-  communityBasis,
-  alignmentFromDrivePoint,
-  SIGMA_ENV,
-  SIGMA_0,
-} from './systems.js';
+import { CONFIG, standardGraph, sweep, meanDegree, kappa } from './network.js';
 
-const basis = communityBasis();
+/** @param {number} x */
+const f = (x) => x.toFixed(3);
+/** @param {number | null} x */
+const fn = (x) => (x === null ? '  n/a' : x.toFixed(3));
 
-/**
- * @param {number} epsilon
- * @param {number} alignment
- * @param {boolean} shared
- */
-function communityReadout(epsilon, alignment, shared) {
-  const sys = communitySystem(epsilon, alignment);
-  const c = modalCovariance(sys.lambdas, sys.p, SIGMA_ENV, SIGMA_0, shared);
-  const corr = correlationMatrix(observableCovariance(basis, c));
-  return {
-    visibility: softVisibility(c, sys.soft),
-    maxCorr: maxAbsPairCorrelation(corr),
-    g: reducedDrive(sys.lambdas, sys.p, SIGMA_ENV, SIGMA_0, sys.soft),
-  };
-}
+/** @type {number[]} */
+const maxAlphas = [];
+/** @type {number[]} */
+const highCapAlphas = [];
+/** @type {number[]} */
+const cutoffGaps = [];
 
-console.log('alignment at x=1/3 :', alignmentFromDrivePoint(1 / 3));
-console.log('alignment at x=1/2 :', alignmentFromDrivePoint(0.5));
-
-console.log('\n-- independent environmental drivers --');
-for (const eps of [1, 0.1, 0.01, 0.001, 3e-4, 1e-4, 3e-5, 1e-5]) {
-  const a = communityReadout(eps, 1, false);
-  const n = communityReadout(eps, 0, false);
+for (const seed of CONFIG.auditSeeds) {
+  const g = standardGraph(seed);
   console.log(
-    `eps=${eps}  aligned vis=${a.visibility.toFixed(4)} r=${a.maxCorr.toFixed(4)}` +
-      `   node vis=${n.visibility.toFixed(4)} r=${n.maxCorr.toFixed(4)}`
+    `\n=== seed ${seed} | n=${g.n} edges=${g.edges.length} <k>=${f(meanDegree(g.degree))} ` +
+      `max k=${Math.max(...g.degree)} kappa0=${f(kappa(g.degree))} ===`,
   );
-}
+  const rows = sweep(g, [...CONFIG.capacities], CONFIG.a, CONFIG.controlSeed);
+  console.log('cap over quiet  S_att  S_atk  S_rnd  spread  S_cut  alpha   k_att  k_atk  rnds');
+  for (const r of rows) {
+    console.log(
+      `${String(r.capacity).padStart(3)} ${String(r.overCapacityCount).padStart(4)} ` +
+        `${String(r.quietCount).padStart(5)}  ${f(r.attention)}  ${f(r.attack)}  ${f(r.control)}  ` +
+        `${f(r.controlSpread)}  ${f(r.cutoffAttack)}  ${fn(r.attackLikeness)}  ` +
+        `${f(r.kappaAttention)}  ${f(r.kappaAttack)}  ${String(r.rounds).padStart(4)}${r.converged ? '' : ' !!'}`,
+    );
+  }
 
-console.log('\n-- one shared driver (rank-one forcing) --');
-for (const eps of [1, 0.01, 1e-4]) {
-  const a = communityReadout(eps, 1, true);
-  const n = communityReadout(eps, 0, true);
+  const defined = rows.filter((r) => r.attackLikeness !== null);
+  const maxAlpha = Math.max(...defined.map((r) => /** @type {number} */ (r.attackLikeness)));
+  const high = defined
+    .filter((r) => r.capacity >= 14)
+    .map((r) => /** @type {number} */ (r.attackLikeness));
+  const maxHigh = Math.max(...high);
+  const worstCutoffGap = Math.max(...rows.map((r) => r.cutoffAttack - r.attention));
+  maxAlphas.push(maxAlpha);
+  highCapAlphas.push(maxHigh);
+  cutoffGaps.push(worstCutoffGap);
+
+  const crossing = defined.find((r) => /** @type {number} */ (r.attackLikeness) >= 0.5);
   console.log(
-    `eps=${eps}  aligned vis=${a.visibility.toFixed(4)} r=${a.maxCorr.toFixed(4)}` +
-      `   node vis=${n.visibility.toFixed(4)} r=${n.maxCorr.toFixed(4)}`
+    `  max alpha = ${f(maxAlpha)} | max alpha at capacity>=14 = ${f(maxHigh)} | ` +
+      `first capacity with alpha>=0.5 = ${crossing ? crossing.capacity : 'none'} | ` +
+      `worst (S_cutoffAttack - S_attention) = ${f(worstCutoffGap)}`,
   );
+  console.log(`  non-converged capacities: ${rows.filter((r) => !r.converged).length}`);
 }
 
-/**
- * @param {number} alignment
- * @returns {number}
- */
-function epsilonAtHalfVisibility(alignment) {
-  let lo = 1e-12;
-  let hi = 1e6;
-  for (let i = 0; i < 200; i++) {
-    const mid = Math.sqrt(lo * hi);
-    const sys = communitySystem(mid, alignment);
-    const v = softVisibility(modalCovariance(sys.lambdas, sys.p, SIGMA_ENV, SIGMA_0), sys.soft);
-    if (v > 0.5) lo = mid;
-    else hi = mid;
-  }
-  return Math.sqrt(lo * hi);
-}
-const halfAligned = epsilonAtHalfVisibility(1);
-const halfNode = epsilonAtHalfVisibility(0);
-console.log('\neps at half visibility, aligned :', halfAligned);
-console.log('eps at half visibility, node    :', halfNode);
-console.log('ratio                           :', halfAligned / halfNode);
-
-let worst = 0;
-for (const eps of [1, 0.5, 0.2, 0.05, 0.01, 0.002, 5e-4, 1e-4]) {
-  for (let i = 0; i <= 20; i++) {
-    const x = 0.02 + (i / 20) * 0.96;
-    const a = alignmentFromDrivePoint(x);
-    for (const sys of [stringSystem(eps, x), communitySystem(eps, a)]) {
-      const c = modalCovariance(sys.lambdas, sys.p, SIGMA_ENV, SIGMA_0);
-      const g = reducedDrive(sys.lambdas, sys.p, SIGMA_ENV, SIGMA_0, sys.soft);
-      worst = Math.max(worst, Math.abs(softVisibility(c, sys.soft) - visibilityLaw(g)));
-    }
-  }
-}
-console.log('\nworst |visibility - G/(1+G)| over both systems :', worst);
-
-for (const seed of [1, 2, 3, 4, 5]) {
-  const sys = communitySystem(0.4, 0.6);
-  const spec = { ...sys, sigmaEnv: SIGMA_ENV, sigma0: SIGMA_0, seed, shared: false };
-  const started = Date.now();
-  const sampled = sampleModalCovariance(spec, 300000, 0.01, 30000);
-  const exact = modalCovariance(sys.lambdas, sys.p, SIGMA_ENV, SIGMA_0);
-  let rel = 0;
-  for (let i = 0; i < sys.lambdas.length; i++) {
-    rel = Math.max(rel, Math.abs(sampled[i][i] - exact[i][i]) / exact[i][i]);
-  }
-  const ms = Date.now() - started;
-  console.log(`seed ${seed}: worst relative variance error = ${rel.toFixed(4)} (${ms} ms)`);
-}
+console.log('\n=== across all audit seeds ===');
+console.log(`min of max alpha        : ${f(Math.min(...maxAlphas))}`);
+console.log(`max of high-capacity a  : ${f(Math.max(...highCapAlphas))}`);
+console.log(`min worst cutoff gap    : ${f(Math.min(...cutoffGaps))}`);

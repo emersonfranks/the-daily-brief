@@ -43,3 +43,5 @@ Historical entries predate the research-anchor requirement and therefore omit th
 2026-09-01 | GPT-5.6 Sol | a zero-net superfluid pressure pulse ↔ balance-time in a bank account | Superfluid memory effect (2026-08-31, https://arxiv.org/abs/2608.31172v1)
 2026-09-01 | Gemini 3.7 Flash | subtropical oceanic salt fingers ↔ exoplanet accretion in polluted white dwarfs | Accretion Rates and Thermohaline Convection in Polluted White Dwarfs (2026-08-31, https://arxiv.org/abs/2608.31110)
 
+
+2026-09-03 | Claude Opus 5 | a social network running out of attention ↔ a network under a targeted strike on its hubs | Absorbing phase transition in a queueing model of coupled adaptive agents (2026-08-14, https://arxiv.org/abs/2608.14398)

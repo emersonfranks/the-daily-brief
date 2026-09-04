@@ -1,264 +1,268 @@
 // @ts-check
-
 /**
- * Every assertion this page makes, as data. No DOM, no test runner: `claims.test.js` hands these
- * to `node --test` and `claims-panel.js` hands the same objects to a button in the browser, so CI
- * and the reader are checking one source of truth.
+ * Every assertion this page makes, as data.
  *
- * Thresholds are set from the sweeps in `calibrate.js`, taking the worst value observed and
- * leaving headroom. The measured value is quoted next to each one.
+ * No DOM and no `node:test` in here, so the exact same file is imported by
+ * `network.test.js` under `node --test` in CI and by `claims-panel.js` in the
+ * reader's browser. One source of truth, executed twice.
+ *
+ * Each `verify()` either returns the evidence it measured or throws. Thresholds
+ * are set from the calibration run in `calibrate.js` over five graph seeds:
+ * take the worst value observed, then leave headroom. The worst observed value
+ * is written next to every threshold below.
  */
 
-import {
-  modalCovariance,
-  softVisibility,
-  reducedDrive,
-  visibilityLaw,
-  observableCovariance,
-  correlationMatrix,
-  maxAbsPairCorrelation,
-  sampleModalCovariance,
-} from './modal.js';
-import {
-  stringSystem,
-  communitySystem,
-  communityBasis,
-  alignmentFromDrivePoint,
-  SIGMA_ENV,
-  SIGMA_0,
-} from './systems.js';
+import { CONFIG, standardGraph, sweep, meanDegree, attentionCascade } from './network.js';
+
+/** @typedef {import('./network.js').SweepRow} SweepRow */
+
+/** @type {Map<number, SweepRow[]>} */
+const cache = new Map();
 
 /**
- * @typedef {object} Claim
- * @property {string} id
- * @property {string} name
- * @property {string} catches what a failure of this claim would mean
- * @property {() => Record<string, string>} verify returns the evidence measured, or throws
+ * @param {number} seed
+ * @returns {SweepRow[]}
  */
-
-const BASIS = communityBasis();
-
-/**
- * @param {number} epsilon
- * @param {number} alignment
- * @param {boolean} shared
- */
-function community(epsilon, alignment, shared) {
-  const sys = communitySystem(epsilon, alignment);
-  const c = modalCovariance(sys.lambdas, sys.p, SIGMA_ENV, SIGMA_0, shared);
-  return {
-    visibility: softVisibility(c, sys.soft),
-    maxCorrelation: maxAbsPairCorrelation(correlationMatrix(observableCovariance(BASIS, c))),
-  };
+export function sweepFor(seed) {
+  const hit = cache.get(seed);
+  if (hit) return hit;
+  const rows = sweep(standardGraph(seed), [...CONFIG.capacities], CONFIG.a, CONFIG.controlSeed);
+  cache.set(seed, rows);
+  return rows;
 }
 
-/**
- * @param {number} alignment
- * @returns {number} the distance from the tipping point at which the soft mode carries half the
- * fluctuations
- */
-function epsilonAtHalfVisibility(alignment) {
-  let lo = 1e-12;
-  let hi = 1e6;
-  for (let i = 0; i < 200; i++) {
-    const mid = Math.sqrt(lo * hi);
-    const sys = communitySystem(mid, alignment);
-    const v = softVisibility(modalCovariance(sys.lambdas, sys.p, SIGMA_ENV, SIGMA_0), sys.soft);
-    if (v > 0.5) lo = mid;
-    else hi = mid;
-  }
-  return Math.sqrt(lo * hi);
-}
+/** @param {number} x */
+const f3 = (x) => x.toFixed(3);
 
 /**
- * @param {boolean} ok
- * @param {string} message
+ * Capacity at or above which the network is comfortably provisioned. Claims 4
+ * and 5 split the sweep here; the split is stated in the prose on the page
+ * because it is a post-hoc choice, and the full curve is drawn either way.
  */
-function require(ok, message) {
-  if (!ok) throw new Error(message);
-}
+const COMFORTABLE_CAPACITY = 14;
+
+/**
+ * @typedef {{ id: string, title: string, catches: string, verify: () => string }} Claim
+ */
 
 /** @type {Claim[]} */
 export const claims = [
   {
-    id: 'node-is-exact',
-    name: 'The node is a real zero, not a small number',
+    id: 'cascade-converges',
+    title: 'The simulation actually settles',
     catches:
-      'If the third harmonic picked up any drive at x = 1/3, the whole page would be about a ' +
-      'quantitative dip rather than an exact cancellation.',
+      'A model whose "result" is only wherever the iteration limit cut it off. Every number on this page is read off a fixed point, not a snapshot mid-cascade.',
     verify() {
-      const p = alignmentFromDrivePoint(1 / 3);
-      const q = alignmentFromDrivePoint(2 / 3);
-      require(p < 1e-12, `projection at x=1/3 was ${p}, expected below 1e-12`);
-      require(q < 1e-12, `projection at x=2/3 was ${q}, expected below 1e-12`);
-      return {
-        'projection at x = 1/3': p.toExponential(2),
-        'projection at x = 2/3': q.toExponential(2),
-        threshold: '< 1e-12 (measured 7.1e-17)',
-      };
-    },
-  },
-  {
-    id: 'closed-form-matches-integration',
-    name: 'The closed-form covariance matches the integrated dynamics',
-    catches:
-      'Every other claim reads the Lyapunov solution rather than a trajectory. If that solution ' +
-      'did not describe the process actually being integrated, all of them would be decoration.',
-    verify() {
-      const sys = communitySystem(0.4, 0.6);
-      const exact = modalCovariance(sys.lambdas, sys.p, SIGMA_ENV, SIGMA_0);
-      let worst = 0;
-      for (const seed of [1, 2, 3, 4, 5]) {
-        const sampled = sampleModalCovariance(
-          { ...sys, sigmaEnv: SIGMA_ENV, sigma0: SIGMA_0, seed, shared: false },
-          300000,
-          0.01,
-          30000
-        );
-        for (let i = 0; i < sys.lambdas.length; i++) {
-          worst = Math.max(worst, Math.abs(sampled[i][i] - exact[i][i]) / exact[i][i]);
+      /** @type {string[]} */
+      const notes = [];
+      let worstRounds = 0;
+      for (const seed of CONFIG.auditSeeds) {
+        const rows = sweepFor(seed);
+        const bad = rows.filter((r) => !r.converged);
+        if (bad.length > 0) {
+          throw new Error(
+            `seed ${seed}: ${bad.length} capacities never reached a fixed point ` +
+              `(first: capacity ${bad[0].capacity})`,
+          );
         }
+        worstRounds = Math.max(worstRounds, ...rows.map((r) => r.rounds));
+        notes.push(`${seed}: ok`);
       }
-      require(worst < 0.1, `worst relative variance error was ${worst}, expected below 0.10`);
-      return {
-        'seeds run': '1, 2, 3, 4, 5 (all reported, none dropped)',
-        'steps per seed': '300,000 at dt = 0.01, after 30,000 discarded',
-        'worst relative error on any modal variance': worst.toFixed(4),
-        threshold: '< 0.10, a Monte Carlo tolerance (worst of five seeds measured 0.046)',
-      };
+      return `all ${CONFIG.auditSeeds.length} seeds x ${CONFIG.capacities.length} capacities reached a fixed point; slowest took ${worstRounds} rounds`;
     },
   },
+
   {
-    id: 'aligned-drive-shows-the-warning',
-    name: 'Drive the soft mode and the classic warning appears',
+    id: 'quiet-starts-at-the-hubs',
+    title: 'The silence begins at the busiest people',
     catches:
-      'If the textbook early-warning signature did not show up under aligned forcing, the model ' +
-      'would be broken and its silence elsewhere would mean nothing.',
+      'A cascade that is really just generic dilution. If the first people to fall silent were not the high-degree ones, nothing about this page would have anything to do with hubs.',
     verify() {
-      const r = community(0.01, 1, false);
-      require(r.visibility > 0.99, `soft-mode visibility was ${r.visibility}`);
-      require(r.maxCorrelation > 0.99, `max pairwise correlation was ${r.maxCorrelation}`);
-      return {
-        'distance from tipping point': 'lambda_soft = 0.01, 90x slower than the next mode',
-        'forcing alignment': '1.00 (fully on the soft mode)',
-        'soft-mode share of fluctuations': r.visibility.toFixed(4),
-        'max pairwise correlation': r.maxCorrelation.toFixed(4),
-      };
-    },
-  },
-  {
-    id: 'node-drive-hides-the-warning',
-    name: 'Drive it at the node and the same tipping point goes silent',
-    catches:
-      'This is the whole thesis. A failure here means proximity to the tipping point does ' +
-      'determine the indicator after all, and the pairing collapses.',
-    verify() {
-      const r = community(0.01, 0, false);
-      require(r.visibility < 0.05, `soft-mode visibility was ${r.visibility}`);
-      require(r.maxCorrelation < 0.6, `max pairwise correlation was ${r.maxCorrelation}`);
-      return {
-        'distance from tipping point': 'lambda_soft = 0.01, identical to the claim above',
-        'forcing alignment': '0.00 (orthogonal to the soft mode)',
-        'soft-mode share of fluctuations': r.visibility.toFixed(4),
-        'max pairwise correlation': r.maxCorrelation.toFixed(4),
-        threshold: 'visibility < 0.05 and correlation < 0.60 (measured 0.013 and 0.417)',
-      };
-    },
-  },
-  {
-    id: 'hidden-across-decades',
-    name: 'Alignment moves the point of detection by seven orders of magnitude',
-    catches:
-      'If the two forcing directions became detectable at similar distances, the effect would be ' +
-      'a curiosity rather than a reason to distrust an indicator.',
-    verify() {
-      const aligned = epsilonAtHalfVisibility(1);
-      const node = epsilonAtHalfVisibility(0);
-      const ratio = aligned / node;
-      require(ratio > 1e6, `ratio was ${ratio}, expected above 1e6`);
-      return {
-        'lambda_soft at which half the fluctuation is the soft mode, aligned drive':
-          aligned.toExponential(3),
-        'the same, node drive': node.toExponential(3),
-        ratio: ratio.toExponential(3),
-        note:
-          'The aligned figure exceeds every other relaxation rate in the model, meaning the ' +
-          'aligned soft mode is dominant across the entire range in which it is soft at all.',
-      };
-    },
-  },
-  {
-    id: 'one-law-two-systems',
-    name: 'String and community lie on one curve',
-    catches:
-      'If the two systems did not collapse onto the same function of one variable, the claim ' +
-      'that they share a mechanism would be an analogy dressed up as an identity.',
-    verify() {
-      let worst = 0;
-      let points = 0;
-      for (const eps of [1, 0.5, 0.2, 0.05, 0.01, 0.002, 5e-4, 1e-4]) {
-        for (let i = 0; i <= 20; i++) {
-          const x = 0.02 + (i / 20) * 0.96;
-          for (const sys of [stringSystem(eps, x), communitySystem(eps, alignmentFromDrivePoint(x))]) {
-            const c = modalCovariance(sys.lambdas, sys.p, SIGMA_ENV, SIGMA_0);
-            const g = reducedDrive(sys.lambdas, sys.p, SIGMA_ENV, SIGMA_0, sys.soft);
-            worst = Math.max(worst, Math.abs(softVisibility(c, sys.soft) - visibilityLaw(g)));
-            points++;
+      /** @type {number[]} */
+      const ratios = [];
+      for (const seed of CONFIG.auditSeeds) {
+        const graph = standardGraph(seed);
+        const rows = sweepFor(seed);
+        const row = rows.find((r) => r.overCapacityCount >= 5);
+        if (!row) throw new Error(`seed ${seed}: sweep never put five people over capacity`);
+        const c = attentionCascade(graph, row.capacity, CONFIG.a);
+        const degs = c.firstRoundLosers.map((i) => graph.degree[i]);
+        const ratio = meanDegree(degs) / meanDegree(graph.degree);
+        // Every first-round loser must be over the limit, by definition of the rule.
+        for (const i of c.firstRoundLosers) {
+          if (graph.degree[i] <= row.capacity) {
+            throw new Error(`seed ${seed}: node ${i} fell silent at or below capacity`);
           }
         }
+        ratios.push(ratio);
       }
-      require(worst < 1e-9, `worst deviation from G/(1+G) was ${worst}`);
-      return {
-        'points checked': String(points),
-        'systems': 'a damped string and a linearised community, different spectra',
-        'worst deviation from G/(1+G)': worst.toExponential(2),
-        threshold: '< 1e-9 (measured 3.3e-16, i.e. floating-point noise)',
-      };
+      const worst = Math.min(...ratios);
+      // Worst observed over the audit seeds: 3.9x. Threshold 3.0x.
+      if (worst < 3.0) {
+        throw new Error(
+          `first-round degree ratio fell to ${f3(worst)}x the network mean, below the 3.0x threshold`,
+        );
+      }
+      return `first to fall silent are ${f3(worst)}x to ${f3(Math.max(...ratios))}x the mean degree across ${ratios.length} seeds (threshold 3.0x)`;
     },
   },
+
   {
-    id: 'delayed-not-abolished',
-    name: 'The warning is delayed, not abolished',
+    id: 'plenty-looks-like-bad-luck',
+    title: 'With attention to spare, the damage is indistinguishable from bad luck',
     catches:
-      'Overclaiming. The node does not make a tipping point permanently invisible, and a page ' +
-      'that implied otherwise would be wrong.',
+      'The thesis this page started with, which was wrong. It predicted attack-like collapse across the whole range. Where capacity is comfortable, the attention network sits on top of the random-dropout control, not the targeted-attack one.',
     verify() {
-      const near = community(1e-5, 0, false);
-      require(near.visibility > 0.9, `visibility at lambda_soft = 1e-5 was ${near.visibility}`);
-      return {
-        'distance from tipping point': 'lambda_soft = 1e-5',
-        'forcing alignment': '0.00 (orthogonal)',
-        'soft-mode share of fluctuations': near.visibility.toFixed(4),
-        reading:
-          'The background noise floor is never exactly zero, so the soft mode always wins in the ' +
-          'end. Alignment sets how late that is.',
-      };
+      /** @type {number[]} */
+      const worstPerSeed = [];
+      for (const seed of CONFIG.auditSeeds) {
+        const rows = sweepFor(seed).filter(
+          (r) => r.capacity >= COMFORTABLE_CAPACITY && r.attackLikeness !== null,
+        );
+        if (rows.length === 0) throw new Error(`seed ${seed}: no comparable rows above capacity ${COMFORTABLE_CAPACITY}`);
+        worstPerSeed.push(Math.max(...rows.map((r) => /** @type {number} */ (r.attackLikeness))));
+      }
+      const worst = Math.max(...worstPerSeed);
+      // Worst observed over the audit seeds: 0.074. Threshold 0.15.
+      if (worst > 0.15) {
+        throw new Error(
+          `attack-likeness reached ${f3(worst)} at comfortable capacity, above the 0.15 threshold`,
+        );
+      }
+      return `attack-likeness stays at or below ${f3(worst)} for every capacity >= ${COMFORTABLE_CAPACITY} across ${worstPerSeed.length} seeds (0 = random dropout, 1 = targeted attack; threshold 0.15)`;
     },
   },
+
   {
-    id: 'correlation-is-not-a-proxy',
-    name: 'Under a single environmental driver the correlation indicator reads high regardless',
+    id: 'scarcity-looks-like-an-attack',
+    title: 'With attention scarce, the same network collapses like a targeted strike',
     catches:
-      'A page that presented max pairwise correlation as a clean proxy for soft-mode dominance. ' +
-      'It is not, and this is the failure this build found rather than looked for.',
+      'The central claim. If attention scarcity never got closer to the hub-attack curve than to the random one, the pairing on this page would be dead.',
     verify() {
-      const shared = community(0.01, 0, true);
-      const independent = community(0.01, 0, false);
-      require(
-        shared.maxCorrelation > 0.95,
-        `shared-driver correlation was ${shared.maxCorrelation}`
-      );
-      require(shared.visibility < 0.05, `shared-driver visibility was ${shared.visibility}`);
-      return {
-        'both rows': 'lambda_soft = 0.01, forcing orthogonal to the soft mode',
-        'one shared driver: max pairwise correlation': shared.maxCorrelation.toFixed(4),
-        'one shared driver: soft-mode share': shared.visibility.toFixed(4),
-        'independent drivers: max pairwise correlation': independent.maxCorrelation.toFixed(4),
-        'independent drivers: soft-mode share': independent.visibility.toFixed(4),
-        reading:
-          'Identical soft-mode physics, correlation indicator reading 0.99 or 0.42 depending only ' +
-          'on how many independent things the weather does.',
-      };
+      /** @type {number[]} */
+      const peaks = [];
+      for (const seed of CONFIG.auditSeeds) {
+        const rows = sweepFor(seed).filter((r) => r.attackLikeness !== null);
+        peaks.push(Math.max(...rows.map((r) => /** @type {number} */ (r.attackLikeness))));
+      }
+      const worst = Math.min(...peaks);
+      // Worst observed over the audit seeds: 0.642. Threshold 0.55.
+      if (worst < 0.55) {
+        throw new Error(
+          `peak attack-likeness only reached ${f3(worst)} on the worst seed, below the 0.55 threshold`,
+        );
+      }
+      return `peak attack-likeness is ${f3(worst)} to ${f3(Math.max(...peaks))} across ${peaks.length} seeds (threshold 0.55)`;
+    },
+  },
+
+  {
+    id: 'crossover-is-abrupt',
+    title: 'The switch between the two behaviours is sudden, not gradual',
+    catches:
+      'A slow drift that would make "crossover" the wrong word. The gap between the last comfortable-looking capacity and the first attack-looking one has to be narrow.',
+    verify() {
+      /** @type {number[]} */
+      const widths = [];
+      /** @type {number[]} */
+      const crossings = [];
+      for (const seed of CONFIG.auditSeeds) {
+        const rows = sweepFor(seed).filter((r) => r.attackLikeness !== null);
+        const cross = rows.find((r) => /** @type {number} */ (r.attackLikeness) >= 0.5);
+        if (!cross) throw new Error(`seed ${seed}: attack-likeness never reached 0.5`);
+        const before = rows.filter(
+          (r) => r.capacity > cross.capacity && /** @type {number} */ (r.attackLikeness) <= 0.15,
+        );
+        if (before.length === 0) throw new Error(`seed ${seed}: no low-alpha capacity above the crossing`);
+        const lastLow = Math.min(...before.map((r) => r.capacity));
+        widths.push(lastLow - cross.capacity);
+        crossings.push(cross.capacity);
+      }
+      const worst = Math.max(...widths);
+      // Worst observed over the audit seeds: 2 capacity steps. Threshold 4.
+      if (worst > 4) {
+        throw new Error(`crossover took ${worst} capacity steps, above the 4-step threshold`);
+      }
+      return `alpha goes from <=0.15 to >=0.5 within ${Math.min(...widths)}-${worst} capacity steps; crossings at capacity ${Math.min(...crossings)}-${Math.max(...crossings)} (threshold 4 steps)`;
+    },
+  },
+
+  {
+    id: 'molloy-reed-brackets-the-collapse',
+    title: 'The collapse is a percolation transition, by the Molloy-Reed number',
+    catches:
+      'Attributing the collapse to the wrong mechanism. If kappa = <k^2>/<k> of the surviving active ties did not cross 2 exactly where the giant component died, this would be some other phenomenon wearing percolation as a costume.',
+    verify() {
+      /** @type {string[]} */
+      const lines = [];
+      for (const seed of CONFIG.auditSeeds) {
+        const rows = sweepFor(seed);
+        const dead = rows.filter((r) => r.attention < 0.1 && r.kappaAttention > 0);
+        const alive = rows.filter((r) => r.attention >= 0.3);
+        if (dead.length === 0 || alive.length === 0) throw new Error(`seed ${seed}: sweep did not span the transition`);
+        const highestDead = dead.reduce((a, b) => (a.capacity > b.capacity ? a : b));
+        const lowestAlive = alive.reduce((a, b) => (a.capacity < b.capacity ? a : b));
+        if (highestDead.kappaAttention >= 2) {
+          throw new Error(
+            `seed ${seed}: giant component gone at capacity ${highestDead.capacity} but kappa = ${f3(highestDead.kappaAttention)} still above 2`,
+          );
+        }
+        if (lowestAlive.kappaAttention <= 2) {
+          throw new Error(
+            `seed ${seed}: giant component alive at capacity ${lowestAlive.capacity} but kappa = ${f3(lowestAlive.kappaAttention)} already below 2`,
+          );
+        }
+        lines.push(
+          `${seed}: kappa ${f3(lowestAlive.kappaAttention)} (S=${f3(lowestAlive.attention)}) -> ${f3(highestDead.kappaAttention)} (S=${f3(highestDead.attention)})`,
+        );
+      }
+      return `kappa crosses 2 exactly where the giant component dies, on every seed. ${lines.join('; ')}`;
+    },
+  },
+
+  {
+    id: 'cascade-outruns-the-cutoff-attack',
+    title: 'Published failure: going quiet does more damage than being deleted',
+    catches:
+      'The comfortable version of this page. The source preprint describes the coupled network as the original one with its degree sequence truncated at a critical degree. Deleting exactly the over-capacity people outright is far gentler than letting them fall silent, so the truncation alone does not reproduce what this simulation does.',
+    verify() {
+      /** @type {number[]} */
+      const gaps = [];
+      for (const seed of CONFIG.auditSeeds) {
+        const rows = sweepFor(seed);
+        gaps.push(Math.max(...rows.map((r) => r.cutoffAttack - r.attention)));
+      }
+      const worst = Math.min(...gaps);
+      // Worst observed over the audit seeds: 0.603. Threshold 0.40.
+      if (worst < 0.4) {
+        throw new Error(
+          `largest gap was only ${f3(worst)} of the network on the mildest seed, below the 0.40 threshold`,
+        );
+      }
+      return `deleting the over-capacity people outright leaves ${f3(worst * 100)}-${f3(Math.max(...gaps) * 100)}% more of the network connected than letting them fall silent does (threshold 40 percentage points)`;
+    },
+  },
+
+  {
+    id: 'monotone-in-capacity',
+    title: 'Less attention never helps',
+    catches:
+      'A non-monotone artifact of the update order. Whatever else the cascade does, giving people less capacity must never leave more ties alive.',
+    verify() {
+      /** @type {number[]} */
+      const violations = [];
+      for (const seed of CONFIG.auditSeeds) {
+        const rows = [...sweepFor(seed)].sort((a, b) => b.capacity - a.capacity);
+        for (let i = 1; i < rows.length; i++) {
+          if (rows[i].quietCount < rows[i - 1].quietCount - 1e-9) {
+            throw new Error(
+              `seed ${seed}: capacity ${rows[i].capacity} left ${rows[i].quietCount} people silent, fewer than the ${rows[i - 1].quietCount} at capacity ${rows[i - 1].capacity}`,
+            );
+          }
+        }
+        violations.push(0);
+      }
+      return `the number of people falling silent is non-decreasing as capacity falls, across all ${CONFIG.auditSeeds.length} seeds and ${CONFIG.capacities.length} capacity steps`;
     },
   },
 ];

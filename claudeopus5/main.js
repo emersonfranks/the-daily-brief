@@ -1,228 +1,160 @@
 // @ts-check
-
 /**
- * Entry point. Reads the two controls, rebuilds both systems, integrates them and paints.
+ * Entry point. Wires the domain module to the renderer and the controls, and
+ * writes every figure in the copy from the live run rather than from anything
+ * typed in by hand.
  */
 
-import {
-  modalCovariance,
-  varianceShares,
-  softVisibility,
-  reducedDrive,
-  observableCovariance,
-  correlationMatrix,
-  maxAbsPairCorrelation,
-  trace,
-  createRun,
-} from './modal.js';
-import {
-  stringSystem,
-  communitySystem,
-  communityBasis,
-  alignmentFromDrivePoint,
-  MODES,
-  SIGMA_ENV,
-  SIGMA_0,
-} from './systems.js';
-import { drawString, drawTraces, drawBars, drawLaw, AMBER, STEEL } from './renderer.js';
+import { CONFIG, standardGraph, compareAtCapacity, sweep, makeRng, meanDegree, kappa } from './network.js';
+import { forceLayout } from './layout.js';
+import { drawNetwork, drawCharts } from './renderer.js';
 import { mountClaimsPanel } from './claims-panel.js';
 
-const DT = 0.01;
-const SUBSTEPS = 8;
-/** Frames between history samples, so the trace window spans several tens of time units. */
-const SAMPLE_EVERY = 3;
-const HISTORY = 260;
-const BASIS = communityBasis();
+const graph = standardGraph();
+const pos = forceLayout(graph, makeRng(4242));
+const rows = sweep(graph, [...CONFIG.capacities], CONFIG.a, CONFIG.controlSeed);
 
-/**
- * @param {string} id
- * @returns {HTMLElement}
- */
-function el(id) {
+/** @param {string} id */
+const el = (id) => {
   const node = document.getElementById(id);
   if (!node) throw new Error(`missing element #${id}`);
   return node;
-}
+};
 
-/**
- * @param {string} id
- * @returns {HTMLCanvasElement}
- */
-function canvas(id) {
-  return /** @type {HTMLCanvasElement} */ (el(id));
-}
+const slider = /** @type {HTMLInputElement} */ (el('capacity'));
+const minCapacity = Math.min(...CONFIG.capacities);
+const maxCapacity = Math.max(...CONFIG.capacities);
+slider.min = String(minCapacity);
+slider.max = String(maxCapacity);
 
-const driveInput = /** @type {HTMLInputElement} */ (el('drive'));
-const epsInput = /** @type {HTMLInputElement} */ (el('epsilon'));
-const freezeButton = el('freeze');
+// A ?capacity= deep link, so a particular point on the slider can be shared.
+const requested = Number(new URLSearchParams(window.location.search).get('capacity'));
+const startCapacity =
+  Number.isFinite(requested) && requested >= minCapacity && requested <= maxCapacity
+    ? Math.round(requested)
+    : maxCapacity;
+slider.value = String(startCapacity);
 
-const params = new URLSearchParams(location.search);
-if (params.has('drive')) driveInput.value = String(params.get('drive'));
-if (params.has('eps')) epsInput.value = String(params.get('eps'));
-/** Frames to run before freezing, for reproducible captures. Zero means never. */
-const freezeAfter = params.has('freeze') ? Number(params.get('freeze')) || 900 : 0;
+const canvasAttention = /** @type {HTMLCanvasElement} */ (el('net-attention'));
+const canvasAttack = /** @type {HTMLCanvasElement} */ (el('net-attack'));
+const canvasControl = /** @type {HTMLCanvasElement} */ (el('net-control'));
+const canvasChart = /** @type {HTMLCanvasElement} */ (el('chart'));
 
-/** @param {number} t slider fraction */
-const epsilonFrom = (t) => Math.pow(10, -5 + 5 * t);
+/** @param {number} v */
+const pct = (v) => `${(v * 100).toFixed(1)}%`;
 
-let frozen = false;
-let ticks = 0;
+let current = Number(slider.value);
 
-/** @type {number[][]} */
-let history = [];
+function render() {
+  const r = compareAtCapacity(graph, current, CONFIG.a, CONFIG.controlSeed);
 
-let state = build();
-
-function build() {
-  const driveX = Number(driveInput.value) / 3000;
-  const epsilon = epsilonFrom(Number(epsInput.value) / 1000);
-  const alignment = alignmentFromDrivePoint(driveX);
-
-  const str = stringSystem(epsilon, driveX);
-  const com = communitySystem(epsilon, alignment);
-
-  const strC = modalCovariance(str.lambdas, str.p, SIGMA_ENV, SIGMA_0, true);
-  const comC = modalCovariance(com.lambdas, com.p, SIGMA_ENV, SIGMA_0, false);
-  const comSpecies = observableCovariance(BASIS, comC);
-
-  const comRun = createRun({
-    ...com,
-    sigmaEnv: SIGMA_ENV,
-    sigma0: SIGMA_0,
-    seed: 90120260,
-    shared: false,
+  drawNetwork(canvasAttention, graph, pos, {
+    edgeAlive: (e) => r.cascade.edgeActive[e],
+    nodeGone: () => false,
+    inGiant: (i) => r.attentionComponentOf[i] !== -1,
   });
 
-  history = [];
-  for (let s = 0; s < HISTORY; s++) {
-    for (let t = 0; t < SUBSTEPS * SAMPLE_EVERY; t++) comRun.step(DT);
-    history.push(speciesFrom(comRun.amplitudes));
+  const attackGone = new Uint8Array(graph.n);
+  for (const i of r.attackRemoved) attackGone[i] = 1;
+  drawNetwork(canvasAttack, graph, pos, {
+    edgeAlive: (e) => {
+      const [u, v] = graph.edges[e];
+      return attackGone[u] === 0 && attackGone[v] === 0;
+    },
+    nodeGone: (i) => attackGone[i] === 1,
+    inGiant: (i) => r.attackComponentOf[i] !== -1,
+  });
+
+  const controlGone = new Uint8Array(graph.n);
+  for (const i of r.controlRemoved) controlGone[i] = 1;
+  drawNetwork(canvasControl, graph, pos, {
+    edgeAlive: (e) => {
+      const [u, v] = graph.edges[e];
+      return controlGone[u] === 0 && controlGone[v] === 0;
+    },
+    nodeGone: (i) => controlGone[i] === 1,
+    inGiant: (i) => r.controlComponentOf[i] !== -1,
+  });
+
+  drawCharts(canvasChart, rows, current);
+
+  el('cap-readout').textContent = String(current);
+  el('quiet-count').textContent = `${r.quietCount} of ${graph.n}`;
+  el('over-count').textContent = String(r.overCapacityCount);
+  el('s-attention').textContent = pct(r.attentionFraction);
+  el('s-attack').textContent = pct(r.attackFraction);
+  el('s-control').textContent = pct(r.controlFraction);
+  el('kappa-attention').textContent = r.kappaAttention.toFixed(2);
+
+  const alpha = r.attackLikeness;
+  const verdictValue = el('verdict-value');
+  const verdictText = el('verdict-text');
+  const bar = /** @type {HTMLElement} */ (el('verdict-bar-fill'));
+  if (alpha === null) {
+    verdictValue.textContent = '\u2014';
+    verdictText.textContent =
+      'Too little damage yet for the comparison to mean anything: bad luck and a targeted attack would both leave this network essentially intact.';
+    bar.style.width = '0%';
+  } else {
+    verdictValue.textContent = alpha.toFixed(2);
+    bar.style.width = `${Math.max(0, Math.min(1, alpha)) * 100}%`;
+    verdictText.textContent =
+      alpha < 0.25
+        ? 'Behaving like bad luck. The busiest people fell silent first, and it made almost no difference \u2014 the network absorbed it exactly as if the same number of people had dropped out at random.'
+        : alpha < 0.6
+          ? 'In between, and moving. The network has started to notice which people went quiet.'
+          : 'Behaving like a targeted attack. Nobody was removed and there is no attacker, yet the network has broken up almost as thoroughly as if someone had picked off its biggest hubs deliberately.';
   }
-
-  return {
-    driveX,
-    epsilon,
-    alignment,
-    str,
-    com,
-    strShares: varianceShares(strC),
-    comShares: varianceShares(comC),
-    strVisibility: softVisibility(strC, str.soft),
-    comVisibility: softVisibility(comC, com.soft),
-    strG: reducedDrive(str.lambdas, str.p, SIGMA_ENV, SIGMA_0, str.soft),
-    comG: reducedDrive(com.lambdas, com.p, SIGMA_ENV, SIGMA_0, com.soft),
-    maxCorr: maxAbsPairCorrelation(correlationMatrix(comSpecies)),
-    strScale: 1.6 * Math.sqrt(trace(strC)),
-    comScale: 1.7 * Math.sqrt(trace(comSpecies) / MODES),
-    strRun: createRun({ ...str, sigmaEnv: SIGMA_ENV, sigma0: SIGMA_0, seed: 20260901, shared: true }),
-    comRun,
-  };
 }
 
-/**
- * @param {number[]} amplitudes modal amplitudes of the community
- * @returns {number[]} abundance deviation of each species
- */
-function speciesFrom(amplitudes) {
-  /** @type {number[]} */
-  const species = [];
-  for (let i = 0; i < MODES; i++) {
-    let v = 0;
-    for (let k = 0; k < MODES; k++) v += BASIS[i][k] * amplitudes[k];
-    species.push(v);
-  }
-  return species;
-}
-
-function refresh() {
-  state = build();
-  paintReadouts();
-}
-
-/**
- * @param {number} v
- * @returns {string}
- */
-function pct(v) {
-  if (v >= 0.9995) return '100%';
-  if (v < 0.001) return `${(v * 100).toFixed(3)}%`;
-  return `${(v * 100).toFixed(1)}%`;
-}
-
-function paintReadouts() {
-  el('alignmentOut').textContent = state.alignment.toFixed(3);
-  el('epsOut').textContent =
-    state.epsilon >= 0.01 ? state.epsilon.toFixed(3) : state.epsilon.toExponential(1);
-  el('stringShare').textContent = pct(state.strVisibility);
-  el('commShare').textContent = pct(state.comVisibility);
-  el('maxCorr').textContent = state.maxCorr.toFixed(3);
-
-  const loud = state.comVisibility > 0.5;
-  const nearNode = state.alignment < 0.02;
-  el('verdict').textContent = loud
-    ? 'The soft mode now carries most of the fluctuation. Species move together; the classic ' +
-      'warning is loud and an ecologist would see it.'
-    : nearNode
-      ? 'The community is exactly this close to its tipping point and its instruments say nothing. ' +
-        'The soft mode is there; the environment is simply not pushing on it.'
-      : 'The soft mode is present but subordinate: most of what you measure is the stiff modes ' +
-        'shuffling. Move the drive point to change how much of the warning reaches the surface.';
-  el('verdict').className = loud ? 'verdict loud' : nearNode ? 'verdict silent' : 'verdict';
-}
-
-function frame() {
-  if (!frozen) {
-    for (let s = 0; s < SUBSTEPS; s++) {
-      state.strRun.step(DT);
-      state.comRun.step(DT);
-    }
-    ticks++;
-    if (ticks % SAMPLE_EVERY === 0) {
-      history.push(speciesFrom(state.comRun.amplitudes));
-      if (history.length > HISTORY) history.shift();
-    }
-    if (freezeAfter && ticks >= freezeAfter) setFrozen(true);
-  }
-
-  drawString(canvas('stringCanvas'), state.strRun.amplitudes, state.strScale, state.driveX);
-  drawBars(canvas('stringBars'), state.strShares, state.str.soft, AMBER);
-  drawTraces(canvas('commCanvas'), history, state.comScale);
-  drawBars(canvas('commBars'), state.comShares, state.com.soft, STEEL);
-  drawLaw(canvas('lawCanvas'), [
-    { g: state.strG, visibility: state.strVisibility, colour: AMBER, label: 'string' },
-    { g: state.comG, visibility: state.comVisibility, colour: STEEL, label: 'community' },
-  ]);
-
-  requestAnimationFrame(frame);
-}
-
-driveInput.addEventListener('input', refresh);
-epsInput.addEventListener('input', refresh);
-
-el('toNode').addEventListener('click', () => {
-  driveInput.value = '1000';
-  refresh();
-});
-el('offNode').addEventListener('click', () => {
-  driveInput.value = '1500';
-  refresh();
-});
-freezeButton.addEventListener('click', () => {
-  setFrozen(!frozen);
+slider.addEventListener('input', () => {
+  current = Number(slider.value);
+  render();
 });
 
-/** @param {boolean} value */
-function setFrozen(value) {
-  frozen = value;
-  freezeButton.textContent = frozen ? 'resume the simulation' : 'freeze the simulation';
-  freezeButton.setAttribute('aria-pressed', String(frozen));
+for (const button of document.querySelectorAll('[data-capacity]')) {
+  button.addEventListener('click', () => {
+    current = Number(/** @type {HTMLElement} */ (button).dataset.capacity);
+    slider.value = String(current);
+    render();
+  });
 }
 
-mountClaimsPanel(el('claims'));
-paintReadouts();
-requestAnimationFrame(frame);
+let resizeTimer = 0;
+window.addEventListener('resize', () => {
+  window.clearTimeout(resizeTimer);
+  resizeTimer = window.setTimeout(render, 120);
+});
 
-if (params.has('proof')) {
-  const runAll = el('claims').querySelector('button');
-  if (runAll instanceof HTMLButtonElement) runAll.click();
+// ---- figures in the prose, written from this run ----
+const defined = rows.filter((r) => r.attackLikeness !== null);
+const crossing = defined.find((r) => /** @type {number} */ (r.attackLikeness) >= 0.5);
+const lastCalm = defined
+  .filter((r) => /** @type {number} */ (r.attackLikeness) <= 0.15)
+  .reduce((a, b) => (a.capacity < b.capacity ? a : b));
+
+el('fig-n').textContent = String(graph.n);
+el('fig-edges').textContent = String(graph.edges.length);
+el('fig-meandeg').textContent = meanDegree(graph.degree).toFixed(2);
+el('fig-maxdeg').textContent = String(Math.max(...graph.degree));
+el('fig-kappa0').textContent = kappa(graph.degree).toFixed(2);
+
+if (crossing) {
+  for (const id of ['fig-cross-cap', 'fig-cross-cap2']) el(id).textContent = String(crossing.capacity);
+  for (const id of ['fig-cross-att', 'fig-cross-att2']) el(id).textContent = pct(crossing.attention);
+  el('fig-cross-over').textContent = String(crossing.overCapacityCount);
+  el('fig-cross-overpct').textContent = pct(crossing.overCapacityCount / graph.n);
+  el('fig-cross-atk').textContent = pct(crossing.attack);
+  el('fig-cross-rnd').textContent = pct(crossing.control);
+  el('fig-cross-cut').textContent = pct(crossing.cutoffAttack);
+  el('fig-cross-alpha').textContent = /** @type {number} */ (crossing.attackLikeness).toFixed(2);
 }
+el('fig-calm-cap').textContent = String(lastCalm.capacity);
+el('fig-calm-alpha').textContent = /** @type {number} */ (lastCalm.attackLikeness).toFixed(2);
+el('fig-calm-att').textContent = pct(lastCalm.attention);
+el('fig-calm-rnd').textContent = pct(lastCalm.control);
+el('fig-calm-atk').textContent = pct(lastCalm.attack);
+el('fig-window').textContent = crossing ? String(lastCalm.capacity - crossing.capacity) : '\u2014';
+
+mountClaimsPanel(el('claims-root'));
+render();
