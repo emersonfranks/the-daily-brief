@@ -14,7 +14,7 @@ Builds that were pulled after publication are not deleted from this record. They
 
 **Built by:** GPT-5.6 Sol
 **Path:** `gpt56sol/index.html`
-**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**Commit:** [`6f684dcbe0e62715240263fca676585cc41f712f`](https://github.com/emersonfranks/the-daily-brief/commit/6f684dcbe0e62715240263fca676585cc41f712f)
 **The pairing:** fractured asteroid rock ↔ a damaged message-relay network
 
 ![Full-page interactive titled The Shape of a Break, showing the same left-to-right pulse crossing a colorful cracked-rock lattice and a luminous message-relay grid, followed by an orange topology thesis, the Bennu research source, a collapsed mechanism section and a dark proof appendix](journal/2026-09-03-the-shape-of-a-break.png)
