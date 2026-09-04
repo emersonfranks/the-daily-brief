@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Spiral Accord — The Daily Brief</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="badge-tag">Universal Invariant &middot; 1D Topological Domain Dynamics</div>
+      <h1>The Spiral Accord</h1>
+      <div class="pairing-subtitle">
+        <b>a chiral graphene nanoribbon</b> &harr; <b>a climbing plant tendril</b>
+      </div>
+      <div class="intro-callout">
+        <strong>The 30-Second Brief:</strong>
+        <p><strong>What you are looking at:</strong> An interactive 3D ribbon whose segments each prefer to twist left or right. Left-handed segments glow cyan; right-handed segments glow rose/gold.</p>
+        <p><strong>What to do:</strong> Drag the <em>Chiral Solvent / Asymmetric Torque</em> slider away from center to apply a microscopic handedness bias, or slide <em>Thermal Agitation</em> down to freeze the ribbon into low-temperature order.</p>
+        <p><strong>What to watch for:</strong> Individual units do not flip in isolation. Neighboring units lock together, pushing the yellow <em>Perversion Nodes</em> (topological domain walls) toward the ends until they collide and vanish—snapping the entire macroscopic strand into a pure, unified spiral.</p>
+      </div>
+    </header>
+
+    <!-- Main Interactive Simulation -->
+    <section class="simulation-section">
+      <div class="canvas-wrapper">
+        <canvas id="ribbon-canvas"></canvas>
+
+        <!-- Live HUD Overlay -->
+        <div class="hud-overlay">
+          <div class="hud-panel">
+            <div class="hud-row">
+              <span class="hud-label">Enantiomeric Excess (ee):</span>
+              <span class="hud-value" id="hud-ee-val">0% (Racemic)</span>
+            </div>
+            <div class="hud-row">
+              <span class="hud-label">Chiral Polarization:</span>
+              <div class="meter-track">
+                <div class="meter-fill" id="hud-ee-bar" style="left: 50%; width: 0%;"></div>
+              </div>
+            </div>
+            <div class="hud-row">
+              <span class="hud-label">Active Perversion Kinks:</span>
+              <span class="hud-value" id="hud-kinks-val">0 nodes</span>
+            </div>
+          </div>
+
+          <div class="hud-panel">
+            <div class="hud-row">
+              <span class="hud-label">Cooperative Length &xi;:</span>
+              <span class="hud-value" id="hud-corr-val">-- units</span>
+            </div>
+            <div class="hud-row">
+              <span class="hud-label">Kinks Annihilated:</span>
+              <span class="hud-value" id="hud-annihilate-val">0</span>
+            </div>
+            <div class="hud-row">
+              <div id="hud-status-summary" class="hud-status-badge status-uniform">Equilibrated</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="canvas-hint">🖱 Drag to rotate 3D view &middot; Scroll to zoom &middot; Watch perversion nodes collide</div>
+      </div>
+
+      <!-- Controls -->
+      <div class="controls-card">
+        <div class="controls-header">
+          <h3>Experiment Controls</h3>
+          <p>Manipulate thermodynamic and topological boundary variables to observe chiral amplification and domain wall sweep.</p>
+        </div>
+
+        <div class="controls-grid">
+          <div class="control-group">
+            <div class="control-label-row">
+              <span class="control-title">Chiral Bias Field (h)</span>
+              <span class="control-readout" id="bias-val">+0.08 ((R)-β-pinene)</span>
+            </div>
+            <input type="range" id="bias-slider" min="-0.30" max="0.30" step="0.01" value="0.08">
+            <span class="control-desc">Chiral solvent concentration (&beta;-pinene nudge in nanoribbons) or asymmetric growth torque in tendrils.</span>
+          </div>
+
+          <div class="control-group">
+            <div class="control-label-row">
+              <span class="control-title">Thermal Agitation (k_B T / J)</span>
+              <span class="control-readout" id="temp-val">0.25 J (Cryogenic -90°C)</span>
+            </div>
+            <input type="range" id="temp-slider" min="0.05" max="2.20" step="0.05" value="0.25">
+            <span class="control-desc">Thermal disorder. High temperature disrupts steric locking, nucleating random wandering domain walls.</span>
+          </div>
+
+          <div class="control-group">
+            <div class="control-label-row">
+              <span class="control-title">Neighbor Coupling (J)</span>
+              <span class="control-readout" id="coupling-val">1.00 J</span>
+            </div>
+            <input type="range" id="coupling-slider" min="0.20" max="2.50" step="0.10" value="1.00">
+            <span class="control-desc">Steric hindrance between adjacent helicene rings or elastic filament bending/torsion stiffness.</span>
+          </div>
+
+          <div class="control-group">
+            <div class="control-label-row">
+              <span class="control-title">Boundary Topology</span>
+            </div>
+            <label class="toggle-label">
+              <input type="checkbox" id="pinned-toggle">
+              <span>Pin Boundary Ends (Clamped Tendril Anchors)</span>
+            </label>
+            <span class="control-desc">When clamped at both ends, topological perversion nodes are trapped and cannot escape through boundaries.</span>
+          </div>
+        </div>
+
+        <!-- Preset Buttons & View Modes -->
+        <div class="button-bar">
+          <span class="hud-label">View Mode:</span>
+          <button class="btn view-mode-btn active" data-mode="graphene">Molecular Graphene</button>
+          <button class="btn view-mode-btn" data-mode="tendril">Plant Tendril</button>
+          <button class="btn view-mode-btn" data-mode="dual">Dual Comparison</button>
+
+          <span class="hud-label" style="margin-left: 12px;">Presets:</span>
+          <button class="btn btn-outline preset-btn" data-state="random">Random Racemic</button>
+          <button class="btn btn-outline preset-btn" data-state="single_perversion">Single Kink</button>
+          <button class="btn btn-outline preset-btn" data-state="multi_kink">Multi-Domain</button>
+
+          <div style="margin-left: auto; display: flex; gap: 8px;">
+            <button class="btn" id="audio-toggle-btn">🔇 Audio: Muted</button>
+            <button class="btn" id="reset-btn">↺ Reset</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Layer 2: Core Thesis -->
+    <section class="discovery-section">
+      <h2>The Core Thesis</h2>
+      <div class="thesis-card">
+        <p class="thesis-statement">
+          When a flexible filament is assembled from bistable units that each prefer to twist left or right, a microscopic chiral nudge does not act in isolation—it triggers a 1D cooperative chain reaction. By coupling adjacent units through steric hindrance or elastic stiffness, domain walls (topological perversion nodes) are swept to the boundaries and annihilated, amplifying a minute chemical solvent bias into a single macroscopic spiral.
+        </p>
+      </div>
+
+      <div class="comparison-grid">
+        <div class="comp-card">
+          <h4>System A: Chiral Graphene Nanoribbon</h4>
+          <p><strong>Unit:</strong> A fused [4]helicene aromatic monomer with bistable left ($M$) and right ($P$) spiral conformations.</p>
+          <p><strong>Nudge:</strong> Chiral solvent molecule (&beta;-pinene from citrus peel/pine trees) exerting a weak differential solvation free energy ($h$).</p>
+          <p><strong>Cooperative Action:</strong> Steric hindrance between adjacent fused benzene rings forces neighbors to share handedness ($J$). At low temperature, the entire polymer chain acts as a single macroscopic optical switch emitting circularly polarized luminescence (CPL).</p>
+        </div>
+
+        <div class="comp-card">
+          <h4>System B: Climbing Plant Tendril</h4>
+          <p><strong>Unit:</strong> An elastic botanical ribbon segment with cellular differential turgor pressure and internal pre-strain.</p>
+          <p><strong>Nudge:</strong> Unilateral sunlight, touch sensation, or mechanical twisting torque ($h$).</p>
+          <p><strong>Cooperative Action:</strong> Continuous elastic torsional stiffness minimizes curvature energy. If the tendril is anchored at both ends, topological conservation prevents total unwinding, trapping stable <em>perversion nodes</em> (reversals of coiling direction discovered by Darwin).</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Layer 3: Expandable Deep Dive -->
+    <section class="discovery-section">
+      <h2>Deep Structural Mechanics</h2>
+
+      <details class="deep-dive-card">
+        <summary>1. The 1D Cooperative Ising Hamiltonian & Sergeants-and-Soldiers Effect</summary>
+        <div class="deep-dive-content">
+          <p>
+            The conformational state of a polymer ribbon with $N$ monomer units is described by a 1D Hamiltonian:
+          </p>
+          <p>
+            <code>H(s) = -J &sum; s_i s_{i+1} - h &sum; s_i</code>
+          </p>
+          <p>
+            where $s_i = \pm 1$ represents the local enantiomeric handedness ($M$ vs $P$), $J$ is the steric neighbor coupling energy, and $h$ is the chiral chemical potential difference imparted by the chiral solvent (&beta;-pinene).
+          </p>
+          <p>
+            Without coupling ($J = 0$), the thermal expectation of a single unit is $\langle s \rangle = \tanh(h / k_B T)$. For weak solvent biases ($h = 0.08 J$), a solitary monomer has almost no handedness preference ($\approx 8\%$). But when $J > k_B T$, the correlation length $\xi(T) = -1 / \ln(\tanh(J/k_B T))$ grows exponentially. When $\xi(T) \ge N$, the entire ribbon undergoes a cooperative transition into a single domain, amplifying the enantiomeric excess to $> 99\%$. This supramolecular phenomenon is famously known as the <em>Sergeants-and-Soldiers</em> effect and <em>Majority Rule</em>.
+          </p>
+        </div>
+      </details>
+
+      <details class="deep-dive-card">
+        <summary>2. Topological Perversion Kinks & Soliton Dynamics in Tendrils</summary>
+        <div class="deep-dive-content">
+          <p>
+            In botanical climbing plants (such as cucumber and passionflower tendrils, studied by Charles Darwin in 1865 and formalized by Goriely & Tabor in 1998), a filament that attaches at both ends cannot add net topological turns without boundary slip.
+          </p>
+          <p>
+            As internal differential contraction shrinks the strand, it relieves strain by forming left-handed and right-handed helical coils separated by a <strong>perversion node</strong>—an inflection point where curvature passes through zero and chirality reverses. Mathematically, these nodes behave as topological solitons (domain walls). When a chiral torque is applied to an unpinned strand, the domain wall experiences an effective drift velocity $v \propto h$, sweeping out of the open end and leaving a pure uniform helix.
+          </p>
+        </div>
+      </details>
+
+      <details class="deep-dive-card">
+        <summary>3. Temperature Breakdown & Thermal Racemization</summary>
+        <div class="deep-dive-content">
+          <p>
+            In the September 2026 experiment by Ikai et al., the graphene nanoribbon displayed near-perfect chiral switching at cryogenic temperatures (-90&deg;C), but the switching efficiency weakened as the system approached room temperature.
+          </p>
+          <p>
+            Our simulation confirms this exact thermal breakdown: as thermal energy $k_B T$ approaches and exceeds the domain wall formation energy $2J$, entropy favors the spontaneous nucleation of wandering perversion kinks. The correlation length $\xi$ shrinks below the ribbon length $N$, partitioning the molecule into a chaotic mixture of microscopic left and right domains, reducing the net optical polarization to zero.
+          </p>
+        </div>
+      </details>
+
+      <div class="citations-box">
+        <h5>Scientific Sources & Research Anchors</h5>
+        <p>
+          <strong>Primary Recent Research Anchor:</strong> Tomoyuki Ikai et al., <em>"Switchable helical graphene nanoribbons controlled by chiral solvents"</em>, <strong>Nature Communications</strong> (Published September 2026). DOI: <a href="https://doi.org/10.1038/s41467-026-76724-9" target="_blank" rel="noopener">10.1038/s41467-026-76724-9</a>.
+        </p>
+        <p>
+          <strong>Independent Supporting Source:</strong> Phys.org, <em>"First switchable graphene nanoribbon that twists on demand"</em> (September 3, 2026). URL: <a href="https://phys.org/news/2026-09-switchable-graphene-nanoribbon-demand.html" target="_blank" rel="noopener">https://phys.org/news/2026-09-switchable-graphene-nanoribbon-demand.html</a>.
+        </p>
+        <p>
+          <strong>Biomechanical Foundation:</strong> A. Goriely & M. Tabor, <em>"Spontaneous Helical Inversion and Tendril Perversion in Climbing Plants"</em>, Phys. Rev. Lett. (1998); S. J. Gerbode et al., <em>"How the Cucumber Tendril Coils and Overwinds"</em>, Science (2012); Charles Darwin, <em>The Movements and Habits of Climbing Plants</em> (1865).
+        </p>
+      </div>
+    </section>
+
+    <!-- Layer 4: Live Proof Appendix -->
+    <section class="discovery-section" id="claims-panel-container">
+      <!-- Attached dynamically by claims-panel.js -->
+    </section>
+
+    <footer>
+      <p>The Daily Brief &middot; Built by Gemini 3.7 Flash &middot; Single-page static web experience</p>
+    </footer>
+  </div>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>

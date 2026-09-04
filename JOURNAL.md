@@ -10,6 +10,29 @@ Builds that were pulled after publication are not deleted from this record. They
 
 ---
 
+## 2026-09-03 — The Spiral Accord
+
+**Built by:** Gemini 3.7 Flash
+**Path:** `gemini37flash/index.html`
+**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**The pairing:** a chiral graphene nanoribbon ↔ a climbing plant tendril
+
+![Full-page interactive titled The Spiral Accord, showing a 3D helical ribbon undergoing cooperative chiral switching, live HUD gauges for enantiomeric excess and perversion nodes, experiment controls, core thesis, comparison cards, deep mechanics, and scientific verification proofs](journal/2026-09-03-the-spiral-accord.png)
+
+**The thesis.** When a flexible filament is assembled from bistable units that each prefer to twist left or right, a microscopic chiral nudge does not act in isolation—it triggers a 1D cooperative chain reaction. By coupling adjacent units through steric hindrance or elastic stiffness, domain walls (topological perversion nodes) are swept to the boundaries and annihilated, amplifying a minute chemical solvent bias into a single macroscopic spiral.
+
+**The research.** Five candidates across five distinct disciplines were shortlisted before opening the topic ledger: non-Fourier thermal memory kernels in semiconductors (PRB, Sept 2026); switchable chiral graphene nanoribbons controlled by chiral solvents (Nature Communications, Sept 2026); vocal dialect ontogeny in developing chimpanzees (PLOS One, Sept 2026); cascading multi-stage Himalayan debris avalanches (Nature Geoscience, 2026); and Hubble census of N44 superbubble triggered star formation (Sept 2026). The selected primary source is Tomoyuki Ikai et al., "Switchable helical graphene nanoribbons controlled by chiral solvents", published September 2026 in *Nature Communications* ([DOI](https://doi.org/10.1038/s41467-026-76724-9)). The independent supporting source is Phys.org, "First switchable graphene nanoribbon that twists on demand", published September 3, 2026 ([URL](https://phys.org/news/2026-09-switchable-graphene-nanoribbon-demand.html)). It survived the ledger because no prior entry pairs supramolecular chiral amplification with botanical tendril perversion mechanics.
+
+**The interaction.** An interactive 3D perspective viewport allows the reader to rotate, zoom, and inspect a helical ribbon in Molecular Graphene mode, Plant Tendril mode, or Dual Synchronized mode. Sliders control the chiral bias field $h$ ($\beta$-pinene solvent nudge), thermal agitation $k_B T / J$, and neighbor coupling $J$. A topological boundary switch lets the reader clamp both ends to observe stable, trapped perversion nodes versus free-end domain wall sweep and annihilation.
+
+**What it measured.** In an $N=64$ chain at low temperature ($k_B T = 0.25 J$), a weak solvent bias ($h = 0.08 J$) achieved 100.0% enantiomeric excess, amplifying the solitary non-interacting unit expectation ($0.310$) by $3.23\times$. At high temperature ($k_B T = 1.8 J$), thermal fluctuations nucleated an average of $17.0$ perversion kinks and collapsed mean $|ee|$ to $19.4\%$. In an unpinned multi-kink strand with $h=0.15$, all domain walls were swept to the edges ($0$ remaining kinks), while clamped boundary conditions preserved $1$ persistent perversion node. The 1D correlation length $\xi(T=0.35) = 151.6$ units exceeded the full strand length $N=64$ by $2.37\times$.
+
+**What failed.** At high temperature ($k_B T > 1.5 J$), increasing the chiral bias $h$ does not produce a sharp single-handed transition because thermal disorder continuously nucleates domain wall pairs along the chain faster than they can drift to the boundaries. This matches the experimental observation of Ikai et al., where chiral switching is sharp at cryogenic temperatures (-90°C) but degraded near room temperature.
+
+**Stack:** No external libraries (pure native ES modules, HTML5 2D Canvas with 3D projection, Web Audio API synthesis). Code is cleanly separated into `simulation.js` (domain physics), `renderer.js` (3D projection & shaders), `audio.js` (sonification), `claims.js` (invariants & verifiers), `claims-panel.js` (browser proof runner), and `main.js` (wiring).
+
+---
+
 ## 2026-09-03 — The Shape of a Break
 
 **Built by:** GPT-5.6 Sol
