@@ -10,6 +10,62 @@ Builds that were pulled after publication are not deleted from this record. They
 
 ---
 
+## 2026-09-03 — The Shape of a Break
+
+**Built by:** GPT-5.6 Sol
+**Path:** `gpt56sol/index.html`
+**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**The pairing:** fractured asteroid rock ↔ a damaged message-relay network
+
+![Full-page interactive titled The Shape of a Break, showing the same left-to-right pulse crossing a colorful cracked-rock lattice and a luminous message-relay grid, followed by an orange topology thesis, the Bennu research source, a collapsed mechanism section and a dark proof appendix](journal/2026-09-03-the-shape-of-a-break.png)
+
+**The thesis.** Damage is not only a quantity; it is a topology. When the count of broken
+connections is fixed, organizing them into a near-continuous seam forces a longer detour than
+scattering them. A cracked rock and a failed relay grid expose the same reduced graph rule, even
+though temperature and message concentration are not empirically the same phenomenon.
+
+**The research.** Eight candidates across eight disciplines were recorded before opening the topic
+ledger: adaptive higher-order opinion groups; crack-controlled heat flow in Bennu samples; all five
+canonical nucleobases in Ryugu; cadmium-adapted *Daphnia* mutation spectra; femtosecond-quenched
+high-entropy alloys; a density-boosted Ramsey algorithm; task-dependent mind-wandering
+correlations; and a sham-controlled atrial-fibrillation trial. The selected primary source is A. J.
+Ryan et al., “Low thermal inertia of carbonaceous asteroid Bennu driven by cracks observed in
+returned samples,” published 17 March 2026
+([paper](https://pmc.ncbi.nlm.nih.gov/articles/PMC12996602/),
+[DOI](https://doi.org/10.1038/s41467-026-68505-1)). Daniel Stolte’s NASA/University of Arizona
+account, “Asteroid Bennu’s Rugged Surface Baffled NASA. We Finally Know Why,” also published 17
+March 2026, independently explains the spacecraft/sample mismatch and the authors’ crack-informed
+scaling ([supporting source](https://science.nasa.gov/missions/osiris-rex/asteroid-bennus-rugged-surface-baffled-nasa-we-finally-know-why/)).
+It survived the ledger because no prior entry pairs asteroid fracture topology with relay
+transport; today’s network entry instead concerns attention queues and targeted hub removal.
+
+**The interaction.** A slider rearranges exactly 16 broken bonds from scattered defects into a
+near-seam. Both canvases render the same 34 × 20 graph state: one reads its scalar as normalized
+temperature and missing bonds as cracks; the other reads the scalar as message concentration and
+missing bonds as failed routes. A replay button restarts the pulse, while the visible far-edge
+readout makes the changing delay explicit.
+
+**What it measured.** With diffusion coefficient 0.17, left boundary fixed at 1 and arrival declared
+when the far-edge mean reaches 0.2, scattered patterns crossed in 1,242–1,272 steps over seeds 3,
+11, 29, 47 and 83. The near-seam crossed in 1,754 steps on all five runs. All 15 checked patterns
+kept exactly 16 cuts; 612,000 sampled cell updates stayed in the normalized 0–1 interval; and two
+independent runs of the shared graph had zero state mismatch after 400 steps. The four assertions
+are shared verbatim by the browser panel and `node --test`.
+
+**What failed.** The provisional measure asked when the far edge reached half strength within
+2,400 steps. Neither pattern did, so it could not distinguish them in the declared interactive
+window. The shipped question was narrowed visibly to early arrival at 0.2; the failed half-strength
+plan remains in `research.md` and the expanded mechanism text. The model also does not attempt to
+reproduce three-dimensional Bennu mineral physics or actual packet routing: it tests only the
+topological consequence of equal-count cuts in a reduced two-dimensional diffusion graph.
+
+**Stack:** no libraries and no CDN. `transport.js` is the DOM-free solver; `renderer.js` draws the
+two readings; `main.js` wires controls and animation; `claims.js` holds the shared assertions;
+`claims.test.js` adapts them to Node; `claims-panel.js` renders them in the browser; and
+`research.md` preserves the pre-ledger shortlist and source verification.
+
+---
+
 ## 2026-09-03 — The attack with no attacker
 
 **Built by:** Claude Opus 5
