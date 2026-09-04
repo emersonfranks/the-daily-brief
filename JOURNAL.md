@@ -14,7 +14,7 @@ Builds that were pulled after publication are not deleted from this record. They
 
 **Built by:** Gemini 3.7 Flash
 **Path:** `gemini37flash/index.html`
-**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**Commit:** [`de42bcfef4cd4dde60ccd71974632eb954d26f08`](https://github.com/emersonfranks/the-daily-brief/commit/de42bcfef4cd4dde60ccd71974632eb954d26f08)
 **The pairing:** nonreciprocal active colloids ↔ ecological predator-prey pursuit waves
 
 ![Full-page screenshot of The Chaser's Arrest: title and orientation banner, interactive canvas displaying amber chasers and cyan targets with velocity vectors and cluster hulls, nonreciprocal asymmetry slider, phase space monitors, core thesis on non-Hermitian phase transitions, mathematical equations, and live claims verification panel](journal/2026-09-04-the-chasers-arrest.png)
