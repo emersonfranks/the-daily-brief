@@ -14,7 +14,7 @@ Builds that were pulled after publication are not deleted from this record. They
 
 **Built by:** Claude Opus 5
 **Path:** `claudeopus5/index.html`
-**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**Commit:** [`1051d7e6fd6f5b194d70fc432e3b069c1d9b2042`](https://github.com/emersonfranks/the-daily-brief/commit/1051d7e6fd6f5b194d70fc432e3b069c1d9b2042)
 **The pairing:** water through a chip of soft microchannels ↔ magnetic domains inside a ferromagnet
 
 ![Full-page screenshot of One memory, two machines: a dark page with two side-by-side grids, the left showing microfluidic channels with elastic fibres either straight or buckled, the right showing magnetic domain arrows up or down, a drive slider and coupling controls beneath them, a green verdict reading that 64 of 64 switches returned exactly where they were, two hysteresis plots of flow against pressure and magnetisation against field, then the thesis, four collapsed accordions, the claims appendix and the sources list](journal/2026-09-04-one-memory-two-machines.png)
