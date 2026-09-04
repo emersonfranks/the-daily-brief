@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arrested Coarsening & Broken Action-Reaction Symmetry — The Daily Brief</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="badge-row">
+        <span class="category-tag">Active Matter &times; Spatial Ecology</span>
+        <span class="model-tag">Gemini 3.7 Flash &middot; 2026-09-04</span>
+      </div>
+      <h1>The Chaser&rsquo;s Arrest</h1>
+      <div class="pairing-banner">
+        <b>nonreciprocal active colloids</b> &harr; <b>ecological predator-prey pursuit waves</b>
+      </div>
+      <p class="strapline">
+        How breaking Newton&rsquo;s third law ($F_{AB} \neq -F_{BA}$) stops attractive systems from condensing into static collapse, transforming runaway thermodynamic aggregation into persistent traveling clusters and non-equilibrium pursuit waves.
+      </p>
+    </header>
+
+    <!-- 3 Core Orientation Questions -->
+    <section class="quick-orientation">
+      <div class="orientation-grid">
+        <div class="orientation-item">
+          <h3>1. What am I looking at?</h3>
+          <p>
+            Two distinct particle species in a fluid. <strong>Chasers (Amber/Red)</strong> are attracted toward targets, while <strong>Targets (Cyan/Green)</strong> are repelled by chasers.
+          </p>
+        </div>
+        <div class="orientation-item">
+          <h3>2. What should I do?</h3>
+          <p>
+            Drag the <strong>Nonreciprocity Asymmetry ($\Delta$)</strong> slider. Start at <code>0.00</code> (reciprocal equilibrium) and slide it upward to <code>1.00</code> (broken action-reaction chase).
+          </p>
+        </div>
+        <div class="orientation-item">
+          <h3>3. What should I expect?</h3>
+          <p>
+            At $\Delta = 0$, particles condense into a frozen static lump. As $\Delta > 0$, mutual pursuit tears the lump apart, propelling self-organized clusters that never stop circulating.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Interactive Canvas Layout -->
+    <section class="experiment-layout">
+      <!-- Canvas Column -->
+      <div class="canvas-wrapper">
+        <div class="canvas-bar">
+          <div class="legend">
+            <span class="legend-item"><span class="dot dot-chaser"></span> Chaser / Predator</span>
+            <span class="legend-item"><span class="dot dot-target"></span> Target / Prey</span>
+          </div>
+          <div class="button-bar">
+            <button id="btn-play-pause" class="btn-secondary">⏸ Pause</button>
+            <button id="btn-reset" class="btn-secondary">↺ Reset</button>
+            <button id="btn-audio" class="btn-secondary">🔇 Sound: Off</button>
+          </div>
+        </div>
+        <canvas id="canvas-main" width="600" height="600"></canvas>
+      </div>
+
+      <!-- Controls & Observables Column -->
+      <div class="controls-panel">
+        <!-- Mode Switch -->
+        <div class="control-group">
+          <label class="control-label-row"><span>System Visualization</span></label>
+          <div class="mode-toggle">
+            <button id="btn-mode-colloids" class="btn-mode active">Active Colloids</button>
+            <button id="btn-mode-eco" class="btn-mode">Ecological PDE Field</button>
+          </div>
+        </div>
+
+        <!-- Nonreciprocity Asymmetry Slider -->
+        <div class="control-group">
+          <div class="control-label-row">
+            <span>Nonreciprocity ($\Delta = F_{AB} + F_{BA}$)</span>
+            <strong id="val-asymmetry">1.00</strong>
+          </div>
+          <input type="range" id="slider-asymmetry" min="0" max="1" step="0.01" value="1.00">
+          <span class="control-desc">0 = Newton's 3rd Law holds (Symmetric); 1 = Maximum pursuit-evasion torque</span>
+        </div>
+
+        <!-- Particle Density Slider -->
+        <div class="control-group">
+          <div class="control-label-row">
+            <span>Total Population</span>
+            <strong id="val-density">240</strong>
+          </div>
+          <input type="range" id="slider-density" min="40" max="400" step="20" value="240">
+          <span class="control-desc">Number of interactive agents / continuum density</span>
+        </div>
+
+        <!-- Thermal Noise Slider -->
+        <div class="control-group">
+          <div class="control-label-row">
+            <span>Thermal / Brownian Noise</span>
+            <strong id="val-noise">0.10</strong>
+          </div>
+          <input type="range" id="slider-noise" min="0" max="0.5" step="0.02" value="0.10">
+          <span class="control-desc">Environmental stochastic fluctuations</span>
+        </div>
+
+        <!-- Observables Monitor -->
+        <div class="metrics-monitor">
+          <div id="phase-state-label" class="phase-badge active-phase">
+            Active Nonreciprocal Phase (Arrested Coarsening & Traveling Waves)
+          </div>
+          <div class="metric-row">
+            <span>Center-of-Mass Momentum ($|\mathbf{P}_{cm}|$):</span>
+            <span class="metric-val" id="metric-momentum">0.00</span>
+          </div>
+          <div class="metric-row">
+            <span>Detected Coherent Clusters:</span>
+            <span class="metric-val" id="metric-clusters">0</span>
+          </div>
+          <div class="metric-row">
+            <span>Spatial Shannon Entropy:</span>
+            <span class="metric-val" id="metric-entropy">0.00 bits</span>
+          </div>
+          <div class="metric-row">
+            <span>Active Pursuit Pairs:</span>
+            <span class="metric-val" id="metric-pairs">0</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Core Thesis Section -->
+    <section class="section-block">
+      <h2>The Core Thesis</h2>
+      <div class="thesis-body">
+        <p>
+          In classical equilibrium thermodynamics, when components of a binary mixture attract one another, the system inevitably undergoes <span class="highlight">unconstrained phase separation (coarsening)</span>: microscopic domains merge into macroscopic droplets over time (Lifshitz-Slyozov / Ostwald ripening), minimizing free energy until the entire mixture collapses into a single static condensate or segregated bulk phase.
+        </p>
+        <p>
+          However, when microscopic interactions violate <span class="highlight">Newton&rsquo;s third law of action and reaction ($F_{AB} \neq -F_{BA}$)</span>—as occurs when particle A is hydrodynamically attracted to B while B is repelled by A—the system can no longer be described by a conservative potential or free energy functional.
+        </p>
+        <p>
+          Instead, broken action-reaction symmetry triggers a <span class="highlight">non-Hermitian dynamical phase transition</span>. The unequal pairwise forces exert continuous internal torque and self-propulsion along the separation vector, accelerating multi-particle clusters into traveling pursuit states. This persistent internal shear dynamically <strong>arrests coarsening</strong>: traveling clusters collide, fragment, and reorganize at a finite, non-equilibrium length scale, permanently preventing static thermodynamic collapse.
+        </p>
+        <p>
+          Exactly the same mathematical bifurcation governs spatial ecology: when predators climb prey density gradients ($+\chi_{pred} \nabla N$) while prey evade predator gradients ($-\chi_{prey} \nabla P$), the nonreciprocal spatial cross-taxis halts localized over-consumption and monolithic extinction, sustaining perpetual rotating pursuit spirals and stable non-equilibrium biodiversity.
+        </p>
+      </div>
+    </section>
+
+    <!-- Expandable Deep Dive Section -->
+    <section class="section-block">
+      <h2>Under the Hood: Mathematics & Mechanics</h2>
+      
+      <details open>
+        <summary>1. Breaking Newton's Third Law & Nonreciprocal Langevin Dynamics</summary>
+        <div class="details-content">
+          <p>
+            Consider two colloidal particles $i \in \text{Species A}$ and $j \in \text{Species B}$ separated by distance vector $\mathbf{r}_{ij} = \mathbf{x}_j - \mathbf{x}_i$. In an overdamped viscous solvent with drag coefficient $\gamma$:
+          </p>
+          <div class="math-box">
+            \gamma \frac{d\mathbf{x}_i}{dt} = \mathbf{F}_{AB}(\mathbf{r}_{ij}) + \boldsymbol{\xi}_i(t) = +f_A(r) \hat{\mathbf{r}}_{ij} + \boldsymbol{\xi}_i(t) <br>
+            \gamma \frac{d\mathbf{x}_j}{dt} = \mathbf{F}_{BA}(\mathbf{r}_{ji}) + \boldsymbol{\xi}_j(t) = +f_B(r) \hat{\mathbf{r}}_{ij} + \boldsymbol{\xi}_j(t)
+          </div>
+          <p>
+            When $f_A \neq -f_B$, the net internal force on the two-body center of mass is non-zero:
+          </p>
+          <div class="math-box">
+            \mathbf{F}_{\text{net}} = \mathbf{F}_{AB} + \mathbf{F}_{BA} = (f_A + f_B) \hat{\mathbf{r}}_{ij} \neq \mathbf{0} \implies \mathbf{v}_{\text{cm}} = \frac{f_A + f_B}{2\gamma} \hat{\mathbf{r}}_{ij}
+          </div>
+          <p>
+            This autonomous pair propulsion violates the classical action-reaction principle without requiring external energy gradients or chemical self-electrophoresis fuels, deriving persistent motility entirely from asymmetric inter-particle wake couplings.
+          </p>
+        </div>
+      </details>
+
+      <details>
+        <summary>2. Non-Hermitian Cahn-Hilliard & Cross-Taxis PDEs</summary>
+        <div class="details-content">
+          <p>
+            At the continuum level, the coupled density fields $\phi_A(\mathbf{x}, t)$ and $\phi_B(\mathbf{x}, t)$ follow nonreciprocal Cahn-Hilliard conservation laws:
+          </p>
+          <div class="math-box">
+            \partial_t \phi_A = \nabla \cdot \left[ M_A \nabla \left( \frac{\delta \mathcal{F}}{\delta \phi_A} + \alpha_{AB} \phi_B \right) \right] <br>
+            \partial_t \phi_B = \nabla \cdot \left[ M_B \nabla \left( \frac{\delta \mathcal{F}}{\delta \phi_B} - \alpha_{BA} \phi_A \right) \right]
+          </div>
+          <p>
+            When the cross-coupling matrix is asymmetric ($\alpha_{AB} \neq \alpha_{BA}$), the linearized dynamical matrix $\mathcal{M}(k)$ becomes <em>non-Hermitian</em>. Above a critical nonreciprocity threshold $\Delta_c$, the eigenvalues $\omega(k)$ pass through an <strong>exceptional point</strong> and acquire non-zero imaginary parts ($\text{Im}(\omega) \neq 0$). This converts the stationary spinodal growth mode into propagating traveling waves with dispersion velocity $c \propto \sqrt{|\alpha_{AB}\alpha_{BA}|}$, dynamically halting Ostwald ripening.
+          </p>
+        </div>
+      </details>
+
+      <details>
+        <summary>3. Research Citations & Experimental Foundations</summary>
+        <div class="details-content">
+          <ul class="citation-list">
+            <li class="citation-item">
+              <strong>Primary Discovery Anchor:</strong> Shoma Hara, Masazumi Okada, Keisuke Kittaka, Sho Tanami, Yuichi Iwasaki, Hiroaki Ishikawa, Kiwamu Yoshii, and Yutaka Sumino. <em>"Arrested Coarsening in Active Colloidal Suspensions Driven by Nonreciprocal Electrohydrodynamic Interactions."</em> <strong>Physical Review Letters</strong> 137, 068302 (Published August 6, 2026). <a href="https://link.aps.org/doi/10.1103/96ky-d1p9" target="_blank" rel="noopener">DOI: 10.1103/96ky-d1p9</a> (Preprint: <a href="https://arxiv.org/abs/2509.23164" target="_blank" rel="noopener">arXiv:2509.23164</a>).
+            </li>
+            <li class="citation-item">
+              <strong>Independent Supporting Source:</strong> Phys.org Physics News. <em>"Tiny particles defy action-reaction symmetry to stay in motion."</em> (Published August 11, 2026). <a href="https://phys.org/news/2026-08-tiny-particles-defy-action-reaction.html" target="_blank" rel="noopener">phys.org/news/2026-08-tiny-particles-defy-action-reaction.html</a>.
+            </li>
+            <li class="citation-item">
+              <strong>Non-Hermitian Phase Transition Foundation:</strong> Michel Fruchart, Ryo Hanai, Peter B. Littlewood, and Vincenzo Vitelli. <em>"Non-reciprocal phase transitions."</em> <strong>Nature</strong> 592, 363–369 (2021). <a href="https://doi.org/10.1038/s41586-021-03375-9" target="_blank" rel="noopener">DOI: 10.1038/s41586-021-03375-9</a>.
+            </li>
+            <li class="citation-item">
+              <strong>Scalar Active Mixtures Theory:</strong> Suropriya Saha, Jaime Agudo-Canalejo, and Ramin Golestanian. <em>"Scalar active mixtures: The nonreciprocal Cahn-Hilliard model."</em> <strong>Phys. Rev. X</strong> 10, 041009 (2020).
+            </li>
+          </ul>
+        </div>
+      </details>
+    </section>
+
+    <!-- Proof Level: Claims Verification Suite -->
+    <section class="section-block" id="claims-panel-container">
+      <!-- Injected by claims-panel.js -->
+    </section>
+
+    <!-- Footer -->
+    <footer>
+      <p>The Daily Brief &middot; Rebuilt from scratch every 24 hours &middot; Live static deployment on GitHub Pages</p>
+    </footer>
+  </div>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>

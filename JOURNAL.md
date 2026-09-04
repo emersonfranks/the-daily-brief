@@ -10,6 +10,27 @@ Builds that were pulled after publication are not deleted from this record. They
 
 ---
 
+## 2026-09-04 — The Chaser's Arrest
+
+**Built by:** Gemini 3.7 Flash
+**Path:** `gemini37flash/index.html`
+**Commit:** [`pending`](https://github.com/emersonfranks/the-daily-brief/commit/pending)
+**The pairing:** nonreciprocal active colloids ↔ ecological predator-prey pursuit waves
+
+![Full-page screenshot of The Chaser's Arrest: title and orientation banner, interactive canvas displaying amber chasers and cyan targets with velocity vectors and cluster hulls, nonreciprocal asymmetry slider, phase space monitors, core thesis on non-Hermitian phase transitions, mathematical equations, and live claims verification panel](journal/2026-09-04-the-chasers-arrest.png)
+
+**The thesis.** Under symmetric equilibrium forces, attractive binary mixtures inevitably collapse into unconstrained macroscopic phase separation (Ostwald ripening / coarsening). Breaking Newton's third law of action-reaction ($F_{AB} \neq -F_{BA}$) destroys conservative free energy and triggers a non-Hermitian dynamical phase transition: persistent internal pursuit shear arrests coarsening, converting static condensation into self-propelling traveling clusters and persistent spatial pursuit waves.
+
+**The research.** Five candidate findings across five disciplines were surveyed before opening the topic ledger: arrested coarsening in nonreciprocal colloidal suspensions (soft matter/active matter); state-dependent signal flow hierarchies in the cerebral cortex (systems neuroscience); decaying Erk gradients encoding skeletal size memory in fin regeneration (developmental biology); constant cosmic atomic hydrogen reserves over 4.5 Gyr (astrophysics); and late-life semaglutide metabolic reprogramming (gerontology). The selected primary discovery is Shoma Hara et al., [“Arrested Coarsening in Active Colloidal Suspensions Driven by Nonreciprocal Electrohydrodynamic Interactions”](https://link.aps.org/doi/10.1103/96ky-d1p9), *Physical Review Letters* 137, 068302 (6 August 2026). The independent supporting source is Phys.org, [“Tiny particles defy action-reaction symmetry to stay in motion”](https://phys.org/news/2026-08-tiny-particles-defy-action-reaction.html) (11 August 2026). The finding survived the topic ledger check because no prior entry investigated nonreciprocal forces, broken action-reaction symmetry, or arrested coarsening. Full details in `gemini37flash/research.md`.
+
+**The interaction.** The reader controls the nonreciprocity asymmetry parameter ($\Delta$), population density, and thermal noise. At $\Delta = 0$, particles condense into static, phase-separated droplets ($V_{cm} = 0$). Increasing $\Delta > 0$ activates nonreciprocal pursuit-evasion, dynamically arresting coarsening and propelling self-organized traveling clusters across the domain. A view switch toggles the macroscopic ecological dual PDE field, showing nonreciprocal cross-taxis spiral waves.
+
+**What it measured.** Measured across 4 empirical claims in `claims.js` and verified by `node --test` and the in-browser panel: isolated nonreciprocal pairs accelerate to center-of-mass velocity $V_{cm} = 2.6005\text{ px/step}$ (compared to exactly $0.0000$ in reciprocal equilibrium); nonreciprocal pursuit elevates spatial Shannon dispersion entropy from $4.63\text{ bits}$ (equilibrium clumping) to $5.77\text{ bits}$ (active non-equilibrium circulation); multi-body assemblies maintain $\ge 80\%$ active coupled pursuit pairs; and the ecological reaction-diffusion cross-taxis dual maintains stable dual-species coexistence ($> 500$ prey and $> 500$ predator biomass units) without spatial collapse.
+
+**What failed.** Initial expectations that individual nonreciprocal particles would exhibit higher instantaneous scalar speeds than reciprocal particles proved incomplete: reciprocal particles experience high transient attraction speeds as they crash inward into dense static lumps. The true signature of broken action-reaction symmetry is not scalar speed, but net directional center-of-mass momentum ($|\mathbf{P}_{cm}|$) and spatial dispersion entropy ($S$). The thesis and assertions were corrected to measure coherent momentum and arrested coarsening entropy rather than bare thermal velocities.
+
+**Stack:** No external libraries. Hand-rolled 2D HTML5 Canvas renderer with vector overlays and kinetic motion trails, native Web Audio API sonification, and modular ES architecture (`simulation.js`, `ecological-dual.js`, `renderer.js`, `audio.js`, `claims.js`, `claims-panel.js`, `main.js`). Tested headlessly via `simulation.test.js` under `node --test`.
+
 ## 2026-09-04 — The Long Handoff
 
 **Built by:** GPT-5.6 Sol
